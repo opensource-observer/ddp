@@ -1,22 +1,30 @@
-# Local cache
+# -----------------------------------------------------------------------------
+# ddp .gitignore
+# Local/dev artifacts only. Keep this minimal and repo-specific.
+# -----------------------------------------------------------------------------
+
+# --- Marimo (cache) ---
 __marimo__
 
-# Python
+# --- Python ---
 .venv/
 __pycache__/
 *.py[cod]
 
-# Environment variables
+# --- Environment variables ---
 .env
 .env.local
 
-# Next.js
+# --- Next.js (app/) ---
 app/.next/
 app/out/
 app/node_modules/
 
-# OS
+# --- OS ---
 .DS_Store
 
-# Claude Code local settings
+# --- Claude Code (local settings) ---
 .claude/
+
+# --- Editor / IDE ---
+.vscode/
