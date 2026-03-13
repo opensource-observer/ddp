@@ -1,0 +1,11 @@
+name: Weekly data refresh
+
+on:
+  schedule:
+    - cron: '0 3 * * 0'  # Sunday 3am UTC
+  workflow_dispatch:
+
+jobs:
+  refresh:
+    uses: ./.github/workflows/deploy.yml
+    secrets: inherit

@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "unknown"
+__generated_with = "0.18.4"
 app = marimo.App(width="full")
 
 
@@ -21,31 +21,66 @@ def _(mo, pyoso_db_conn):
                       engine=pyoso_db_conn, output=False)
 
     def get_row_count(model_name):
-        result = mo.sql(f"SHOW STATS FOR {model_name}",
-                        engine=pyoso_db_conn, output=False)
-        return result['row_count'].sum()
+        import datetime
+        current_year = datetime.date.today().year
+        # Full-year 2015–2020, half-year 2021–2022, quarterly 2023+
+        partitions = []
+        for yr in range(2015, min(2021, current_year + 1)):
+            partitions.append((f"{yr}-01-01", f"{yr}-12-31"))
+        for yr in range(2021, min(2023, current_year + 1)):
+            partitions.append((f"{yr}-01-01", f"{yr}-06-30"))
+            partitions.append((f"{yr}-07-01", f"{yr}-12-31"))
+        # 2023 H1: quarterly
+        partitions.append(("2023-01-01", "2023-03-31"))
+        partitions.append(("2023-04-01", "2023-06-30"))
+        # 2023-07 onwards: monthly
+        import calendar
+        yr, m = 2023, 7
+        while (yr, m) <= (current_year, datetime.date.today().month):
+            last_day = calendar.monthrange(yr, m)[1]
+            partitions.append((f"{yr}-{m:02d}-01", f"{yr}-{m:02d}-{last_day:02d}"))
+            m += 1
+            if m > 12:
+                m, yr = 1, yr + 1
+        total = 0
+        for start, end in partitions:
+            chunk = mo.sql(
+                f"SELECT COUNT(*) AS cnt FROM {model_name}"
+                f" WHERE created_at BETWEEN DATE '{start}' AND DATE '{end}'",
+                engine=pyoso_db_conn, output=False
+            )
+            n = int(chunk['cnt'].iloc[0])
+            if n > 0:
+                total += n
+        return total
 
     def generate_sql_snippet(model_name, df_results, limit=5):
         column_names = df_results.columns.tolist()
         # Format columns with one per line, indented
         columns_formatted = ',\n  '.join(column_names)
         sql_snippet = f"""```sql
-SELECT
-  {columns_formatted}
-FROM {model_name}
-LIMIT {limit}
-```
-"""
+    SELECT
+      {columns_formatted}
+    FROM {model_name}
+    LIMIT {limit}
+    ```
+    """
         return mo.md(sql_snippet)
 
     def render_table_preview(model_name):
         df = get_model_preview(model_name)
+        if df.empty:
+            return mo.md(f"**{model_name}**\n\nUnable to retrieve preview (table might be empty or inaccessible).")
         sql_snippet = generate_sql_snippet(model_name, df, limit=5)
         fmt = {c: '{:.0f}' for c in df.columns if df[c].dtype == 'int64' and ('_id' in c or c == 'id')}
         table = mo.ui.table(df, format_mapping=fmt, show_column_summaries=False, show_data_types=False)
-        row_count = get_row_count(model_name)
+        try:
+            row_count = get_row_count(model_name)
+            row_count_str = f"{row_count:,.0f} rows"
+        except Exception:
+            row_count_str = "N/A rows"
         col_count = len(df.columns)
-        title = f"{model_name} | {row_count:,.0f} rows, {col_count} cols"
+        title = f"{model_name} | {row_count_str}, {col_count} cols"
         return mo.accordion({title: mo.vstack([sql_snippet, table])})
 
     def render_table_accordion(model_names):
@@ -60,51 +95,49 @@ LIMIT {limit}
             title = f"{model_name} | {row_count:,.0f} rows, {col_count} cols"
             accordion[title] = mo.vstack([sql_snippet, table])
         return mo.accordion(accordion)
-    return (render_table_preview, render_table_accordion)
+    return render_table_accordion, render_table_preview
 
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        """
-        # GitHub Archive
+    mo.md("""
+    # GitHub Archive
 
-        **Maintained by:** [gharchive.org](https://gharchive.org)
+    **Maintained by:** [gharchive.org](https://gharchive.org)
 
-        ## Overview
+    ## Overview
 
-        GitHub Archive records the public GitHub timeline, archiving all public GitHub activity including pushes, pull requests,
-        issues, comments, and many other event types. The dataset provides complete coverage of public GitHub activity and is
-        continuously updated. Events use GitHub's **REST API IDs** rather than GraphQL node IDs, allowing direct joins with OSS Directory
-        repositories via the `id` field, but requiring OSS Directory as an intermediary to join with Open Dev Data.
+    GitHub Archive records the public GitHub timeline, archiving all public GitHub activity including pushes, pull requests,
+    issues, comments, and many other event types. The dataset provides complete coverage of public GitHub activity and is
+    continuously updated. Events use GitHub's **REST API IDs** rather than GraphQL node IDs, allowing direct joins with OSS Directory
+    repositories via the `id` field, but requiring OSS Directory as an intermediary to join with Open Dev Data.
 
-        ## Primary Tables
+    ## Primary Tables
 
-        ### Events
+    ### Events
 
-        Contains all public GitHub activity events. The `type` field indicates the event category (push, pull request, issue, etc.),
-        with detailed information in the JSON `payload` field. Repository and actor IDs are extracted from the payload and use
-        GitHub's REST API ID system (`repo.id` and `actor.id`). These REST API IDs can be directly joined with OSS Directory
-        repositories using the `id` field.
+    Contains all public GitHub activity events. The `type` field indicates the event category (push, pull request, issue, etc.),
+    with detailed information in the JSON `payload` field. Repository and actor IDs are extracted from the payload and use
+    GitHub's REST API ID system (`repo.id` and `actor.id`). These REST API IDs can be directly joined with OSS Directory
+    repositories using the `id` field.
 
-        Key event types captured in the archive:
+    Key event types captured in the archive:
 
-        | Event Type | Description |
-        |:---|:---|
-        | `PushEvent` | One or more commits pushed to a repository branch |
-        | `PullRequestEvent` | Pull request opened, closed, merged, or reopened |
-        | `PullRequestReviewEvent` | Code review submitted on a pull request |
-        | `PullRequestReviewCommentEvent` | Comment posted as part of a pull request review |
-        | `IssuesEvent` | Issue opened, closed, or reopened |
-        | `IssueCommentEvent` | Comment posted on an issue or pull request |
-        | `WatchEvent` | User starred a repository |
-        | `ForkEvent` | Repository forked |
-        | `CreateEvent` | Branch, tag, or repository created |
-        | `DeleteEvent` | Branch or tag deleted |
-        | `ReleaseEvent` | Release published |
-        | `MemberEvent` | Collaborator added to a repository |
-        """
-    )
+    | Event Type | Description |
+    |:---|:---|
+    | `PushEvent` | One or more commits pushed to a repository branch |
+    | `PullRequestEvent` | Pull request opened, closed, merged, or reopened |
+    | `PullRequestReviewEvent` | Code review submitted on a pull request |
+    | `PullRequestReviewCommentEvent` | Comment posted as part of a pull request review |
+    | `IssuesEvent` | Issue opened, closed, or reopened |
+    | `IssueCommentEvent` | Comment posted on an issue or pull request |
+    | `WatchEvent` | User starred a repository |
+    | `ForkEvent` | Repository forked |
+    | `CreateEvent` | Branch, tag, or repository created |
+    | `DeleteEvent` | Branch or tag deleted |
+    | `ReleaseEvent` | Release published |
+    | `MemberEvent` | Collaborator added to a repository |
+    """)
     return
 
 
@@ -116,15 +149,13 @@ def _(render_table_preview):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        """
-        ### Push Events
+    mo.md("""
+    ### Push Events
 
-        Extracted push event data with commit counts and branch references. Each row represents a single push to a repository,
-        with the number of commits included in the push. This is the primary table for measuring commit-level activity from
-        GitHub Archive (as opposed to Open Dev Data's commit table, which has individual commit granularity).
-        """
-    )
+    Extracted push event data with commit counts and branch references. Each row represents a single push to a repository,
+    with the number of commits included in the push. This is the primary table for measuring commit-level activity from
+    GitHub Archive (as opposed to Open Dev Data's commit table, which has individual commit granularity).
+    """)
     return
 
 
@@ -136,13 +167,11 @@ def _(render_table_preview):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        """
-        ## Other Tables
+    mo.md("""
+    ## Other Tables
 
-        The following are other tables that may be useful for analysis.
-        """
-    )
+    The following are other tables that may be useful for analysis.
+    """)
     return
 
 
@@ -156,62 +185,58 @@ def _(render_table_accordion):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        """
-        ## ID Systems
+    mo.md("""
+    ## ID Systems
 
-        GitHub Archive uses GitHub's **REST API IDs** for both repositories (`repo.id`) and actors (`actor.id`).
-        This is important because different data sources use different ID systems:
+    GitHub Archive uses GitHub's **REST API IDs** for both repositories (`repo.id`) and actors (`actor.id`).
+    This is important because different data sources use different ID systems:
 
-        | Source | Repository ID | Developer ID |
-        |:---|:---|:---|
-        | **GitHub Archive** | REST API ID (`repo.id`) | REST API ID (`actor.id`) |
-        | **Open Dev Data** | Canonical ID / GraphQL ID | Canonical Developer ID |
-        | **OSS Directory** | REST API ID (`id`) + GraphQL ID (`node_id`) | N/A |
+    | Source | Repository ID | Developer ID |
+    |:---|:---|:---|
+    | **GitHub Archive** | REST API ID (`repo.id`) | REST API ID (`actor.id`) |
+    | **Open Dev Data** | Canonical ID / GraphQL ID | Canonical Developer ID |
+    | **OSS Directory** | REST API ID (`id`) + GraphQL ID (`node_id`) | N/A |
 
-        **Joining GitHub Archive to OSS Directory** is straightforward: join on `repo.id = stg_ossd__current_repositories.id`.
+    **Joining GitHub Archive to OSS Directory** is straightforward: join on `repo.id = stg_ossd__current_repositories.id`.
 
-        **Joining GitHub Archive to Open Dev Data** requires OSS Directory as a bridge, because Open Dev Data uses GraphQL
-        IDs while GitHub Archive uses REST API IDs. The join path is:
+    **Joining GitHub Archive to Open Dev Data** requires OSS Directory as a bridge, because Open Dev Data uses GraphQL
+    IDs while GitHub Archive uses REST API IDs. The join path is:
 
-        ```
-        GitHub Archive (REST ID) → OSS Directory (REST ID + GraphQL ID) → Open Dev Data (GraphQL ID)
-        ```
+    ```
+    GitHub Archive (REST ID) → OSS Directory (REST ID + GraphQL ID) → Open Dev Data (GraphQL ID)
+    ```
 
-        The intermediate model `int_opendevdata__repositories_with_repo_id` handles this bridging by mapping Open Dev Data's
-        canonical repository IDs to GitHub REST API IDs through OSS Directory.
-        """
-    )
+    The intermediate model `int_opendevdata__repositories_with_repo_id` handles this bridging by mapping Open Dev Data's
+    canonical repository IDs to GitHub REST API IDs through OSS Directory.
+    """)
     return
 
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        """
-        ## Limitations
+    mo.md("""
+    ## Limitations
 
-        - **Public repositories only**: The dataset does not capture any activity on private repositories. Contributions
-          made while a repository was private will not appear, even if the repository is later made public.
+    - **Public repositories only**: The dataset does not capture any activity on private repositories. Contributions
+      made while a repository was private will not appear, even if the repository is later made public.
 
-        - **PushEvent commit cap**: Each PushEvent payload includes at most 20 commits. Pushes with more than 20 commits
-          will only show the most recent 20 in the payload. This means commit counts derived from PushEvent payloads may
-          undercount large pushes.
+    - **PushEvent commit cap**: Each PushEvent payload includes at most 20 commits. Pushes with more than 20 commits
+      will only show the most recent 20 in the payload. This means commit counts derived from PushEvent payloads may
+      undercount large pushes.
 
-        - **Commit payload removal (post-October 2025)**: Starting in late October 2025, GitHub Archive no longer includes
-          detailed commit payload data in events. The `stg_github__commits` table is therefore only useful for historical
-          analysis prior to this cutoff.
+    - **Commit payload removal (post-October 2025)**: Starting in late October 2025, GitHub Archive no longer includes
+      detailed commit payload data in events. The `stg_github__commits` table is therefore only useful for historical
+      analysis prior to this cutoff.
 
-        - **Data freshness**: GitHub Archive data can be approximately 3 days behind real-time. Queries against very recent
-          dates may show incomplete results.
+    - **Data freshness**: GitHub Archive data can be approximately 3 days behind real-time. Queries against very recent
+      dates may show incomplete results.
 
-        - **Historical gaps**: There may be gaps in coverage if the GitHub API was down or the GH Archive indexer experienced
-          issues. Some hours or days of activity may be missing from the historical record.
+    - **Historical gaps**: There may be gaps in coverage if the GitHub API was down or the GH Archive indexer experienced
+      issues. Some hours or days of activity may be missing from the historical record.
 
-        - **Not 100% complete**: While comprehensive, edge cases around API rate limiting, transient errors, and archiver
-          downtime mean the dataset is not guaranteed to capture every single public event.
-        """
-    )
+    - **Not 100% complete**: While comprehensive, edge cases around API rate limiting, transient errors, and archiver
+      downtime mean the dataset is not guaranteed to capture every single public event.
+    """)
     return
 
 

@@ -294,170 +294,175 @@ def section_overall_trends(mo):
 
 
 @app.cell(hide_code=True)
-def chart1_controls(mo):
-    chart1_time_range = mo.ui.dropdown(
-        options=["All Time", "Last 5 Years", "Last 3 Years", "Last Year"],
-        value="All Time",
-        label="Time Range"
-    )
-
-    mo.hstack([chart1_time_range], gap=2)
-    return (chart1_time_range,)
-
-
-@app.cell(hide_code=True)
 def chart1_total_mads(
     EC_LIGHT_BLUE,
     add_callout_annotation,
     apply_ec_style,
-    chart1_time_range,
     df_all,
     go,
     mo,
     pd,
 ):
     """Chart 1: Total Monthly Active Developers Over Time"""
+    import json as _json
+    import html as _html_mod
 
-    # Filter to "All Web3 Ecosystems"
-    _df = df_all[df_all['ecosystem_name'] == 'All Web3 Ecosystems'].copy()
+    _OPTS = ['All Time', 'Last 5 Years', 'Last 3 Years', 'Last Year']
 
-    # Filter by time range
-    if chart1_time_range.value == "Last 5 Years":
-        _df = _df[_df['day'] >= pd.Timestamp('2020-01-01')]
-    elif chart1_time_range.value == "Last 3 Years":
-        _df = _df[_df['day'] >= pd.Timestamp('2022-01-01')]
-    elif chart1_time_range.value == "Last Year":
-        _df = _df[_df['day'] >= pd.Timestamp('2024-01-01')]
+    _time_filters = {
+        'All Time': None,
+        'Last 5 Years': pd.Timestamp('2020-01-01'),
+        'Last 3 Years': pd.Timestamp('2022-01-01'),
+        'Last Year': pd.Timestamp('2024-01-01'),
+    }
 
-    # Get current values
-    _current_date = _df['day'].max()
-    _current_value = _df[_df['day'] == _current_date]['total_devs'].values[0]
+    _states = {}
+    for _opt in _OPTS:
+        _df = df_all[df_all['ecosystem_name'] == 'All Web3 Ecosystems'].copy()
+        _cutoff = _time_filters[_opt]
+        if _cutoff is not None:
+            _df = _df[_df['day'] >= _cutoff]
 
-    _fig = go.Figure()
+        _current_date = _df['day'].max()
+        _current_value = _df[_df['day'] == _current_date]['total_devs'].values[0]
 
-    # Area chart with EC styling
-    _fig.add_trace(go.Scatter(
-        x=_df['day'],
-        y=_df['total_devs'],
-        fill='tozeroy',
-        fillcolor=EC_LIGHT_BLUE,
-        line=dict(color=EC_LIGHT_BLUE, width=1),
-        mode='lines',
-        name='Monthly Active Developers',
-        hovertemplate='<b>%{x|%b %Y}</b><br>Developers: %{y:,.0f}<extra></extra>'
-    ))
+        _fig = go.Figure()
 
-    # Apply EC styling
-    apply_ec_style(
-        _fig,
-        title=f"{_current_value:,.0f} monthly active open-source developers contribute to crypto",
-        subtitle="All crypto monthly active developers",
-        y_title="Developers",
-        show_legend=False,
-        right_margin=180
-    )
+        _fig.add_trace(go.Scatter(
+            x=_df['day'],
+            y=_df['total_devs'],
+            fill='tozeroy',
+            fillcolor=EC_LIGHT_BLUE,
+            line=dict(color=EC_LIGHT_BLUE, width=1),
+            mode='lines',
+            name='Monthly Active Developers',
+            hovertemplate='<b>%{x|%b %Y}</b><br>Developers: %{y:,.0f}<extra></extra>'
+        ))
 
-    # Annotate: start/end of current year + peak
-    _year = int(_current_date.year)
-    _df_year = _df[_df["day"].dt.year == _year]
+        apply_ec_style(
+            _fig,
+            title=f"{_current_value:,.0f} monthly active open-source developers contribute to crypto",
+            subtitle="All crypto monthly active developers",
+            y_title="Developers",
+            show_legend=False,
+            right_margin=180
+        )
 
-    if len(_df_year) > 0:
-        _start_date = _df_year["day"].min()
-        _end_date = _df_year["day"].max()
-        _start_value = _df_year[_df_year["day"] == _start_date]["total_devs"].iloc[0]
-        _end_value = _df_year[_df_year["day"] == _end_date]["total_devs"].iloc[0]
+        _year = int(_current_date.year)
+        _df_year = _df[_df["day"].dt.year == _year]
+
+        if len(_df_year) > 0:
+            _start_date = _df_year["day"].min()
+            _end_date = _df_year["day"].max()
+            _start_value = _df_year[_df_year["day"] == _start_date]["total_devs"].iloc[0]
+            _end_value = _df_year[_df_year["day"] == _end_date]["total_devs"].iloc[0]
+
+            _fig.add_trace(
+                go.Scatter(
+                    x=[_start_date, _end_date],
+                    y=[_start_value, _end_value],
+                    mode="markers",
+                    marker=dict(size=7, color="#1B4F72", line=dict(width=1, color="white")),
+                    showlegend=False,
+                    hovertemplate="<b>%{x|%b %Y}</b><br>Developers: %{y:,.0f}<extra></extra>",
+                )
+            )
+
+            _fig.add_annotation(
+                x=_start_date,
+                y=_start_value,
+                text=f"<b>{_start_date.strftime('%b %Y')}</b><br>{_start_value:,.0f}",
+                showarrow=False,
+                yshift=-22,
+                font=dict(size=10, color="#333"),
+                align="center",
+                bgcolor="white",
+                bordercolor="#CCCCCC",
+                borderwidth=1,
+                borderpad=5,
+            )
+
+            _fig.add_annotation(
+                x=_end_date,
+                y=_end_value,
+                text=f"<b>{_end_date.strftime('%b %Y')}</b><br>{_end_value:,.0f}",
+                showarrow=False,
+                yshift=-22,
+                font=dict(size=10, color="#333"),
+                align="center",
+                bgcolor="white",
+                bordercolor="#CCCCCC",
+                borderwidth=1,
+                borderpad=5,
+            )
+
+        _peak_idx = _df["total_devs"].idxmax()
+        _peak_date = _df.loc[_peak_idx, "day"]
+        _peak_value = _df.loc[_peak_idx, "total_devs"]
 
         _fig.add_trace(
             go.Scatter(
-                x=[_start_date, _end_date],
-                y=[_start_value, _end_value],
+                x=[_peak_date],
+                y=[_peak_value],
                 mode="markers",
-                marker=dict(size=7, color="#1B4F72", line=dict(width=1, color="white")),
+                marker=dict(size=8, color="#1B4F72", line=dict(width=1, color="white")),
                 showlegend=False,
-                hovertemplate="<b>%{x|%b %Y}</b><br>Developers: %{y:,.0f}<extra></extra>",
+                hovertemplate="<b>Peak</b><br>%{x|%b %Y}<br>Developers: %{y:,.0f}<extra></extra>",
             )
         )
-
-        # Start-of-year value label
         _fig.add_annotation(
-            x=_start_date,
-            y=_start_value,
-            text=f"<b>{_start_date.strftime('%b %Y')}</b><br>{_start_value:,.0f}",
-            showarrow=False,
-            yshift=-22,
-            font=dict(size=10, color="#333"),
+            x=_peak_date,
+            y=_peak_value,
+            text=f"<b>Peak</b><br>{_peak_value:,.0f}<br><span style='font-size:10px;color:#666'>{_peak_date.strftime('%b %Y')}</span>",
+            showarrow=True,
+            arrowhead=0,
+            arrowcolor="#666",
+            ax=0,
+            ay=-55,
+            font=dict(size=11, color="#333"),
             align="center",
             bgcolor="white",
             bordercolor="#CCCCCC",
             borderwidth=1,
-            borderpad=5,
+            borderpad=6,
         )
 
-        # End-of-year value label
-        _fig.add_annotation(
-            x=_end_date,
-            y=_end_value,
-            text=f"<b>{_end_date.strftime('%b %Y')}</b><br>{_end_value:,.0f}",
-            showarrow=False,
-            yshift=-22,
-            font=dict(size=10, color="#333"),
-            align="center",
-            bgcolor="white",
-            bordercolor="#CCCCCC",
-            borderwidth=1,
-            borderpad=5,
-        )
+        _fig.update_xaxes(range=[_df["day"].min(), _df["day"].max()], autorange=False)
+        _fig.update_layout(height=500)
 
-    _peak_idx = _df["total_devs"].idxmax()
-    _peak_date = _df.loc[_peak_idx, "day"]
-    _peak_value = _df.loc[_peak_idx, "total_devs"]
+        _states[_opt] = {'chart': _json.loads(_fig.to_json())}
 
-    _fig.add_trace(
-        go.Scatter(
-            x=[_peak_date],
-            y=[_peak_value],
-            mode="markers",
-            marker=dict(size=8, color="#1B4F72", line=dict(width=1, color="white")),
-            showlegend=False,
-            hovertemplate="<b>Peak</b><br>%{x|%b %Y}<br>Developers: %{y:,.0f}<extra></extra>",
-        )
+    _opts = list(_states.keys())
+    _djs_safe = _json.dumps(_states).replace('</', '<\\/')
+    _opts_js = _json.dumps(_opts)
+    _btn_html = ''.join(f'<button class="tab-btn" data-idx="{i}">{o}</button>' for i, o in enumerate(_opts))
+
+    _inner = (
+        '<!DOCTYPE html><html><head><meta charset="utf-8">'
+        '<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>'
+        '<style>'
+        '*{box-sizing:border-box;margin:0;padding:0}'
+        'body{font-family:Arial,sans-serif;font-size:13px;padding:4px}'
+        '.tab-btn{padding:6px 14px;border:none;background:none;border-radius:6px;font-size:13px;cursor:pointer;color:#6b7280}'
+        '.tab-btn:hover{background:#f3f4f6;color:#111}'
+        '.tab-btn.active{background:#eff6ff;color:#2563eb;font-weight:600}'
+        '.tab-bar{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px;border-bottom:1px solid #e5e7eb;padding-bottom:8px}'
+        '</style></head><body>'
+        f'<div class="tab-bar">{_btn_html}</div>'
+        '<div id="chart"></div>'
+        f'<script>var D={_djs_safe};var O={_opts_js};'
+        'document.querySelectorAll(".tab-btn").forEach(function(btn,i){'
+        'btn.addEventListener("click",function(){'
+        'document.querySelectorAll(".tab-btn").forEach(function(b){b.classList.remove("active")});'
+        'btn.classList.add("active");'
+        'Plotly.react("chart",D[O[i]].chart.data,D[O[i]].chart.layout,{responsive:true});'
+        '});});'
+        'var _b=document.querySelectorAll(".tab-btn");if(_b.length)_b[0].click();'
+        '</script></body></html>'
     )
-    _fig.add_annotation(
-        x=_peak_date,
-        y=_peak_value,
-        text=f"<b>Peak</b><br>{_peak_value:,.0f}<br><span style='font-size:10px;color:#666'>{_peak_date.strftime('%b %Y')}</span>",
-        showarrow=True,
-        arrowhead=0,
-        arrowcolor="#666",
-        ax=0,
-        ay=-55,
-        font=dict(size=11, color="#333"),
-        align="center",
-        bgcolor="white",
-        bordercolor="#CCCCCC",
-        borderwidth=1,
-        borderpad=6,
-    )
-
-    # Prevent annotations from changing the x-axis padding/range
-    _fig.update_xaxes(range=[_df["day"].min(), _df["day"].max()], autorange=False)
-
-    _fig.update_layout(height=500)
-
-    mo.ui.plotly(_fig, config={"displayModeBar": False})
+    _src = _html_mod.escape(_inner, quote=True)
+    mo.Html(f'<iframe srcdoc="{_src}" style="width:100%;height:520px;border:none;display:block" scrolling="no"></iframe>')
     return
-
-
-@app.cell(hide_code=True)
-def chart2_controls(mo):
-    chart2_time_range = mo.ui.dropdown(
-        options=["All Time", "Last 5 Years", "Last 3 Years", "Last Year"],
-        value="All Time",
-        label="Time Range"
-    )
-
-    mo.hstack([chart2_time_range], gap=2)
-    return (chart2_time_range,)
 
 
 @app.cell(hide_code=True)
@@ -465,258 +470,302 @@ def chart2_tenure_composition(
     TENURE_COLORS,
     add_tenure_legend,
     apply_ec_style,
-    chart2_time_range,
     df_all,
     go,
     mo,
     pd,
 ):
     """Chart 2: Developer Composition by Tenure - Stacked Area Chart"""
+    import json as _json
+    import html as _html_mod
 
-    # Filter to "All Web3 Ecosystems"
-    _df = df_all[df_all['ecosystem_name'] == 'All Web3 Ecosystems'].copy()
+    _OPTS = ['All Time', 'Last 5 Years', 'Last 3 Years', 'Last Year']
 
-    if chart2_time_range.value == "Last 5 Years":
-        _df = _df[_df['day'] >= pd.Timestamp('2020-01-01')]
-    elif chart2_time_range.value == "Last 3 Years":
-        _df = _df[_df['day'] >= pd.Timestamp('2022-01-01')]
-    elif chart2_time_range.value == "Last Year":
-        _df = _df[_df['day'] >= pd.Timestamp('2024-01-01')]
+    _time_filters = {
+        'All Time': None,
+        'Last 5 Years': pd.Timestamp('2020-01-01'),
+        'Last 3 Years': pd.Timestamp('2022-01-01'),
+        'Last Year': pd.Timestamp('2024-01-01'),
+    }
 
-    _fig = go.Figure()
+    _states = {}
+    for _opt in _OPTS:
+        _df = df_all[df_all['ecosystem_name'] == 'All Web3 Ecosystems'].copy()
+        _cutoff = _time_filters[_opt]
+        if _cutoff is not None:
+            _df = _df[_df['day'] >= _cutoff]
 
-    # Stack order: Established (bottom), Emerging (middle), Newcomers (top)
-    # This matches the EC report visual
-    for _segment, _col in [("Established", "established"), ("Emerging", "emerging"), ("Newcomers", "newcomers")]:
-        _fig.add_trace(go.Scatter(
-            x=_df['day'],
-            y=_df[_col],
-            name=_segment,
-            mode='lines',
-            stackgroup='one',
-            fillcolor=TENURE_COLORS[_segment],
-            line=dict(width=0.5, color=TENURE_COLORS[_segment]),
-            hovertemplate=f'<b>{_segment}</b><br>%{{x|%b %Y}}<br>Developers: %{{y:,.0f}}<extra></extra>'
-        ))
+        _fig = go.Figure()
 
-    # Get current values for legend
-    _current_row = _df.iloc[-1]
-    _current_newcomers = _current_row['newcomers']
-    _current_emerging = _current_row['emerging']
-    _current_established = _current_row['established']
+        for _segment, _col in [("Established", "established"), ("Emerging", "emerging"), ("Newcomers", "newcomers")]:
+            _fig.add_trace(go.Scatter(
+                x=_df['day'],
+                y=_df[_col],
+                name=_segment,
+                mode='lines',
+                stackgroup='one',
+                fillcolor=TENURE_COLORS[_segment],
+                line=dict(width=0.5, color=TENURE_COLORS[_segment]),
+                hovertemplate=f'<b>{_segment}</b><br>%{{x|%b %Y}}<br>Developers: %{{y:,.0f}}<extra></extra>'
+            ))
 
-    apply_ec_style(
-        _fig,
-        title="But devs working in crypto for 1+ years grew steadily",
-        subtitle="All crypto monthly active developers by tenure",
-        y_title="Developers",
-        show_legend=False,  # We use custom legend
-        right_margin=180
+        _current_row = _df.iloc[-1]
+        _current_newcomers = _current_row['newcomers']
+        _current_emerging = _current_row['emerging']
+        _current_established = _current_row['established']
+
+        apply_ec_style(
+            _fig,
+            title="But devs working in crypto for 1+ years grew steadily",
+            subtitle="All crypto monthly active developers by tenure",
+            y_title="Developers",
+            show_legend=False,
+            right_margin=180
+        )
+
+        add_tenure_legend(_fig, _current_newcomers, _current_emerging, _current_established, TENURE_COLORS)
+
+        _fig.update_layout(height=500)
+
+        _states[_opt] = {'chart': _json.loads(_fig.to_json())}
+
+    _opts = list(_states.keys())
+    _djs_safe = _json.dumps(_states).replace('</', '<\\/')
+    _opts_js = _json.dumps(_opts)
+    _btn_html = ''.join(f'<button class="tab-btn" data-idx="{i}">{o}</button>' for i, o in enumerate(_opts))
+
+    _inner = (
+        '<!DOCTYPE html><html><head><meta charset="utf-8">'
+        '<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>'
+        '<style>'
+        '*{box-sizing:border-box;margin:0;padding:0}'
+        'body{font-family:Arial,sans-serif;font-size:13px;padding:4px}'
+        '.tab-btn{padding:6px 14px;border:none;background:none;border-radius:6px;font-size:13px;cursor:pointer;color:#6b7280}'
+        '.tab-btn:hover{background:#f3f4f6;color:#111}'
+        '.tab-btn.active{background:#eff6ff;color:#2563eb;font-weight:600}'
+        '.tab-bar{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px;border-bottom:1px solid #e5e7eb;padding-bottom:8px}'
+        '</style></head><body>'
+        f'<div class="tab-bar">{_btn_html}</div>'
+        '<div id="chart"></div>'
+        f'<script>var D={_djs_safe};var O={_opts_js};'
+        'document.querySelectorAll(".tab-btn").forEach(function(btn,i){'
+        'btn.addEventListener("click",function(){'
+        'document.querySelectorAll(".tab-btn").forEach(function(b){b.classList.remove("active")});'
+        'btn.classList.add("active");'
+        'Plotly.react("chart",D[O[i]].chart.data,D[O[i]].chart.layout,{responsive:true});'
+        '});});'
+        'var _b=document.querySelectorAll(".tab-btn");if(_b.length)_b[0].click();'
+        '</script></body></html>'
     )
-
-    # Add tenure legend on right side
-    add_tenure_legend(_fig, _current_newcomers, _current_emerging, _current_established, TENURE_COLORS)
-
-    _fig.update_layout(height=500)
-
-    mo.ui.plotly(_fig, config={"displayModeBar": False})
+    _src = _html_mod.escape(_inner, quote=True)
+    mo.Html(f'<iframe srcdoc="{_src}" style="width:100%;height:520px;border:none;display:block" scrolling="no"></iframe>')
     return
-
-
-@app.cell(hide_code=True)
-def chart3_controls(mo):
-    chart3_period = mo.ui.dropdown(
-        options=["YoY (2024 vs 2025)", "3-Year (2022 vs 2025)", "5-Year (2020 vs 2025)"],
-        value="YoY (2024 vs 2025)",
-        label="Comparison Period"
-    )
-
-    mo.hstack([chart3_period], gap=2)
-    return (chart3_period,)
 
 
 @app.cell(hide_code=True)
 def chart3_experienced_devs(
     TENURE_COLORS,
     apply_ec_style,
-    chart3_period,
     df_all,
     go,
     mo,
 ):
     """Chart 3: The Experienced Developer Story - Stacked area with comparison annotations"""
+    import json as _json
+    import html as _html_mod
 
-    # Filter to "All Web3 Ecosystems"
-    _df = df_all[df_all['ecosystem_name'] == 'All Web3 Ecosystems'].copy()
+    _OPTS = ['YoY (2024 vs 2025)', '3-Year (2022 vs 2025)', '5-Year (2020 vs 2025)']
 
-    # Calculate experienced devs (Emerging + Established)
-    _df['experienced'] = _df['emerging'] + _df['established']
-
-    # Determine comparison dates based on selection
     _period_map = {
-        "YoY (2024 vs 2025)": (2024, 2025, 1),
-        "3-Year (2022 vs 2025)": (2022, 2025, 3),
-        "5-Year (2020 vs 2025)": (2020, 2025, 5)
+        'YoY (2024 vs 2025)': (2024, 2025, 1),
+        '3-Year (2022 vs 2025)': (2022, 2025, 3),
+        '5-Year (2020 vs 2025)': (2020, 2025, 5),
     }
-    _start_year, _end_year, _years = _period_map[chart3_period.value]
 
-    # Get values at start and end of period
-    _start_df = _df[_df['year'] == _start_year]
-    _end_df = _df[_df['year'] == _end_year]
+    _df_base = df_all[df_all['ecosystem_name'] == 'All Web3 Ecosystems'].copy()
+    _df_base['experienced'] = _df_base['emerging'] + _df_base['established']
 
-    _start_row = _start_df.iloc[-1] if len(_start_df) > 0 else None
-    _end_row = _end_df.iloc[-1] if len(_end_df) > 0 else None
+    _states = {}
+    for _opt in _OPTS:
+        _df = _df_base.copy()
+        _start_year, _end_year, _years = _period_map[_opt]
 
-    if _start_row is not None and _end_row is not None:
-        _start_exp = _start_row['experienced']
-        _end_exp = _end_row['experienced']
-        _exp_change = _end_exp - _start_exp
-        _exp_change_pct = ((_end_exp - _start_exp) / _start_exp) * 100
-        _exp_color = "#27AE60" if _exp_change_pct > 0 else "#E74C3C"
-        _start_date = _start_row['day']
-        _end_date = _end_row['day']
-    else:
-        _start_exp = _end_exp = _exp_change = _exp_change_pct = 0
-        _exp_color = "#666"
-        _start_date = _end_date = _df['day'].max()
+        _start_df = _df[_df['year'] == _start_year]
+        _end_df = _df[_df['year'] == _end_year]
 
-    # Create stacked area chart (same as tenure composition)
-    _fig = go.Figure()
+        _start_row = _start_df.iloc[-1] if len(_start_df) > 0 else None
+        _end_row = _end_df.iloc[-1] if len(_end_df) > 0 else None
 
-    # Stack order: Established (bottom), Emerging (middle), Newcomers (top)
-    for _segment, _col in [("Established", "established"), ("Emerging", "emerging"), ("Newcomers", "newcomers")]:
-        _fig.add_trace(go.Scatter(
-            x=_df['day'],
-            y=_df[_col],
-            name=_segment,
-            mode='lines',
-            stackgroup='one',
-            fillcolor=TENURE_COLORS[_segment],
-            line=dict(width=0.5, color=TENURE_COLORS[_segment]),
-            hovertemplate=f'<b>{_segment}</b><br>%{{x|%b %Y}}<br>Developers: %{{y:,.0f}}<extra></extra>'
-        ))
+        if _start_row is not None and _end_row is not None:
+            _start_exp = _start_row['experienced']
+            _end_exp = _end_row['experienced']
+            _exp_change = _end_exp - _start_exp
+            _exp_change_pct = ((_end_exp - _start_exp) / _start_exp) * 100
+            _exp_color = "#27AE60" if _exp_change_pct > 0 else "#E74C3C"
+            _start_date = _start_row['day']
+            _end_date = _end_row['day']
+        else:
+            _start_exp = _end_exp = _exp_change = _exp_change_pct = 0
+            _exp_color = "#666"
+            _start_date = _end_date = _df['day'].max()
 
-    # Add vertical dashed lines for comparison period
-    _fig.add_vline(x=_start_date, line_dash="dash", line_color="#666", line_width=1)
-    _fig.add_vline(x=_end_date, line_dash="dash", line_color="#666", line_width=1)
+        _fig = go.Figure()
 
-    # Add shaded region between comparison dates
-    _fig.add_vrect(
-        x0=_start_date, x1=_end_date,
-        fillcolor="rgba(200, 200, 200, 0.1)",
-        line_width=0
-    )
+        for _segment, _col in [("Established", "established"), ("Emerging", "emerging"), ("Newcomers", "newcomers")]:
+            _fig.add_trace(go.Scatter(
+                x=_df['day'],
+                y=_df[_col],
+                name=_segment,
+                mode='lines',
+                stackgroup='one',
+                fillcolor=TENURE_COLORS[_segment],
+                line=dict(width=0.5, color=TENURE_COLORS[_segment]),
+                hovertemplate=f'<b>{_segment}</b><br>%{{x|%b %Y}}<br>Developers: %{{y:,.0f}}<extra></extra>'
+            ))
 
-    # Add comparison period label at top
-    _fig.add_annotation(
-        x=_start_date + (_end_date - _start_date) / 2,
-        y=1.02, yref="paper",
-        text=f"Dec {_start_year} - {_end_year}",
-        showarrow=False,
-        font=dict(size=11, color="#666")
-    )
+        _fig.add_vline(x=_start_date, line_dash="dash", line_color="#666", line_width=1)
+        _fig.add_vline(x=_end_date, line_dash="dash", line_color="#666", line_width=1)
 
-    apply_ec_style(
-        _fig,
-        title=f"Experienced devs (1+ years) grew by <span style='color:{_exp_color}'>{_exp_change_pct:+.0f}%</span> ({_exp_change:+,.0f}) in {_end_year}",
-        subtitle=f"This reflects an increase of {_exp_change:+,.0f} developers outside of Newcomers",
-        y_title="Developers",
-        show_legend=False,
-        right_margin=180
-    )
-
-    # Add legend on right with current values
-    _current = _df.iloc[-1]
-    _annotations_data = [
-        (0.88, "Newcomers", _current['newcomers'], "<1 year in crypto", TENURE_COLORS["Newcomers"]),
-        (0.58, "Emerging", _current['emerging'], "1-2 years in crypto", TENURE_COLORS["Emerging"]),
-        (0.28, "Established", _current['established'], "2+ years in crypto", TENURE_COLORS["Established"]),
-    ]
-
-    for _y, _label, _val, _desc, _color in _annotations_data:
-        _fig.add_annotation(
-            x=1.02, y=_y, xref="paper", yref="paper",
-            text=f"<span style='color:{_color}'>\u25CF</span> <b>{_label}</b><br><span style='font-size:10px;color:#666'>{_desc}</span>",
-            showarrow=False, font=dict(size=11), align="left", xanchor="left"
+        _fig.add_vrect(
+            x0=_start_date, x1=_end_date,
+            fillcolor="rgba(200, 200, 200, 0.1)",
+            line_width=0
         )
 
-    # Add point annotations for start/end experienced values
-    _fig.add_annotation(
-        x=_start_date, y=_start_exp,
-        text=f"{_start_exp:,.0f}",
-        showarrow=True, arrowhead=0, arrowcolor="#666",
-        ax=-30, ay=20,
-        font=dict(size=10, color="#666"),
-        bgcolor="white", borderpad=2
+        _fig.add_annotation(
+            x=_start_date + (_end_date - _start_date) / 2,
+            y=1.02, yref="paper",
+            text=f"Dec {_start_year} - {_end_year}",
+            showarrow=False,
+            font=dict(size=11, color="#666")
+        )
+
+        apply_ec_style(
+            _fig,
+            title=f"Experienced devs (1+ years) grew by <span style='color:{_exp_color}'>{_exp_change_pct:+.0f}%</span> ({_exp_change:+,.0f}) in {_end_year}",
+            subtitle=f"This reflects an increase of {_exp_change:+,.0f} developers outside of Newcomers",
+            y_title="Developers",
+            show_legend=False,
+            right_margin=180
+        )
+
+        _current = _df.iloc[-1]
+        _annotations_data = [
+            (0.88, "Newcomers", _current['newcomers'], "<1 year in crypto", TENURE_COLORS["Newcomers"]),
+            (0.58, "Emerging", _current['emerging'], "1-2 years in crypto", TENURE_COLORS["Emerging"]),
+            (0.28, "Established", _current['established'], "2+ years in crypto", TENURE_COLORS["Established"]),
+        ]
+
+        for _y, _label, _val, _desc, _color in _annotations_data:
+            _fig.add_annotation(
+                x=1.02, y=_y, xref="paper", yref="paper",
+                text=f"<span style='color:{_color}'>\u25CF</span> <b>{_label}</b><br><span style='font-size:10px;color:#666'>{_desc}</span>",
+                showarrow=False, font=dict(size=11), align="left", xanchor="left"
+            )
+
+        _fig.add_annotation(
+            x=_start_date, y=_start_exp,
+            text=f"{_start_exp:,.0f}",
+            showarrow=True, arrowhead=0, arrowcolor="#666",
+            ax=-30, ay=20,
+            font=dict(size=10, color="#666"),
+            bgcolor="white", borderpad=2
+        )
+
+        _fig.add_annotation(
+            x=_end_date, y=_end_exp,
+            text=f"<span style='color:{_exp_color}'>{_exp_change_pct:+.0f}%</span><br>{_exp_change:+,.0f} devs",
+            showarrow=True, arrowhead=0, arrowcolor=_exp_color,
+            ax=40, ay=-20,
+            font=dict(size=11),
+            bgcolor="white", bordercolor=_exp_color, borderwidth=1, borderpad=4
+        )
+
+        _fig.add_annotation(
+            x=_end_date, y=_end_exp,
+            text=f"{_end_exp:,.0f}",
+            showarrow=False,
+            yshift=-25,
+            font=dict(size=10, color="#666")
+        )
+
+        _fig.update_layout(height=500)
+
+        _states[_opt] = {'chart': _json.loads(_fig.to_json())}
+
+    _opts = list(_states.keys())
+    _djs_safe = _json.dumps(_states).replace('</', '<\\/')
+    _opts_js = _json.dumps(_opts)
+    _btn_html = ''.join(f'<button class="tab-btn" data-idx="{i}">{o}</button>' for i, o in enumerate(_opts))
+
+    _inner = (
+        '<!DOCTYPE html><html><head><meta charset="utf-8">'
+        '<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>'
+        '<style>'
+        '*{box-sizing:border-box;margin:0;padding:0}'
+        'body{font-family:Arial,sans-serif;font-size:13px;padding:4px}'
+        '.tab-btn{padding:6px 14px;border:none;background:none;border-radius:6px;font-size:13px;cursor:pointer;color:#6b7280}'
+        '.tab-btn:hover{background:#f3f4f6;color:#111}'
+        '.tab-btn.active{background:#eff6ff;color:#2563eb;font-weight:600}'
+        '.tab-bar{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px;border-bottom:1px solid #e5e7eb;padding-bottom:8px}'
+        '</style></head><body>'
+        f'<div class="tab-bar">{_btn_html}</div>'
+        '<div id="chart"></div>'
+        f'<script>var D={_djs_safe};var O={_opts_js};'
+        'document.querySelectorAll(".tab-btn").forEach(function(btn,i){'
+        'btn.addEventListener("click",function(){'
+        'document.querySelectorAll(".tab-btn").forEach(function(b){b.classList.remove("active")});'
+        'btn.classList.add("active");'
+        'Plotly.react("chart",D[O[i]].chart.data,D[O[i]].chart.layout,{responsive:true});'
+        '});});'
+        'var _b=document.querySelectorAll(".tab-btn");if(_b.length)_b[0].click();'
+        '</script></body></html>'
     )
-
-    _fig.add_annotation(
-        x=_end_date, y=_end_exp,
-        text=f"<span style='color:{_exp_color}'>{_exp_change_pct:+.0f}%</span><br>{_exp_change:+,.0f} devs",
-        showarrow=True, arrowhead=0, arrowcolor=_exp_color,
-        ax=40, ay=-20,
-        font=dict(size=11),
-        bgcolor="white", bordercolor=_exp_color, borderwidth=1, borderpad=4
-    )
-
-    _fig.add_annotation(
-        x=_end_date, y=_end_exp,
-        text=f"{_end_exp:,.0f}",
-        showarrow=False,
-        yshift=-25,
-        font=dict(size=10, color="#666")
-    )
-
-    _fig.update_layout(height=500)
-
-    mo.ui.plotly(_fig, config={"displayModeBar": False})
+    _src = _html_mod.escape(_inner, quote=True)
+    mo.Html(f'<iframe srcdoc="{_src}" style="width:100%;height:520px;border:none;display:block" scrolling="no"></iframe>')
     return
-
-
-@app.cell(hide_code=True)
-def chart4_controls(mo):
-    chart4_comparison = mo.ui.dropdown(
-        options=["2025 vs 2024", "2024 vs 2023", "2023 vs 2022", "2022 vs 2021"],
-        value="2025 vs 2024",
-        label="Comparison Period"
-    )
-
-    mo.hstack([chart4_comparison], gap=2)
-    return (chart4_comparison,)
 
 
 @app.cell(hide_code=True)
 def chart4_developer_changes(
     TENURE_COLORS,
     apply_ec_style,
-    chart4_comparison,
     df_all,
     go,
     mo,
 ):
     """Chart 4: Where Did Developers Go? - Multi-line chart with change annotations"""
+    import json as _json
+    import html as _html_mod
 
-    # Filter to "All Web3 Ecosystems"
-    _df = df_all[df_all['ecosystem_name'] == 'All Web3 Ecosystems'].copy()
+    _OPTS = ['2025 vs 2024', '2024 vs 2023', '2023 vs 2022', '2022 vs 2021']
 
-    # Parse comparison years
-    _years = chart4_comparison.value.split(" vs ")
-    _end_year = int(_years[0])
-    _start_year = int(_years[1])
+    _df_base = df_all[df_all['ecosystem_name'] == 'All Web3 Ecosystems'].copy()
 
-    # Get comparison values
-    _start_df = _df[_df['year'] == _start_year]
-    _end_df = _df[_df['year'] == _end_year]
+    _states = {}
+    for _opt in _OPTS:
+        _years_split = _opt.split(' vs ')
+        _end_year = int(_years_split[0])
+        _start_year = int(_years_split[1])
 
-    if len(_start_df) == 0 or len(_end_df) == 0:
-        _output = mo.md("*Insufficient data for selected comparison period*")
-    else:
+        _start_df = _df_base[_df_base['year'] == _start_year]
+        _end_df = _df_base[_df_base['year'] == _end_year]
+
+        if len(_start_df) == 0 or len(_end_df) == 0:
+            _fig = go.Figure()
+            _fig.add_annotation(
+                text="Insufficient data for selected comparison period",
+                xref="paper", yref="paper", x=0.5, y=0.5,
+                showarrow=False, font=dict(size=14, color="#666")
+            )
+            _states[_opt] = {'chart': _json.loads(_fig.to_json())}
+            continue
+
         _start_row = _start_df.iloc[-1]
         _end_row = _end_df.iloc[-1]
         _start_date = _start_row['day']
         _end_date = _end_row['day']
 
-        # Calculate changes
         _changes = {}
         for _seg in ['newcomers', 'emerging', 'established']:
             _s = _start_row[_seg]
@@ -728,13 +777,8 @@ def chart4_developer_changes(
                 'pct': ((_e - _s) / _s) * 100 if _s > 0 else 0
             }
 
-        # Find biggest decline for title
-        _min_seg = min(_changes.keys(), key=lambda k: _changes[k]['pct'])
-        _min_pct = _changes[_min_seg]['pct']
-
         _fig = go.Figure()
 
-        # Add each tenure segment as a separate line
         _segment_config = [
             ("Newcomers", "newcomers", TENURE_COLORS["Newcomers"]),
             ("Emerging", "emerging", TENURE_COLORS["Emerging"]),
@@ -743,19 +787,17 @@ def chart4_developer_changes(
 
         for _label, _col, _color in _segment_config:
             _fig.add_trace(go.Scatter(
-                x=_df['day'],
-                y=_df[_col],
+                x=_df_base['day'],
+                y=_df_base[_col],
                 name=_label,
                 mode='lines',
                 line=dict(width=2, color=_color),
                 hovertemplate=f'<b>{_label}</b><br>%{{x|%b %Y}}<br>Developers: %{{y:,.0f}}<extra></extra>'
             ))
 
-        # Add vertical dashed lines for comparison period
         _fig.add_vline(x=_start_date, line_dash="dash", line_color="#666", line_width=1)
         _fig.add_vline(x=_end_date, line_dash="dash", line_color="#666", line_width=1)
 
-        # Add comparison period label
         _fig.add_annotation(
             x=_start_date + (_end_date - _start_date) / 2,
             y=1.02, yref="paper",
@@ -773,8 +815,7 @@ def chart4_developer_changes(
             right_margin=180
         )
 
-        # Add change annotations on the right for each segment
-        _y_positions = [0.85, 0.50, 0.20]  # Approximate y positions
+        _y_positions = [0.85, 0.50, 0.20]
         for _i, (_label, _col, _color) in enumerate(_segment_config):
             _c = _changes[_col]
             _pct_color = "#27AE60" if _c['pct'] > 0 else "#E74C3C"
@@ -792,7 +833,6 @@ def chart4_developer_changes(
                 borderpad=6
             )
 
-        # Add point markers at comparison dates
         for _label, _col, _color in _segment_config:
             _fig.add_trace(go.Scatter(
                 x=[_start_date, _end_date],
@@ -803,7 +843,6 @@ def chart4_developer_changes(
                 hoverinfo='skip'
             ))
 
-        # Add value labels at start points
         for _label, _col, _color in _segment_config:
             _fig.add_annotation(
                 x=_start_date, y=_changes[_col]['start'],
@@ -815,9 +854,38 @@ def chart4_developer_changes(
 
         _fig.update_layout(height=500)
 
-        _output = mo.ui.plotly(_fig, config={"displayModeBar": False})
+        _states[_opt] = {'chart': _json.loads(_fig.to_json())}
 
-    _output
+    _opts = list(_states.keys())
+    _djs_safe = _json.dumps(_states).replace('</', '<\\/')
+    _opts_js = _json.dumps(_opts)
+    _btn_html = ''.join(f'<button class="tab-btn" data-idx="{i}">{o}</button>' for i, o in enumerate(_opts))
+
+    _inner = (
+        '<!DOCTYPE html><html><head><meta charset="utf-8">'
+        '<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>'
+        '<style>'
+        '*{box-sizing:border-box;margin:0;padding:0}'
+        'body{font-family:Arial,sans-serif;font-size:13px;padding:4px}'
+        '.tab-btn{padding:6px 14px;border:none;background:none;border-radius:6px;font-size:13px;cursor:pointer;color:#6b7280}'
+        '.tab-btn:hover{background:#f3f4f6;color:#111}'
+        '.tab-btn.active{background:#eff6ff;color:#2563eb;font-weight:600}'
+        '.tab-bar{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px;border-bottom:1px solid #e5e7eb;padding-bottom:8px}'
+        '</style></head><body>'
+        f'<div class="tab-bar">{_btn_html}</div>'
+        '<div id="chart"></div>'
+        f'<script>var D={_djs_safe};var O={_opts_js};'
+        'document.querySelectorAll(".tab-btn").forEach(function(btn,i){'
+        'btn.addEventListener("click",function(){'
+        'document.querySelectorAll(".tab-btn").forEach(function(b){b.classList.remove("active")});'
+        'btn.classList.add("active");'
+        'Plotly.react("chart",D[O[i]].chart.data,D[O[i]].chart.layout,{responsive:true});'
+        '});});'
+        'var _b=document.querySelectorAll(".tab-btn");if(_b.length)_b[0].click();'
+        '</script></body></html>'
+    )
+    _src = _html_mod.escape(_inner, quote=True)
+    mo.Html(f'<iframe srcdoc="{_src}" style="width:100%;height:520px;border:none;display:block" scrolling="no"></iframe>')
     return
 
 
@@ -831,90 +899,98 @@ def section_newcomer_trends(mo):
 
 
 @app.cell(hide_code=True)
-def chart5_controls(mo):
-    chart5_granularity = mo.ui.dropdown(
-        options=["Yearly", "Quarterly", "Monthly"],
-        value="Yearly",
-        label="Time Granularity"
-    )
-    chart5_range = mo.ui.dropdown(
-        options=["All Time", "Last 5 Years", "Last 3 Years"],
-        value="All Time",
-        label="Date Range"
-    )
-
-    mo.hstack([chart5_granularity, chart5_range], gap=2)
-    return chart5_granularity, chart5_range
-
-
-@app.cell(hide_code=True)
 def chart5_newcomer_volatility(
     EC_LIGHT_BLUE,
     apply_ec_style,
-    chart5_granularity,
-    chart5_range,
     df_all,
     go,
     mo,
     pd,
 ):
-    """Chart 5: Newcomer Volatility - Bar Chart by Year"""
+    """Chart 5: Newcomer Volatility - Bar Chart by Year (Yearly granularity, selectable time range)"""
+    import json as _json
+    import html as _html_mod
 
-    # Filter to "All Web3 Ecosystems"
-    _df = df_all[df_all['ecosystem_name'] == 'All Web3 Ecosystems'].copy()
+    _OPTS = ['All Time', 'Last 5 Years', 'Last 3 Years']
 
-    if chart5_range.value == "Last 5 Years":
-        _df = _df[_df['day'] >= pd.Timestamp('2020-01-01')]
-    elif chart5_range.value == "Last 3 Years":
-        _df = _df[_df['day'] >= pd.Timestamp('2022-01-01')]
+    _time_filters = {
+        'All Time': None,
+        'Last 5 Years': pd.Timestamp('2020-01-01'),
+        'Last 3 Years': pd.Timestamp('2022-01-01'),
+    }
 
-    # Aggregate by selected granularity (take max for rolling window data)
-    if chart5_granularity.value == "Yearly":
+    _states = {}
+    for _opt in _OPTS:
+        _df = df_all[df_all['ecosystem_name'] == 'All Web3 Ecosystems'].copy()
+        _cutoff = _time_filters[_opt]
+        if _cutoff is not None:
+            _df = _df[_df['day'] >= _cutoff]
+
         _df_agg = _df.groupby('year').agg({'newcomers': 'max'}).reset_index()
         _df_agg['label'] = _df_agg['year'].astype(int).astype(str)
         _x_vals = _df_agg['label']
-    elif chart5_granularity.value == "Quarterly":
-        _df_agg = _df.groupby('quarter').agg({'newcomers': 'max'}).reset_index()
-        _df_agg['label'] = _df_agg['quarter'].dt.strftime('%Y Q%q')
-        _x_vals = _df_agg['quarter']
-    else:  # Monthly
-        _df_agg = _df.groupby('month').agg({'newcomers': 'max'}).reset_index()
-        _df_agg['label'] = _df_agg['month'].dt.strftime('%b %Y')
-        _x_vals = _df_agg['month']
 
-    # Find peak year for subtitle
-    _peak_idx = _df_agg['newcomers'].idxmax()
-    _peak_year = _df_agg.loc[_peak_idx, 'label']
-    _peak_value = _df_agg.loc[_peak_idx, 'newcomers']
+        _peak_idx = _df_agg['newcomers'].idxmax()
+        _peak_year = _df_agg.loc[_peak_idx, 'label']
+        _peak_value = _df_agg.loc[_peak_idx, 'newcomers']
 
-    _fig = go.Figure()
+        _fig = go.Figure()
 
-    _fig.add_trace(go.Bar(
-        x=_x_vals,
-        y=_df_agg['newcomers'],
-        marker_color=EC_LIGHT_BLUE,
-        text=_df_agg['newcomers'].apply(lambda x: f'{x:,.0f}'),
-        textposition='outside',
-        textfont=dict(size=10, color="#666"),
-        hovertemplate='<b>%{x}</b><br>Newcomers: %{y:,.0f}<extra></extra>'
-    ))
+        _fig.add_trace(go.Bar(
+            x=_x_vals,
+            y=_df_agg['newcomers'],
+            marker_color=EC_LIGHT_BLUE,
+            text=_df_agg['newcomers'].apply(lambda x: f'{x:,.0f}'),
+            textposition='outside',
+            textfont=dict(size=10, color="#666"),
+            hovertemplate='<b>%{x}</b><br>Newcomers: %{y:,.0f}<extra></extra>'
+        ))
 
-    apply_ec_style(
-        _fig,
-        title="Newcomers tend to follow crypto asset price appreciation",
-        subtitle=f"{_peak_value:,.0f} developers joined crypto in {_peak_year}",
-        y_title="Developers",
-        show_legend=False,
-        right_margin=60  # Less margin needed for bar charts
+        apply_ec_style(
+            _fig,
+            title="Newcomers tend to follow crypto asset price appreciation",
+            subtitle=f"{_peak_value:,.0f} developers joined crypto in {_peak_year}",
+            y_title="Developers",
+            show_legend=False,
+            right_margin=60
+        )
+
+        _max_val = _df_agg['newcomers'].max()
+        _fig.update_yaxes(range=[0, _max_val * 1.15])
+        _fig.update_layout(height=450)
+
+        _states[_opt] = {'chart': _json.loads(_fig.to_json())}
+
+    _opts = list(_states.keys())
+    _djs_safe = _json.dumps(_states).replace('</', '<\\/')
+    _opts_js = _json.dumps(_opts)
+    _btn_html = ''.join(f'<button class="tab-btn" data-idx="{i}">{o}</button>' for i, o in enumerate(_opts))
+
+    _inner = (
+        '<!DOCTYPE html><html><head><meta charset="utf-8">'
+        '<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>'
+        '<style>'
+        '*{box-sizing:border-box;margin:0;padding:0}'
+        'body{font-family:Arial,sans-serif;font-size:13px;padding:4px}'
+        '.tab-btn{padding:6px 14px;border:none;background:none;border-radius:6px;font-size:13px;cursor:pointer;color:#6b7280}'
+        '.tab-btn:hover{background:#f3f4f6;color:#111}'
+        '.tab-btn.active{background:#eff6ff;color:#2563eb;font-weight:600}'
+        '.tab-bar{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px;border-bottom:1px solid #e5e7eb;padding-bottom:8px}'
+        '</style></head><body>'
+        f'<div class="tab-bar">{_btn_html}</div>'
+        '<div id="chart"></div>'
+        f'<script>var D={_djs_safe};var O={_opts_js};'
+        'document.querySelectorAll(".tab-btn").forEach(function(btn,i){'
+        'btn.addEventListener("click",function(){'
+        'document.querySelectorAll(".tab-btn").forEach(function(b){b.classList.remove("active")});'
+        'btn.classList.add("active");'
+        'Plotly.react("chart",D[O[i]].chart.data,D[O[i]].chart.layout,{responsive:true});'
+        '});});'
+        'var _b=document.querySelectorAll(".tab-btn");if(_b.length)_b[0].click();'
+        '</script></body></html>'
     )
-
-    # Adjust y-axis to fit text labels above bars
-    _max_val = _df_agg['newcomers'].max()
-    _fig.update_yaxes(range=[0, _max_val * 1.15])
-
-    _fig.update_layout(height=450)
-
-    mo.ui.plotly(_fig, config={"displayModeBar": False})
+    _src = _html_mod.escape(_inner, quote=True)
+    mo.Html(f'<iframe srcdoc="{_src}" style="width:100%;height:520px;border:none;display:block" scrolling="no"></iframe>')
     return
 
 
@@ -928,153 +1004,164 @@ def section_ecosystem_landscape(mo):
 
 
 @app.cell(hide_code=True)
-def chart6_controls(mo):
-    chart6_view = mo.ui.dropdown(
-        options=["Percentage (Stacked)", "Absolute Counts"],
-        value="Percentage (Stacked)",
-        label="View Type"
-    )
-
-    chart6_time_range = mo.ui.dropdown(
-        options=["All Time", "Last 5 Years", "Last 3 Years", "Last Year"],
-        value="All Time",
-        label="Time Range"
-    )
-
-    mo.hstack([chart6_view, chart6_time_range], gap=2)
-    return chart6_time_range, chart6_view
-
-
-@app.cell(hide_code=True)
 def chart6_btc_eth_share(
     apply_ec_style,
-    chart6_time_range,
-    chart6_view,
     df_all,
     go,
     mo,
     pd,
 ):
-    """Chart 6: Developer Distribution - 100% stacked area showing ecosystem breakdown"""
+    """Chart 6: Developer Distribution - tabs for view type, sub-tabs for time range"""
+    import json as _json
+    import html as _html_mod
 
-    # Get all ecosystem data
+    # Tabs: view type x time range combined as "View | Time"
+    _VIEW_OPTS = ['Percentage (Stacked)', 'Absolute Counts']
+    _TIME_OPTS = ['All Time', 'Last 5 Years', 'Last 3 Years', 'Last Year']
+
+    _time_filters = {
+        'All Time': None,
+        'Last 5 Years': pd.Timestamp('2020-01-01'),
+        'Last 3 Years': pd.Timestamp('2022-01-01'),
+        'Last Year': pd.Timestamp('2024-01-01'),
+    }
+
+    # Build base merged dataframe
     _df_total = df_all[df_all['ecosystem_name'] == 'All Web3 Ecosystems'].copy()
     _df_btc = df_all[df_all['ecosystem_name'] == 'Bitcoin'].copy()
     _df_eth = df_all[df_all['ecosystem_name'] == 'Ethereum'].copy()
     _df_sol = df_all[df_all['ecosystem_name'] == 'Solana'].copy()
 
-    # Merge on day
-    _df = _df_total[['day', 'total_devs']].rename(columns={'total_devs': 'total'})
-    _df = _df.merge(_df_btc[['day', 'total_devs']].rename(columns={'total_devs': 'bitcoin'}), on='day', how='left')
-    _df = _df.merge(_df_eth[['day', 'total_devs']].rename(columns={'total_devs': 'ethereum'}), on='day', how='left')
-    _df = _df.merge(_df_sol[['day', 'total_devs']].rename(columns={'total_devs': 'solana'}), on='day', how='left')
+    _df_merged = _df_total[['day', 'total_devs']].rename(columns={'total_devs': 'total'})
+    _df_merged = _df_merged.merge(_df_btc[['day', 'total_devs']].rename(columns={'total_devs': 'bitcoin'}), on='day', how='left')
+    _df_merged = _df_merged.merge(_df_eth[['day', 'total_devs']].rename(columns={'total_devs': 'ethereum'}), on='day', how='left')
+    _df_merged = _df_merged.merge(_df_sol[['day', 'total_devs']].rename(columns={'total_devs': 'solana'}), on='day', how='left')
+    _df_merged = _df_merged.fillna(0)
+    _df_merged['other'] = (_df_merged['total'] - _df_merged['bitcoin'] - _df_merged['ethereum'] - _df_merged['solana']).clip(lower=0)
+    _df_merged['btc_pct'] = (_df_merged['bitcoin'] / _df_merged['total']) * 100
+    _df_merged['eth_pct'] = (_df_merged['ethereum'] / _df_merged['total']) * 100
+    _df_merged['sol_pct'] = (_df_merged['solana'] / _df_merged['total']) * 100
+    _df_merged['other_pct'] = (_df_merged['other'] / _df_merged['total']) * 100
 
-    # Fill NaN with 0
-    _df = _df.fillna(0)
+    _btc_color = "#F7931A"
+    _eth_color = "#627EEA"
+    _sol_color = "#14F195"
+    _other_color = "#9CA3AF"
 
-    # Calculate "Other" ecosystems (total minus known)
-    _df['other'] = _df['total'] - _df['bitcoin'] - _df['ethereum'] - _df['solana']
-    _df['other'] = _df['other'].clip(lower=0)  # Ensure non-negative
+    # Combine view + time range into a single tab key: "Percentage | All Time" etc.
+    _OPTS = [f'{v} | {t}' for v in _VIEW_OPTS for t in _TIME_OPTS]
 
-    # Calculate percentages
-    _df['btc_pct'] = (_df['bitcoin'] / _df['total']) * 100
-    _df['eth_pct'] = (_df['ethereum'] / _df['total']) * 100
-    _df['sol_pct'] = (_df['solana'] / _df['total']) * 100
-    _df['other_pct'] = (_df['other'] / _df['total']) * 100
+    _states = {}
+    for _opt in _OPTS:
+        _view, _time_key = _opt.split(' | ', 1)
+        _df = _df_merged.copy()
+        _cutoff = _time_filters[_time_key]
+        if _cutoff is not None:
+            _df = _df[_df['day'] >= _cutoff]
 
-    # Apply time filter
-    if chart6_time_range.value == "Last 5 Years":
-        _df = _df[_df['day'] >= pd.Timestamp('2020-01-01')]
-    elif chart6_time_range.value == "Last 3 Years":
-        _df = _df[_df['day'] >= pd.Timestamp('2022-01-01')]
-    elif chart6_time_range.value == "Last Year":
-        _df = _df[_df['day'] >= pd.Timestamp('2024-01-01')]
+        _current = _df.iloc[-1]
+        _btc_eth_share = _current['btc_pct'] + _current['eth_pct']
 
-    # Colors matching EC style
-    _btc_color = "#F7931A"   # Bitcoin orange
-    _eth_color = "#627EEA"   # Ethereum purple/blue
-    _sol_color = "#14F195"   # Solana green
-    _other_color = "#9CA3AF" # Gray for other
+        _fig = go.Figure()
 
-    _fig = go.Figure()
+        if _view == 'Percentage (Stacked)':
+            _segments = [
+                ("Other ecosystems", "other_pct", _other_color),
+                ("Solana", "sol_pct", _sol_color),
+                ("Ethereum", "eth_pct", _eth_color),
+                ("Bitcoin", "btc_pct", _btc_color),
+            ]
+            for _name, _col, _color in _segments:
+                _current_val = _current[_col]
+                _fig.add_trace(go.Scatter(
+                    x=_df['day'],
+                    y=_df[_col],
+                    name=f"{_name} ({_current_val:.0f}%)",
+                    mode='lines',
+                    stackgroup='one',
+                    groupnorm='percent',
+                    fillcolor=_color,
+                    line=dict(width=0.5, color=_color),
+                    hovertemplate=f'<b>{_name}</b><br>%{{x|%b %Y}}<br>Share: %{{y:.1f}}%<extra></extra>'
+                ))
+            _fig.update_yaxes(range=[0, 100], ticksuffix="%")
+            _y_title = "% of Developers"
+        else:
+            _segments = [
+                ("Other ecosystems", "other", _other_color),
+                ("Solana", "solana", _sol_color),
+                ("Ethereum", "ethereum", _eth_color),
+                ("Bitcoin", "bitcoin", _btc_color),
+            ]
+            for _name, _col, _color in _segments:
+                _current_val = _current[_col]
+                _fig.add_trace(go.Scatter(
+                    x=_df['day'],
+                    y=_df[_col],
+                    name=f"{_name} ({_current_val:,.0f})",
+                    mode='lines',
+                    stackgroup='one',
+                    fillcolor=_color,
+                    line=dict(width=0.5, color=_color),
+                    hovertemplate=f'<b>{_name}</b><br>%{{x|%b %Y}}<br>Developers: %{{y:,.0f}}<extra></extra>'
+                ))
+            _y_title = "Developers"
 
-    # Current shares for legend
-    _current = _df.iloc[-1]
-    _btc_eth_share = _current['btc_pct'] + _current['eth_pct']
-
-    if chart6_view.value == "Percentage (Stacked)":
-        # 100% stacked area chart
-        # Stack from bottom: Other, Solana, Ethereum, Bitcoin (so BTC+ETH are at top)
-        _segments = [
-            ("Other ecosystems", "other_pct", _other_color),
-            ("Solana", "sol_pct", _sol_color),
-            ("Ethereum", "eth_pct", _eth_color),
-            ("Bitcoin", "btc_pct", _btc_color),
-        ]
-
-        for _name, _col, _color in _segments:
-            _current_val = _current[_col]
-            _fig.add_trace(go.Scatter(
-                x=_df['day'],
-                y=_df[_col],
-                name=f"{_name} ({_current_val:.0f}%)",
-                mode='lines',
-                stackgroup='one',
-                groupnorm='percent',
-                fillcolor=_color,
-                line=dict(width=0.5, color=_color),
-                hovertemplate=f'<b>{_name}</b><br>%{{x|%b %Y}}<br>Share: %{{y:.1f}}%<extra></extra>'
-            ))
-
-        _fig.update_yaxes(range=[0, 100], ticksuffix="%")
-
-    else:
-        # Absolute counts stacked
-        _segments = [
-            ("Other ecosystems", "other", _other_color),
-            ("Solana", "solana", _sol_color),
-            ("Ethereum", "ethereum", _eth_color),
-            ("Bitcoin", "bitcoin", _btc_color),
-        ]
-
-        for _name, _col, _color in _segments:
-            _current_val = _current[_col]
-            _fig.add_trace(go.Scatter(
-                x=_df['day'],
-                y=_df[_col],
-                name=f"{_name} ({_current_val:,.0f})",
-                mode='lines',
-                stackgroup='one',
-                fillcolor=_color,
-                line=dict(width=0.5, color=_color),
-                hovertemplate=f'<b>{_name}</b><br>%{{x|%b %Y}}<br>Developers: %{{y:,.0f}}<extra></extra>'
-            ))
-
-    apply_ec_style(
-        _fig,
-        title=f"Bitcoin and Ethereum account for {_btc_eth_share:.0f}% of all crypto developers",
-        subtitle="Monthly active developers by ecosystem",
-        y_title="% of Developers" if chart6_view.value == "Percentage (Stacked)" else "Developers",
-        show_legend=True,
-        right_margin=60
-    )
-
-    # Move legend to right side, vertical
-    _fig.update_layout(
-        height=500,
-        legend=dict(
-            orientation="v",
-            yanchor="middle",
-            y=0.5,
-            xanchor="left",
-            x=1.02,
-            bgcolor="rgba(255,255,255,0.9)",
-            bordercolor="#CCCCCC",
-            borderwidth=1
+        apply_ec_style(
+            _fig,
+            title=f"Bitcoin and Ethereum account for {_btc_eth_share:.0f}% of all crypto developers",
+            subtitle="Monthly active developers by ecosystem",
+            y_title=_y_title,
+            show_legend=True,
+            right_margin=60
         )
-    )
 
-    mo.ui.plotly(_fig, config={"displayModeBar": False})
+        _fig.update_layout(
+            height=500,
+            legend=dict(
+                orientation="v",
+                yanchor="middle",
+                y=0.5,
+                xanchor="left",
+                x=1.02,
+                bgcolor="rgba(255,255,255,0.9)",
+                bordercolor="#CCCCCC",
+                borderwidth=1
+            )
+        )
+
+        _states[_opt] = {'chart': _json.loads(_fig.to_json())}
+
+    _opts = list(_states.keys())
+    _djs_safe = _json.dumps(_states).replace('</', '<\\/')
+    _opts_js = _json.dumps(_opts)
+    _btn_html = ''.join(f'<button class="tab-btn" data-idx="{i}">{o}</button>' for i, o in enumerate(_opts))
+
+    _inner = (
+        '<!DOCTYPE html><html><head><meta charset="utf-8">'
+        '<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>'
+        '<style>'
+        '*{box-sizing:border-box;margin:0;padding:0}'
+        'body{font-family:Arial,sans-serif;font-size:13px;padding:4px}'
+        '.tab-btn{padding:6px 14px;border:none;background:none;border-radius:6px;font-size:13px;cursor:pointer;color:#6b7280}'
+        '.tab-btn:hover{background:#f3f4f6;color:#111}'
+        '.tab-btn.active{background:#eff6ff;color:#2563eb;font-weight:600}'
+        '.tab-bar{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px;border-bottom:1px solid #e5e7eb;padding-bottom:8px}'
+        '</style></head><body>'
+        f'<div class="tab-bar">{_btn_html}</div>'
+        '<div id="chart"></div>'
+        f'<script>var D={_djs_safe};var O={_opts_js};'
+        'document.querySelectorAll(".tab-btn").forEach(function(btn,i){'
+        'btn.addEventListener("click",function(){'
+        'document.querySelectorAll(".tab-btn").forEach(function(b){b.classList.remove("active")});'
+        'btn.classList.add("active");'
+        'Plotly.react("chart",D[O[i]].chart.data,D[O[i]].chart.layout,{responsive:true});'
+        '});});'
+        'var _b=document.querySelectorAll(".tab-btn");if(_b.length)_b[0].click();'
+        '</script></body></html>'
+    )
+    _src = _html_mod.escape(_inner, quote=True)
+    mo.Html(f'<iframe srcdoc="{_src}" style="width:100%;height:520px;border:none;display:block" scrolling="no"></iframe>')
     return
 
 
@@ -1088,84 +1175,46 @@ def section_ecosystem_deep_dive(mo):
 
 
 @app.cell(hide_code=True)
-def ecosystem_selector(SUPPORTED_ECOSYSTEMS, mo):
-    ecosystem_dropdown = mo.ui.dropdown(
-        options=SUPPORTED_ECOSYSTEMS,
-        value="Ethereum",
-        label="Select Ecosystem"
-    )
-
-    ecosystem_time_range = mo.ui.dropdown(
-        options=["All Time", "Last 5 Years", "Last 3 Years", "Last Year"],
-        value="All Time",
-        label="Time Range"
-    )
-
-    mo.hstack([ecosystem_dropdown, ecosystem_time_range], gap=2)
-    return ecosystem_dropdown, ecosystem_time_range
-
-
-@app.cell(hide_code=True)
-def ecosystem_header(df_all, ecosystem_dropdown, mo, pd):
-    """Display ecosystem header with key stats."""
-
-    _eco_name = ecosystem_dropdown.value
-    _df_eco = df_all[df_all['ecosystem_name'] == _eco_name].copy()
-
-    if len(_df_eco) == 0:
-        _output = mo.md(f"## {_eco_name}\n\n*No data available*")
-    else:
-        _current_row = _df_eco[_df_eco['day'] == _df_eco['day'].max()].iloc[0]
-        _current_devs = _current_row['total_devs']
-        _current_date = _current_row['day']
-
-        _year_ago = _current_date - pd.DateOffset(years=1)
-        _year_ago_df = _df_eco[_df_eco['day'] <= _year_ago]
-        if len(_year_ago_df) > 0:
-            _year_ago_devs = _year_ago_df.iloc[-1]['total_devs']
-            _yoy_pct = ((_current_devs - _year_ago_devs) / _year_ago_devs) * 100
-            _yoy_str = f"{_yoy_pct:+.1f}%"
-            _yoy_color = "green" if _yoy_pct > 0 else "red"
-        else:
-            _yoy_str = "N/A"
-            _yoy_color = "gray"
-
-        _output = mo.md(f"""
-    ## {_eco_name}
-
-    **{_current_devs:,.0f}** monthly active developers ({_current_date.strftime('%B %Y')}) · <span style="color: {_yoy_color}">{_yoy_str} YoY</span>
-    """)
-
-    _output
-    return
-
-
-@app.cell(hide_code=True)
 def chart_ecosystem_total_devs(
     EC_LIGHT_BLUE,
     add_callout_annotation,
     apply_ec_style,
     df_all,
-    ecosystem_dropdown,
-    ecosystem_time_range,
     go,
     mo,
     pd,
 ):
-    """Deep Dive Chart 1: Ecosystem Total Active Developers"""
+    """Deep Dive Chart 1: Ecosystem Total Active Developers — tabs: ecosystem x time range"""
+    import json as _json
+    import html as _html_mod
 
-    _eco_name = ecosystem_dropdown.value
-    _df = df_all[df_all['ecosystem_name'] == _eco_name].copy()
+    _ECO_OPTS = ['Bitcoin', 'Ethereum', 'Solana']
+    _TIME_OPTS = ['All Time', 'Last 5 Years', 'Last 3 Years', 'Last Year']
 
-    if len(_df) == 0:
-        _output = mo.md("*No data available for this ecosystem*")
-    else:
-        if ecosystem_time_range.value == "Last 5 Years":
-            _df = _df[_df['day'] >= pd.Timestamp('2020-01-01')]
-        elif ecosystem_time_range.value == "Last 3 Years":
-            _df = _df[_df['day'] >= pd.Timestamp('2022-01-01')]
-        elif ecosystem_time_range.value == "Last Year":
-            _df = _df[_df['day'] >= pd.Timestamp('2024-01-01')]
+    _time_filters = {
+        'All Time': None,
+        'Last 5 Years': pd.Timestamp('2020-01-01'),
+        'Last 3 Years': pd.Timestamp('2022-01-01'),
+        'Last Year': pd.Timestamp('2024-01-01'),
+    }
+
+    _OPTS = [f'{e} | {t}' for e in _ECO_OPTS for t in _TIME_OPTS]
+
+    _states = {}
+    for _opt in _OPTS:
+        _eco_name, _time_key = _opt.split(' | ', 1)
+        _df = df_all[df_all['ecosystem_name'] == _eco_name].copy()
+
+        if len(_df) == 0:
+            _fig = go.Figure()
+            _fig.add_annotation(text="No data available", xref="paper", yref="paper",
+                                x=0.5, y=0.5, showarrow=False, font=dict(size=14, color="#666"))
+            _states[_opt] = {'chart': _json.loads(_fig.to_json())}
+            continue
+
+        _cutoff = _time_filters[_time_key]
+        if _cutoff is not None:
+            _df = _df[_df['day'] >= _cutoff]
 
         _current_row = _df.iloc[-1]
         _current_devs = _current_row['total_devs']
@@ -1202,9 +1251,38 @@ def chart_ecosystem_total_devs(
 
         _fig.update_layout(height=450)
 
-        _output = mo.ui.plotly(_fig, config={"displayModeBar": False})
+        _states[_opt] = {'chart': _json.loads(_fig.to_json())}
 
-    _output
+    _opts = list(_states.keys())
+    _djs_safe = _json.dumps(_states).replace('</', '<\\/')
+    _opts_js = _json.dumps(_opts)
+    _btn_html = ''.join(f'<button class="tab-btn" data-idx="{i}">{o}</button>' for i, o in enumerate(_opts))
+
+    _inner = (
+        '<!DOCTYPE html><html><head><meta charset="utf-8">'
+        '<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>'
+        '<style>'
+        '*{box-sizing:border-box;margin:0;padding:0}'
+        'body{font-family:Arial,sans-serif;font-size:13px;padding:4px}'
+        '.tab-btn{padding:6px 14px;border:none;background:none;border-radius:6px;font-size:13px;cursor:pointer;color:#6b7280}'
+        '.tab-btn:hover{background:#f3f4f6;color:#111}'
+        '.tab-btn.active{background:#eff6ff;color:#2563eb;font-weight:600}'
+        '.tab-bar{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px;border-bottom:1px solid #e5e7eb;padding-bottom:8px}'
+        '</style></head><body>'
+        f'<div class="tab-bar">{_btn_html}</div>'
+        '<div id="chart"></div>'
+        f'<script>var D={_djs_safe};var O={_opts_js};'
+        'document.querySelectorAll(".tab-btn").forEach(function(btn,i){'
+        'btn.addEventListener("click",function(){'
+        'document.querySelectorAll(".tab-btn").forEach(function(b){b.classList.remove("active")});'
+        'btn.classList.add("active");'
+        'Plotly.react("chart",D[O[i]].chart.data,D[O[i]].chart.layout,{responsive:true});'
+        '});});'
+        'var _b=document.querySelectorAll(".tab-btn");if(_b.length)_b[0].click();'
+        '</script></body></html>'
+    )
+    _src = _html_mod.escape(_inner, quote=True)
+    mo.Html(f'<iframe srcdoc="{_src}" style="width:100%;height:520px;border:none;display:block" scrolling="no"></iframe>')
     return
 
 
@@ -1214,26 +1292,41 @@ def chart_ecosystem_tenure(
     add_tenure_legend,
     apply_ec_style,
     df_all,
-    ecosystem_dropdown,
-    ecosystem_time_range,
     go,
     mo,
     pd,
 ):
     """Deep Dive Chart 2: Ecosystem Developer Composition by Tenure"""
+    import json as _json
+    import html as _html_mod
 
-    _eco_name = ecosystem_dropdown.value
-    _df = df_all[df_all['ecosystem_name'] == _eco_name].copy()
+    _ECO_OPTS = ['Bitcoin', 'Ethereum', 'Solana']
+    _TIME_OPTS = ['All Time', 'Last 5 Years', 'Last 3 Years', 'Last Year']
 
-    if len(_df) == 0:
-        _output = mo.md("*No data available*")
-    else:
-        if ecosystem_time_range.value == "Last 5 Years":
-            _df = _df[_df['day'] >= pd.Timestamp('2020-01-01')]
-        elif ecosystem_time_range.value == "Last 3 Years":
-            _df = _df[_df['day'] >= pd.Timestamp('2022-01-01')]
-        elif ecosystem_time_range.value == "Last Year":
-            _df = _df[_df['day'] >= pd.Timestamp('2024-01-01')]
+    _time_filters = {
+        'All Time': None,
+        'Last 5 Years': pd.Timestamp('2020-01-01'),
+        'Last 3 Years': pd.Timestamp('2022-01-01'),
+        'Last Year': pd.Timestamp('2024-01-01'),
+    }
+
+    _OPTS = [f'{e} | {t}' for e in _ECO_OPTS for t in _TIME_OPTS]
+
+    _states = {}
+    for _opt in _OPTS:
+        _eco_name, _time_key = _opt.split(' | ', 1)
+        _df = df_all[df_all['ecosystem_name'] == _eco_name].copy()
+
+        if len(_df) == 0:
+            _fig = go.Figure()
+            _fig.add_annotation(text="No data available", xref="paper", yref="paper",
+                                x=0.5, y=0.5, showarrow=False, font=dict(size=14, color="#666"))
+            _states[_opt] = {'chart': _json.loads(_fig.to_json())}
+            continue
+
+        _cutoff = _time_filters[_time_key]
+        if _cutoff is not None:
+            _df = _df[_df['day'] >= _cutoff]
 
         _fig = go.Figure()
 
@@ -1264,9 +1357,38 @@ def chart_ecosystem_tenure(
 
         _fig.update_layout(height=450)
 
-        _output = mo.ui.plotly(_fig, config={"displayModeBar": False})
+        _states[_opt] = {'chart': _json.loads(_fig.to_json())}
 
-    _output
+    _opts = list(_states.keys())
+    _djs_safe = _json.dumps(_states).replace('</', '<\\/')
+    _opts_js = _json.dumps(_opts)
+    _btn_html = ''.join(f'<button class="tab-btn" data-idx="{i}">{o}</button>' for i, o in enumerate(_opts))
+
+    _inner = (
+        '<!DOCTYPE html><html><head><meta charset="utf-8">'
+        '<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>'
+        '<style>'
+        '*{box-sizing:border-box;margin:0;padding:0}'
+        'body{font-family:Arial,sans-serif;font-size:13px;padding:4px}'
+        '.tab-btn{padding:6px 14px;border:none;background:none;border-radius:6px;font-size:13px;cursor:pointer;color:#6b7280}'
+        '.tab-btn:hover{background:#f3f4f6;color:#111}'
+        '.tab-btn.active{background:#eff6ff;color:#2563eb;font-weight:600}'
+        '.tab-bar{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px;border-bottom:1px solid #e5e7eb;padding-bottom:8px}'
+        '</style></head><body>'
+        f'<div class="tab-bar">{_btn_html}</div>'
+        '<div id="chart"></div>'
+        f'<script>var D={_djs_safe};var O={_opts_js};'
+        'document.querySelectorAll(".tab-btn").forEach(function(btn,i){'
+        'btn.addEventListener("click",function(){'
+        'document.querySelectorAll(".tab-btn").forEach(function(b){b.classList.remove("active")});'
+        'btn.classList.add("active");'
+        'Plotly.react("chart",D[O[i]].chart.data,D[O[i]].chart.layout,{responsive:true});'
+        '});});'
+        'var _b=document.querySelectorAll(".tab-btn");if(_b.length)_b[0].click();'
+        '</script></body></html>'
+    )
+    _src = _html_mod.escape(_inner, quote=True)
+    mo.Html(f'<iframe srcdoc="{_src}" style="width:100%;height:520px;border:none;display:block" scrolling="no"></iframe>')
     return
 
 
@@ -1275,26 +1397,41 @@ def chart_ecosystem_activity(
     ACTIVITY_COLORS,
     apply_ec_style,
     df_all,
-    ecosystem_dropdown,
-    ecosystem_time_range,
     go,
     mo,
     pd,
 ):
     """Deep Dive Chart 3: Ecosystem Activity Levels"""
+    import json as _json
+    import html as _html_mod
 
-    _eco_name = ecosystem_dropdown.value
-    _df = df_all[df_all['ecosystem_name'] == _eco_name].copy()
+    _ECO_OPTS = ['Bitcoin', 'Ethereum', 'Solana']
+    _TIME_OPTS = ['All Time', 'Last 5 Years', 'Last 3 Years', 'Last Year']
 
-    if len(_df) == 0:
-        _output = mo.md("*No data available*")
-    else:
-        if ecosystem_time_range.value == "Last 5 Years":
-            _df = _df[_df['day'] >= pd.Timestamp('2020-01-01')]
-        elif ecosystem_time_range.value == "Last 3 Years":
-            _df = _df[_df['day'] >= pd.Timestamp('2022-01-01')]
-        elif ecosystem_time_range.value == "Last Year":
-            _df = _df[_df['day'] >= pd.Timestamp('2024-01-01')]
+    _time_filters = {
+        'All Time': None,
+        'Last 5 Years': pd.Timestamp('2020-01-01'),
+        'Last 3 Years': pd.Timestamp('2022-01-01'),
+        'Last Year': pd.Timestamp('2024-01-01'),
+    }
+
+    _OPTS = [f'{e} | {t}' for e in _ECO_OPTS for t in _TIME_OPTS]
+
+    _states = {}
+    for _opt in _OPTS:
+        _eco_name, _time_key = _opt.split(' | ', 1)
+        _df = df_all[df_all['ecosystem_name'] == _eco_name].copy()
+
+        if len(_df) == 0:
+            _fig = go.Figure()
+            _fig.add_annotation(text="No data available", xref="paper", yref="paper",
+                                x=0.5, y=0.5, showarrow=False, font=dict(size=14, color="#666"))
+            _states[_opt] = {'chart': _json.loads(_fig.to_json())}
+            continue
+
+        _cutoff = _time_filters[_time_key]
+        if _cutoff is not None:
+            _df = _df[_df['day'] >= _cutoff]
 
         _fig = go.Figure()
 
@@ -1319,9 +1456,38 @@ def chart_ecosystem_activity(
 
         _fig.update_layout(height=450)
 
-        _output = mo.ui.plotly(_fig, config={"displayModeBar": False})
+        _states[_opt] = {'chart': _json.loads(_fig.to_json())}
 
-    _output
+    _opts = list(_states.keys())
+    _djs_safe = _json.dumps(_states).replace('</', '<\\/')
+    _opts_js = _json.dumps(_opts)
+    _btn_html = ''.join(f'<button class="tab-btn" data-idx="{i}">{o}</button>' for i, o in enumerate(_opts))
+
+    _inner = (
+        '<!DOCTYPE html><html><head><meta charset="utf-8">'
+        '<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>'
+        '<style>'
+        '*{box-sizing:border-box;margin:0;padding:0}'
+        'body{font-family:Arial,sans-serif;font-size:13px;padding:4px}'
+        '.tab-btn{padding:6px 14px;border:none;background:none;border-radius:6px;font-size:13px;cursor:pointer;color:#6b7280}'
+        '.tab-btn:hover{background:#f3f4f6;color:#111}'
+        '.tab-btn.active{background:#eff6ff;color:#2563eb;font-weight:600}'
+        '.tab-bar{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px;border-bottom:1px solid #e5e7eb;padding-bottom:8px}'
+        '</style></head><body>'
+        f'<div class="tab-bar">{_btn_html}</div>'
+        '<div id="chart"></div>'
+        f'<script>var D={_djs_safe};var O={_opts_js};'
+        'document.querySelectorAll(".tab-btn").forEach(function(btn,i){'
+        'btn.addEventListener("click",function(){'
+        'document.querySelectorAll(".tab-btn").forEach(function(b){b.classList.remove("active")});'
+        'btn.classList.add("active");'
+        'Plotly.react("chart",D[O[i]].chart.data,D[O[i]].chart.layout,{responsive:true});'
+        '});});'
+        'var _b=document.querySelectorAll(".tab-btn");if(_b.length)_b[0].click();'
+        '</script></body></html>'
+    )
+    _src = _html_mod.escape(_inner, quote=True)
+    mo.Html(f'<iframe srcdoc="{_src}" style="width:100%;height:520px;border:none;display:block" scrolling="no"></iframe>')
     return
 
 
@@ -1329,31 +1495,35 @@ def chart_ecosystem_activity(
 def chart_ecosystem_newcomers_by_year(
     apply_ec_style,
     df_all,
-    ecosystem_dropdown,
     go,
     mo,
 ):
     """Deep Dive Chart 4: Ecosystem New Developer Acquisition by Year"""
+    import json as _json
+    import html as _html_mod
 
-    _eco_name = ecosystem_dropdown.value
-    _df = df_all[df_all['ecosystem_name'] == _eco_name].copy()
+    _ECO_OPTS = ['Bitcoin', 'Ethereum', 'Solana']
 
-    # EC-style light purple/blue for bars
     _bar_color = "#B8C9E8"
 
-    if len(_df) == 0:
-        _output = mo.md("*No data available*")
-    else:
-        # Aggregate by year - take max newcomers per year (rolling window peak)
-        _df_agg = _df.groupby('year').agg({'newcomers': 'max'}).reset_index()
-        _df_agg = _df_agg[_df_agg['year'] >= 2015]  # Filter to reasonable range
+    _states = {}
+    for _eco_name in _ECO_OPTS:
+        _df = df_all[df_all['ecosystem_name'] == _eco_name].copy()
 
-        # Find recent years with high newcomer counts for title
+        if len(_df) == 0:
+            _fig = go.Figure()
+            _fig.add_annotation(text="No data available", xref="paper", yref="paper",
+                                x=0.5, y=0.5, showarrow=False, font=dict(size=14, color="#666"))
+            _states[_eco_name] = {'chart': _json.loads(_fig.to_json())}
+            continue
+
+        _df_agg = _df.groupby('year').agg({'newcomers': 'max'}).reset_index()
+        _df_agg = _df_agg[_df_agg['year'] >= 2015]
+
         _recent_years = _df_agg[_df_agg['year'] >= _df_agg['year'].max() - 2]
         _recent_values = _recent_years['newcomers'].tolist()
         _recent_year_labels = _recent_years['year'].astype(int).tolist()
 
-        # Find a threshold (round down to nearest 5000 or 1000)
         _min_recent = min(_recent_values) if _recent_values else 0
         if _min_recent >= 10000:
             _threshold = (_min_recent // 5000) * 5000
@@ -1362,7 +1532,6 @@ def chart_ecosystem_newcomers_by_year(
         else:
             _threshold = 0
 
-        # Build title based on threshold
         if _threshold > 0 and len(_recent_year_labels) >= 2:
             _years_str = ", ".join([f"'{str(y)[-2:]}" for y in _recent_year_labels])
             _title = f"{_threshold:,.0f}+ new devs supported {_eco_name} in {_years_str}"
@@ -1381,7 +1550,6 @@ def chart_ecosystem_newcomers_by_year(
             hovertemplate='<b>%{x}</b><br>New Developers: %{y:,.0f}<extra></extra>'
         ))
 
-        # Add threshold reference line if applicable
         if _threshold > 0:
             _fig.add_hline(
                 y=_threshold,
@@ -1402,15 +1570,42 @@ def chart_ecosystem_newcomers_by_year(
             right_margin=60
         )
 
-        # Adjust y-axis for text labels
         _max_val = _df_agg['newcomers'].max()
         _fig.update_yaxes(range=[0, _max_val * 1.18])
-
         _fig.update_layout(height=450)
 
-        _output = mo.ui.plotly(_fig, config={"displayModeBar": False})
+        _states[_eco_name] = {'chart': _json.loads(_fig.to_json())}
 
-    _output
+    _opts = list(_states.keys())
+    _djs_safe = _json.dumps(_states).replace('</', '<\\/')
+    _opts_js = _json.dumps(_opts)
+    _btn_html = ''.join(f'<button class="tab-btn" data-idx="{i}">{o}</button>' for i, o in enumerate(_opts))
+
+    _inner = (
+        '<!DOCTYPE html><html><head><meta charset="utf-8">'
+        '<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>'
+        '<style>'
+        '*{box-sizing:border-box;margin:0;padding:0}'
+        'body{font-family:Arial,sans-serif;font-size:13px;padding:4px}'
+        '.tab-btn{padding:6px 14px;border:none;background:none;border-radius:6px;font-size:13px;cursor:pointer;color:#6b7280}'
+        '.tab-btn:hover{background:#f3f4f6;color:#111}'
+        '.tab-btn.active{background:#eff6ff;color:#2563eb;font-weight:600}'
+        '.tab-bar{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px;border-bottom:1px solid #e5e7eb;padding-bottom:8px}'
+        '</style></head><body>'
+        f'<div class="tab-bar">{_btn_html}</div>'
+        '<div id="chart"></div>'
+        f'<script>var D={_djs_safe};var O={_opts_js};'
+        'document.querySelectorAll(".tab-btn").forEach(function(btn,i){'
+        'btn.addEventListener("click",function(){'
+        'document.querySelectorAll(".tab-btn").forEach(function(b){b.classList.remove("active")});'
+        'btn.classList.add("active");'
+        'Plotly.react("chart",D[O[i]].chart.data,D[O[i]].chart.layout,{responsive:true});'
+        '});});'
+        'var _b=document.querySelectorAll(".tab-btn");if(_b.length)_b[0].click();'
+        '</script></body></html>'
+    )
+    _src = _html_mod.escape(_inner, quote=True)
+    mo.Html(f'<iframe srcdoc="{_src}" style="width:100%;height:520px;border:none;display:block" scrolling="no"></iframe>')
     return
 
 
@@ -1424,114 +1619,86 @@ def section_comparative(mo):
 
 
 @app.cell(hide_code=True)
-def comparison_controls(SUPPORTED_ECOSYSTEMS, mo):
-    compare_ecosystems = mo.ui.multiselect(
-        options=SUPPORTED_ECOSYSTEMS,
-        value=["Ethereum", "Bitcoin"],
-        label="Select Ecosystems"
-    )
-
-    compare_metric = mo.ui.dropdown(
-        options=[
-            "Total Developers",
-            "Newcomers",
-            "Emerging",
-            "Established",
-            "Full-time",
-            "Part-time",
-            "One-time"
-        ],
-        value="Total Developers",
-        label="Metric"
-    )
-
-    compare_time_range = mo.ui.dropdown(
-        options=["All Time", "Last 5 Years", "Last 3 Years", "Last Year"],
-        value="All Time",
-        label="Time Range"
-    )
-
-    mo.hstack([compare_ecosystems, compare_metric, compare_time_range], gap=2)
-    return compare_ecosystems, compare_metric, compare_time_range
-
-
-@app.cell(hide_code=True)
 def comparison_chart(
     apply_ec_style,
-    compare_ecosystems,
-    compare_metric,
-    compare_time_range,
     df_all,
     go,
     mo,
     pd,
 ):
-    """Comparative analysis - line chart comparing ecosystems over time."""
+    """Comparative analysis - tabs: metric x time range (fixed: Ethereum vs Bitcoin)"""
+    import json as _json
+    import html as _html_mod
 
-    _selected = compare_ecosystems.value
+    _METRIC_OPTS = [
+        'Total Developers',
+        'Newcomers',
+        'Emerging',
+        'Established',
+        'Full-time',
+        'Part-time',
+        'One-time',
+    ]
+    _TIME_OPTS = ['All Time', 'Last 5 Years', 'Last 3 Years', 'Last Year']
 
-    if len(_selected) < 1:
-        _output = mo.md("*Select at least one ecosystem to compare*")
-    else:
-        # Map metric names to column names
-        _metric_map = {
-            "Total Developers": "total_devs",
-            "Newcomers": "newcomers",
-            "Emerging": "emerging",
-            "Established": "established",
-            "Full-time": "full_time",
-            "Part-time": "part_time",
-            "One-time": "one_time"
-        }
-        _col = _metric_map[compare_metric.value]
+    _metric_map = {
+        'Total Developers': 'total_devs',
+        'Newcomers': 'newcomers',
+        'Emerging': 'emerging',
+        'Established': 'established',
+        'Full-time': 'full_time',
+        'Part-time': 'part_time',
+        'One-time': 'one_time',
+    }
 
-        # Color palette for multiple ecosystems
-        _colors = ["#5DADE2", "#F5B041", "#58D68D", "#AF7AC5", "#EC7063"]
+    _time_filters = {
+        'All Time': None,
+        'Last 5 Years': pd.Timestamp('2020-01-01'),
+        'Last 3 Years': pd.Timestamp('2022-01-01'),
+        'Last Year': pd.Timestamp('2024-01-01'),
+    }
+
+    _selected_ecos = ['Ethereum', 'Bitcoin', 'Solana']
+    _colors = ["#5DADE2", "#F5B041", "#58D68D"]
+
+    _OPTS = [f'{m} | {t}' for m in _METRIC_OPTS for t in _TIME_OPTS]
+
+    _states = {}
+    for _opt in _OPTS:
+        _metric_name, _time_key = _opt.split(' | ', 1)
+        _col = _metric_map[_metric_name]
+        _cutoff = _time_filters[_time_key]
 
         _fig = go.Figure()
 
-        for _i, _eco in enumerate(_selected):
+        for _i, _eco in enumerate(_selected_ecos):
             _df_eco = df_all[df_all['ecosystem_name'] == _eco].copy()
-
-            # Apply time filter
-            if compare_time_range.value == "Last 5 Years":
-                _df_eco = _df_eco[_df_eco['day'] >= pd.Timestamp('2020-01-01')]
-            elif compare_time_range.value == "Last 3 Years":
-                _df_eco = _df_eco[_df_eco['day'] >= pd.Timestamp('2022-01-01')]
-            elif compare_time_range.value == "Last Year":
-                _df_eco = _df_eco[_df_eco['day'] >= pd.Timestamp('2024-01-01')]
+            if _cutoff is not None:
+                _df_eco = _df_eco[_df_eco['day'] >= _cutoff]
 
             if len(_df_eco) > 0:
                 _color = _colors[_i % len(_colors)]
                 _current_val = _df_eco.iloc[-1][_col]
-
                 _fig.add_trace(go.Scatter(
                     x=_df_eco['day'],
                     y=_df_eco[_col],
                     name=f"{_eco} ({_current_val:,.0f})",
                     mode='lines',
                     line=dict(width=2, color=_color),
-                    hovertemplate=f'<b>{_eco}</b><br>%{{x|%b %Y}}<br>{compare_metric.value}: %{{y:,.0f}}<extra></extra>'
+                    hovertemplate=f'<b>{_eco}</b><br>%{{x|%b %Y}}<br>{_metric_name}: %{{y:,.0f}}<extra></extra>'
                 ))
 
-        # Build title
-        if len(_selected) == 1:
-            _title = f"{_selected[0]}: {compare_metric.value} Over Time"
-        elif len(_selected) == 2:
-            _title = f"{_selected[0]} vs {_selected[1]}: {compare_metric.value}"
-        else:
-            _title = f"Ecosystem Comparison: {compare_metric.value}"
+        _title = f"Ecosystem Comparison: {_metric_name}"
 
         apply_ec_style(
             _fig,
             title=_title,
-            subtitle=f"{compare_metric.value} over time",
+            subtitle=f"{_metric_name} over time",
             y_title="Developers",
             show_legend=True,
             right_margin=60
         )
 
-        # Move legend to top-left for line charts
         _fig.update_layout(
             height=450,
             legend=dict(
@@ -1546,9 +1713,38 @@ def comparison_chart(
             )
         )
 
-        _output = mo.ui.plotly(_fig, config={"displayModeBar": False})
+        _states[_opt] = {'chart': _json.loads(_fig.to_json())}
 
-    _output
+    _opts = list(_states.keys())
+    _djs_safe = _json.dumps(_states).replace('</', '<\\/')
+    _opts_js = _json.dumps(_opts)
+    _btn_html = ''.join(f'<button class="tab-btn" data-idx="{i}">{o}</button>' for i, o in enumerate(_opts))
+
+    _inner = (
+        '<!DOCTYPE html><html><head><meta charset="utf-8">'
+        '<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>'
+        '<style>'
+        '*{box-sizing:border-box;margin:0;padding:0}'
+        'body{font-family:Arial,sans-serif;font-size:13px;padding:4px}'
+        '.tab-btn{padding:6px 14px;border:none;background:none;border-radius:6px;font-size:13px;cursor:pointer;color:#6b7280}'
+        '.tab-btn:hover{background:#f3f4f6;color:#111}'
+        '.tab-btn.active{background:#eff6ff;color:#2563eb;font-weight:600}'
+        '.tab-bar{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px;border-bottom:1px solid #e5e7eb;padding-bottom:8px}'
+        '</style></head><body>'
+        f'<div class="tab-bar">{_btn_html}</div>'
+        '<div id="chart"></div>'
+        f'<script>var D={_djs_safe};var O={_opts_js};'
+        'document.querySelectorAll(".tab-btn").forEach(function(btn,i){'
+        'btn.addEventListener("click",function(){'
+        'document.querySelectorAll(".tab-btn").forEach(function(b){b.classList.remove("active")});'
+        'btn.classList.add("active");'
+        'Plotly.react("chart",D[O[i]].chart.data,D[O[i]].chart.layout,{responsive:true});'
+        '});});'
+        'var _b=document.querySelectorAll(".tab-btn");if(_b.length)_b[0].click();'
+        '</script></body></html>'
+    )
+    _src = _html_mod.escape(_inner, quote=True)
+    mo.Html(f'<iframe srcdoc="{_src}" style="width:100%;height:520px;border:none;display:block" scrolling="no"></iframe>')
     return
 
 
