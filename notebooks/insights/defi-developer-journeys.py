@@ -66,8 +66,8 @@ def header_accordion(mo):
 
 
 @app.cell(hide_code=True)
-def header_context(ETHEREUM_COLOR, OTHER_CRYPTO_COLOR, PROJECT_ECOSYSTEM, df_protocol_table, mo, project_selector, tab_select):
-    # Build protocol table with row highlighting based on selected ecosystem or project
+def header_context(ETHEREUM_COLOR, OTHER_CRYPTO_COLOR, df_protocol_table, mo):
+    # Build protocol table — static version for export
     _df = df_protocol_table.copy().reset_index(drop=True)
     _df['top_chain'] = _df['top_chain'].fillna('').str.replace('_', ' ').str.title()
 
@@ -92,62 +92,10 @@ def header_context(ETHEREUM_COLOR, OTHER_CRYPTO_COLOR, PROJECT_ECOSYSTEM, df_pro
     _display['ETH TVL Share (%)'] = _display['ETH TVL Share (%)'].apply(lambda v: f'{v:.0f}')
     _display['Total TVL'] = _display['Total TVL'].apply(_fmt_tvl)
 
-    # Determine highlighting mode
-    _selected = tab_select.value
-    _is_deep_dive = _selected == 'Project Deep Dive'
-    _highlight_project = project_selector.value if _is_deep_dive else None
-    _highlight_cat = 'Ethereum' if _selected == 'Ethereum' else ('Other' if _selected == 'Other Ecosystems' else None)
-
-    # Window table to ~10 rows around selected project in deep dive mode
-    if _is_deep_dive and _highlight_project and _highlight_project in _display['Project'].values:
-        _idx = _display.index[_display['Project'] == _highlight_project].tolist()[0]
-        _n_total = len(_display)
-        _window = 10
-        # Center the window around the project, clamping to bounds
-        _start = max(0, _idx - _window // 2)
-        _end = _start + _window
-        if _end > _n_total:
-            _end = _n_total
-            _start = max(0, _end - _window)
-        _display = _display.iloc[_start:_end].copy()
-
-    # Apply row-level background highlighting via pandas Styler
-    def _highlight_rows(row):
-        if _is_deep_dive and _highlight_project:
-            if row['Project'] == _highlight_project:
-                _eco = PROJECT_ECOSYSTEM.get(_highlight_project, 'Other')
-                _color = ETHEREUM_COLOR if _eco == 'Ethereum' else OTHER_CRYPTO_COLOR
-                return [f'background-color: {_color}18'] * len(row)
-        elif _highlight_cat and row['Category'] == _highlight_cat:
-            _color = ETHEREUM_COLOR if _selected == 'Ethereum' else OTHER_CRYPTO_COLOR
-            return [f'background-color: {_color}18'] * len(row)
-        return [''] * len(row)
-
-    _styled = (
-        _display.style
-        .apply(_highlight_rows, axis=1)
-        .set_properties(**{'font-size': '0.85em', 'padding': '5px 12px'})
-        .set_table_styles([
-            {'selector': 'th', 'props': [
-                ('font-size', '0.8em'), ('color', '#64748B'),
-                ('padding', '6px 12px'), ('border-bottom', '2px solid #E2E8F0'),
-                ('text-align', 'left'),
-            ]},
-            {'selector': 'td', 'props': [('border-bottom', '1px solid #F1F5F9')]},
-            {'selector': 'table', 'props': [('width', '100%'), ('border-collapse', 'collapse')]},
-        ])
-        .hide(axis='index')
-    )
-
-    # Show project dropdown inline when Deep Dive is selected
-    _selector_row = mo.hstack([tab_select, project_selector], justify='start', gap=1) if _is_deep_dive else tab_select
-
     mo.vstack([
         mo.md("## Which DeFi projects are included?"),
         mo.md("We analyzed developer activity across 50+ top DeFi projects on Ethereum and other major L1s."),
-        mo.md("Select an ecosystem to focus on:"),
-        _selector_row,
-        mo.as_html(_styled),
+        mo.Html('<style>.nb-tbl{border-collapse:collapse;width:100%;font-size:13px}.nb-tbl th,.nb-tbl td{padding:8px 12px;text-align:left;border-bottom:1px solid #e5e7eb}.nb-tbl th{background:#f9fafb;font-weight:600;color:#374151}</style><div style="overflow-x:auto">' + _display.to_html(index=False, border=0, classes='nb-tbl') + '</div>'),
     ])
     return
 
@@ -160,7 +108,7 @@ def transform_protocol_table(df_projects_with_eco):
         ['project_display_name', 'current_tvl', 'ecosystem_category', 'tvl_rank',
          'ethereum_pct', 'top_chain', 'total_repos', 'qualifying_developers']
     ].copy()
-    _projects['ethereum_pct'] = _projects['ethereum_pct'].fillna(0)
+    _projects['ethereum_pct'] = _projects['ethereum_pct'].fillna(0).infer_objects(copy=False)
     _projects['total_repos'] = _projects['total_repos'].fillna(0).astype(int)
     _projects['qualifying_developers'] = _projects['qualifying_developers'].fillna(0).astype(int)
     _projects = _projects.sort_values('tvl_rank')
@@ -175,9 +123,16 @@ def insight_protocol_table(
     df_protocol_table,
     mo,
 ):
-    # Clean protocol summary table using mo.ui.table
+    # Clean protocol summary table — rendered as plain HTML table
     _df = df_protocol_table.copy().reset_index(drop=True)
     _df['top_chain'] = _df['top_chain'].fillna('').str.replace('_', ' ').str.title()
+
+    def _fmt_tvl(v):
+        if v >= 1e9:
+            return f'${v / 1e9:.1f}B'
+        if v >= 1e6:
+            return f'${v / 1e6:.0f}M'
+        return f'${v / 1e3:.0f}K'
 
     _display = _df.rename(columns={
         'tvl_rank': 'Rank',
@@ -189,25 +144,9 @@ def insight_protocol_table(
         'total_repos': 'Repos',
         'qualifying_developers': 'Qualifying Devs',
     })[['Rank', 'Project', 'Category', 'Total TVL', 'ETH TVL Share (%)', 'Top Chain', 'Repos', 'Qualifying Devs']]
-
-    def _fmt_tvl(v):
-        if v >= 1e9:
-            return f'${v / 1e9:.1f}B'
-        if v >= 1e6:
-            return f'${v / 1e6:.0f}M'
-        return f'${v / 1e3:.0f}K'
-
-    _table = mo.ui.table(
-        _display,
-        format_mapping={
-            'Total TVL': _fmt_tvl,
-            'ETH TVL Share (%)': '{:.0f}'.format,
-            'Rank': '{:.0f}'.format,
-        },
-        selection=None,
-        page_size=len(_display),
-        show_column_summaries=False,
-    )
+    _display['Rank'] = _display['Rank'].astype(int)
+    _display['ETH TVL Share (%)'] = _display['ETH TVL Share (%)'].apply(lambda v: f'{v:.0f}')
+    _display['Total TVL'] = _display['Total TVL'].apply(_fmt_tvl)
 
     protocol_table_content = mo.vstack([
         mo.md(
@@ -215,28 +154,17 @@ def insight_protocol_table(
             f'<span style="color:{ETHEREUM_COLOR}">&#9632;</span> Ethereum = &gt;80% TVL on Ethereum (L1+L2s). '
             f'<span style="color:{OTHER_CRYPTO_COLOR}">&#9632;</span> Other = remaining chains.'
         ),
-        _table,
+        mo.Html('<style>.nb-tbl{border-collapse:collapse;width:100%;font-size:13px}.nb-tbl th,.nb-tbl td{padding:8px 12px;text-align:left;border-bottom:1px solid #e5e7eb}.nb-tbl th{background:#f9fafb;font-weight:600;color:#374151}</style><div style="overflow-x:auto">' + _display.to_html(index=False, border=0, classes='nb-tbl') + '</div>'),
     ])
     return (protocol_table_content,)
 
 
 @app.cell(hide_code=True)
-def alluvial_filters(PROJECT_ECOSYSTEM, df_with_status, mo):
-    # Create project filters for both ecosystems (used in alluvial diagrams)
+def alluvial_filters(PROJECT_ECOSYSTEM, df_with_status):
+    # Compute all projects for both ecosystems (no interactive filter needed for static export)
     _all_projects = sorted(df_with_status['project_display_name'].unique())
-    _eth_projects = [p for p in _all_projects if PROJECT_ECOSYSTEM.get(p) == 'Ethereum']
-    _other_projects = [p for p in _all_projects if PROJECT_ECOSYSTEM.get(p) != 'Ethereum']
-
-    alluvial_filter_eth = mo.ui.multiselect(
-        options=_eth_projects,
-        value=_eth_projects,
-        label='Show projects individually:',
-    )
-    alluvial_filter_other = mo.ui.multiselect(
-        options=_other_projects,
-        value=_other_projects,
-        label='Show projects individually:',
-    )
+    alluvial_filter_eth = [p for p in _all_projects if PROJECT_ECOSYSTEM.get(p) == 'Ethereum']
+    alluvial_filter_other = [p for p in _all_projects if PROJECT_ECOSYSTEM.get(p) != 'Ethereum']
     return alluvial_filter_eth, alluvial_filter_other
 
 
@@ -340,7 +268,7 @@ def transform_alluvial_data(
         _grid = _grid.merge(_home_by_year, on=['canonical_developer_id', 'year'], how='left')
         _grid = _grid.merge(_crypto_eco, on=['canonical_developer_id', 'year'], how='left')
         for col in ['home_days', 'crypto_days', 'oss_days', 'personal_days']:
-            _grid[col] = _grid[col].fillna(0)
+            _grid[col] = _grid[col].fillna(0).infer_objects(copy=False)
 
         def _classify(row):
             if pd.notna(row['onboard_year']) and row['year'] < row['onboard_year']:
@@ -428,8 +356,8 @@ def transform_alluvial_data(
         stats = {'empty': False, 'total_devs': len(_pool_ids), 'n_projects': len(selected)}
         return data, stats
 
-    _eth_selected = set(alluvial_filter_eth.value) if alluvial_filter_eth.value else set()
-    _other_selected = set(alluvial_filter_other.value) if alluvial_filter_other.value else set()
+    _eth_selected = set(alluvial_filter_eth) if alluvial_filter_eth else set()
+    _other_selected = set(alluvial_filter_other) if alluvial_filter_other else set()
 
     _eth_data, _eth_stats = _compute_one(_eth_selected, True)
     _other_data, _other_stats = _compute_one(_other_selected, False)
@@ -758,8 +686,8 @@ def transform_onboarding_features(df_alignment, df_developer_lifecycle):
     )
 
     # Fill NaN for developers with no pre-onboarding activity
-    df_onboarding_features['pre_total_days'] = df_onboarding_features['pre_total_days'].fillna(0)
-    df_onboarding_features['pre_months_active'] = df_onboarding_features['pre_months_active'].fillna(0)
+    df_onboarding_features['pre_total_days'] = df_onboarding_features['pre_total_days'].fillna(0).infer_objects(copy=False)
+    df_onboarding_features['pre_months_active'] = df_onboarding_features['pre_months_active'].fillna(0).infer_objects(copy=False)
     # Direct to DeFi: less than 6 months of activity before joining home project
     df_onboarding_features['is_direct_to_defi'] = df_onboarding_features['pre_months_active'] < 6
     return (df_onboarding_features,)
@@ -1399,10 +1327,10 @@ def transform_contribution_features(df_alignment, df_with_clusters):
     )
 
     # Fill NaN (shouldn't happen, but safety)
-    df_contribution_features['contrib_months'] = df_contribution_features['contrib_months'].fillna(0)
-    df_contribution_features['contrib_total_days'] = df_contribution_features['contrib_total_days'].fillna(0)
-    df_contribution_features['avg_days_per_month'] = df_contribution_features['avg_days_per_month'].fillna(0)
-    df_contribution_features['consistency'] = df_contribution_features['consistency'].fillna(0)
+    df_contribution_features['contrib_months'] = df_contribution_features['contrib_months'].fillna(0).infer_objects(copy=False)
+    df_contribution_features['contrib_total_days'] = df_contribution_features['contrib_total_days'].fillna(0).infer_objects(copy=False)
+    df_contribution_features['avg_days_per_month'] = df_contribution_features['avg_days_per_month'].fillna(0).infer_objects(copy=False)
+    df_contribution_features['consistency'] = df_contribution_features['consistency'].fillna(0).infer_objects(copy=False)
 
     # Classify contribution intensity
     def _classify_intensity(avg_days):
@@ -1690,15 +1618,9 @@ def insight_new_developer_inflow(
 
 
 @app.cell(hide_code=True)
-def appendix_project_selector(df_projects_with_eco, mo):
-    # Project selector for deep dive
-    _projects = sorted(df_projects_with_eco['project_display_name'].unique())
-    project_selector = mo.ui.dropdown(
-        options=_projects,
-        value='Aave',
-        full_width=True
-    )
-    return (project_selector,)
+def appendix_project_selector():
+    # project_selector removed — replaced by JS tab switching in appendix_project_details
+    return
 
 
 @app.cell(hide_code=True)
@@ -1715,26 +1637,31 @@ def appendix_project_details(
     df_developer_lifecycle,
     df_interest_projects,
     df_monthly_devs,
+    df_projects_with_eco,
     df_tvl_history,
     go,
     make_subplots,
     mo,
     pd,
-    project_selector,
 ):
-    # Project deep dive with stat cards, cluster charts, TVL, dev activity,
-    # balance of trade, cohort retention, pipeline composition, and feeder projects
-    _project = project_selector.value
+    import json as _json
 
-    _project_devs = df_contribution_features[
-        df_contribution_features['project_display_name'] == _project
-    ].copy()
+    # Pre-render top 10 projects by TVL for static JS tab switching
+    _top10 = (
+        df_projects_with_eco.sort_values('current_tvl', ascending=False)
+        .head(10)['project_display_name'].tolist()
+    )
 
-    _total = len(_project_devs)
+    def _render_project(_project):
+        _project_devs = df_contribution_features[
+            df_contribution_features['project_display_name'] == _project
+        ].copy()
 
-    if _total == 0:
-        project_deep_dive_output = mo.md(f"No qualified developers found for **{_project}**")
-    else:
+        _total = len(_project_devs)
+
+        if _total == 0:
+            return mo.md(f"No qualified developers found for **{_project}**")
+
         _project_dev_ids = set(_project_devs['canonical_developer_id'].unique())
         _project_eco = PROJECT_ECOSYSTEM.get(_project, 'Other')
         _active_color = ETHEREUM_COLOR if _project_eco == 'Ethereum' else OTHER_CRYPTO_COLOR
@@ -1880,7 +1807,7 @@ def appendix_project_details(
                 _yearly_grid = _yearly_grid.merge(_home_by_year, on=['canonical_developer_id', 'year'], how='left')
                 _yearly_grid = _yearly_grid.merge(_crypto_eco, on=['canonical_developer_id', 'year'], how='left')
                 for col in ['home_days', 'crypto_days', 'oss_days', 'personal_days']:
-                    _yearly_grid[col] = _yearly_grid[col].fillna(0)
+                    _yearly_grid[col] = _yearly_grid[col].fillna(0).infer_objects(copy=False)
 
                 # Vectorized classification: map primary_project to ecosystem
                 _yearly_grid['_proj_eco'] = _yearly_grid['primary_project'].map(PROJECT_ECOSYSTEM).fillna('Other')
@@ -2403,7 +2330,46 @@ def appendix_project_details(
         if _feeders is not None:
             _sections.append(_feeders)
 
-        project_deep_dive_output = mo.vstack(_sections)
+        return mo.vstack(_sections)
+
+    import html as _html_mod
+
+    # Build JS tab switcher for top 10 projects
+    _rendered = {}
+    for _p in _top10:
+        _rendered[_p] = _render_project(_p)
+
+    _opts = _top10
+    _states = {_p: {'content': mo.as_html(_rendered[_p]).text} for _p in _top10}
+
+    _djs_safe = _json.dumps(_states).replace('</', '<\\/')
+    _opts_js = _json.dumps(_opts)
+    _btn_html = ''.join(f'<button class="tab-btn" data-idx="{i}">{o}</button>' for i, o in enumerate(_opts))
+
+    _inner = (
+        '<!DOCTYPE html><html><head><meta charset="utf-8">'
+        '<style>'
+        '*{box-sizing:border-box;margin:0;padding:0}'
+        'body{font-family:Arial,sans-serif;font-size:13px;padding:4px}'
+        '.tab-btn{padding:6px 14px;border:none;background:none;border-radius:6px;font-size:13px;cursor:pointer;color:#6b7280}'
+        '.tab-btn:hover{background:#f3f4f6;color:#111}'
+        '.tab-btn.active{background:#eff6ff;color:#2563eb;font-weight:600}'
+        '.tab-bar{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px;border-bottom:1px solid #e5e7eb;padding-bottom:8px}'
+        '</style></head><body>'
+        f'<div class="tab-bar">{_btn_html}</div>'
+        '<div id="content"></div>'
+        f'<script>var D={_djs_safe};var O={_opts_js};'
+        'document.querySelectorAll(".tab-btn").forEach(function(btn,i){'
+        'btn.addEventListener("click",function(){'
+        'document.querySelectorAll(".tab-btn").forEach(function(b){b.classList.remove("active")});'
+        'btn.classList.add("active");'
+        'document.getElementById("content").innerHTML=D[O[i]].content;'
+        '});});'
+        'var _b=document.querySelectorAll(".tab-btn");if(_b.length)_b[0].click();'
+        '</script></body></html>'
+    )
+    _src = _html_mod.escape(_inner, quote=True)
+    project_deep_dive_output = mo.Html(f'<iframe srcdoc="{_src}" style="width:100%;height:800px;border:none;display:block" scrolling="no"></iframe>')
     return (project_deep_dive_output,)
 
 
@@ -2534,7 +2500,6 @@ def insight_ecosystem_overview(
 @app.cell(hide_code=True)
 def ethereum_content(
     alluvial_content,
-    alluvial_filter_eth,
     balance_content,
     cohort_content,
     ecosystem_overview_content,
@@ -2546,7 +2511,6 @@ def ethereum_content(
         ecosystem_overview_content['Ethereum'],
         mo.md("---"),
         mo.md("## Where does Ethereum DeFi developer talent flow over time?"),
-        alluvial_filter_eth,
         alluvial_content['Ethereum'],
         mo.md("---"),
         mo.md("## Is Ethereum DeFi retaining developer talent over time?"),
@@ -2568,7 +2532,6 @@ def ethereum_content(
 @app.cell(hide_code=True)
 def other_ecosystem_content(
     alluvial_content,
-    alluvial_filter_other,
     balance_content,
     cohort_content,
     ecosystem_overview_content,
@@ -2580,7 +2543,6 @@ def other_ecosystem_content(
         ecosystem_overview_content['Other'],
         mo.md("---"),
         mo.md("## Where does non-Ethereum DeFi developer talent flow over time?"),
-        alluvial_filter_other,
         alluvial_content['Other'],
         mo.md("---"),
         mo.md("## Is non-Ethereum DeFi retaining developer talent over time?"),
@@ -2609,13 +2571,9 @@ def project_deep_dive_tab(mo, project_deep_dive_output):
 
 
 @app.cell(hide_code=True)
-def tab_selector(mo):
-    tab_select = mo.ui.radio(
-        options=["Ethereum", "Other Ecosystems", "Project Deep Dive"],
-        value="Ethereum",
-        inline=True,
-    )
-    return (tab_select,)
+def tab_selector():
+    # tab_select removed — replaced by JS tab switching in main_dashboard
+    return
 
 
 @app.cell(hide_code=True)
@@ -2624,16 +2582,48 @@ def main_dashboard(
     ethereum_tab_content,
     mo,
     other_tab_content,
-    tab_select,
 ):
-    if tab_select.value == "Ethereum":
-        _content = ethereum_tab_content
-    elif tab_select.value == "Other Ecosystems":
-        _content = other_tab_content
-    else:
-        _content = deep_dive_tab_content
+    import json as _json
+    import html as _html_mod
 
-    mo.vstack([_content])
+    _TABS = ['Ethereum', 'Other Ecosystems', 'Project Deep Dive']
+    _tab_content = {
+        'Ethereum': ethereum_tab_content,
+        'Other Ecosystems': other_tab_content,
+        'Project Deep Dive': deep_dive_tab_content,
+    }
+
+    _opts = _TABS
+    _states = {t: {'content': mo.as_html(_tab_content[t]).text} for t in _TABS}
+
+    _djs_safe = _json.dumps(_states).replace('</', '<\\/')
+    _opts_js = _json.dumps(_opts)
+    _btn_html = ''.join(f'<button class="tab-btn" data-idx="{i}">{o}</button>' for i, o in enumerate(_opts))
+
+    _inner = (
+        '<!DOCTYPE html><html><head><meta charset="utf-8">'
+        '<style>'
+        '*{box-sizing:border-box;margin:0;padding:0}'
+        'body{font-family:Arial,sans-serif;font-size:13px;padding:4px}'
+        '.tab-btn{padding:6px 14px;border:none;background:none;border-radius:6px;font-size:13px;cursor:pointer;color:#6b7280}'
+        '.tab-btn:hover{background:#f3f4f6;color:#111}'
+        '.tab-btn.active{background:#eff6ff;color:#2563eb;font-weight:600}'
+        '.tab-bar{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px;border-bottom:1px solid #e5e7eb;padding-bottom:8px}'
+        '</style></head><body>'
+        f'<div class="tab-bar">{_btn_html}</div>'
+        '<div id="content"></div>'
+        f'<script>var D={_djs_safe};var O={_opts_js};'
+        'document.querySelectorAll(".tab-btn").forEach(function(btn,i){'
+        'btn.addEventListener("click",function(){'
+        'document.querySelectorAll(".tab-btn").forEach(function(b){b.classList.remove("active")});'
+        'btn.classList.add("active");'
+        'document.getElementById("content").innerHTML=D[O[i]].content;'
+        '});});'
+        'var _b=document.querySelectorAll(".tab-btn");if(_b.length)_b[0].click();'
+        '</script></body></html>'
+    )
+    _src = _html_mod.escape(_inner, quote=True)
+    mo.Html(f'<iframe srcdoc="{_src}" style="width:100%;height:800px;border:none;display:block" scrolling="no"></iframe>')
     return
 
 

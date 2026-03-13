@@ -482,8 +482,7 @@ def _(mo, pyoso_db_conn):
                       engine=pyoso_db_conn, output=False)
 
     def get_row_count(model_name):
-        result = mo.sql(f"SHOW STATS FOR {model_name}",
-                        engine=pyoso_db_conn, output=False)
+        result = mo.sql(f"SELECT COUNT(*) AS row_count FROM {model_name}", engine=pyoso_db_conn, output=False)
         return result['row_count'].sum()
 
     def generate_sql_snippet(model_name, df_results, limit=5):

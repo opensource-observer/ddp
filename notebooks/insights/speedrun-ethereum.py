@@ -66,7 +66,6 @@ Using Speedrun Ethereum as a focused case study, the data suggests that bottom-u
     return
 
 
-
 @app.cell(hide_code=True)
 def fetch_data(mo, pyoso_db_conn, stringify):
     with mo.persistent_cache("sre_users"):
@@ -105,7 +104,7 @@ def fetch_data(mo, pyoso_db_conn, stringify):
                   e.name AS ecosystem_name,
                   er.ecosystem_id AS ecosystem_id,
                   e.is_chain,
-                  e.is_crypto,
+                  e.is_crypto
                 FROM int_opendevdata__repositories_with_repo_id r
                 JOIN stg_opendevdata__ecosystems_repos_recursive er
                   ON r.opendevdata_id = er.repo_id
@@ -198,7 +197,7 @@ def fetch_data(mo, pyoso_db_conn, stringify):
 @app.function(hide_code=True)
 def build_user_table(df_events):
     cols = ['user_name', 'cohort_year', 'start_month', 'location_code',
-            'challenges_completed', 'batch_id', 'dev_forked_scaffold-eth',  
+            'challenges_completed', 'batch_id', 'dev_forked_scaffold-eth',
             'first_month_activity', 'last_month_activity', 'months_of_prior_activity', 'experience_category', 'change_category']
     df = df_events[cols].drop_duplicates().reset_index(drop=True).copy()
     df['user_name'] = df['user_name'].apply(lambda x: f'https://github.com/{x}')
@@ -395,7 +394,7 @@ def process_dev_velocity(SRE_BASE, SRE_GREEN, np, pd, px):
             if pre_v < eps and post_v < eps:
                 return 'About the Same'
             if pre_v < eps and post_v >= eps:
-                return 'Major Increase'        
+                return 'Major Increase'
             if pre_v >= eps and post_v < eps:
                 return 'Major Decrease'
             if r >= major_ratio:
@@ -495,75 +494,68 @@ def process_dev_velocity(SRE_BASE, SRE_GREEN, np, pd, px):
 
 
 @app.cell(hide_code=True)
-def reuseable_dropdowns(ecosystem_options, mo):
-    def ui_dropdown_activity_metric(value='Active Developers', label='Select a developer metric'):
-        return mo.ui.dropdown(
-            options=['Active Developers', 'Full-time Developers', 'Velocity'],
-            value=value,
-            label=label
-        )
-
-    def ui_dropdown_experience_select(value='Experienced', label='Select an experience level'):
-        return mo.ui.dropdown(
-            options=['Experienced', 'Learning', 'Newb'],
-            value=value,
-            label=label
-        )
-
-    def ui_multiselect_ecosystem(value=None, label='Filter ecosystem(s)'):
-        if not value:
-            value = ecosystem_options
-        else:
-            value = [value]
-        return mo.ui.multiselect(
-            options=ecosystem_options,
-            value=value,
-            label=label
-        )
-    return (
-        ui_dropdown_activity_metric,
-        ui_dropdown_experience_select,
-        ui_multiselect_ecosystem,
-    )
-
-
-@app.cell(hide_code=True)
-def _(ui_dropdown_activity_metric, ui_multiselect_ecosystem):
-    activity_select1 = ui_dropdown_activity_metric(label='Analyze')
-    ecosystem_select1 = ui_multiselect_ecosystem(value='Ethereum', label='and apply it to the')
-    return activity_select1, ecosystem_select1
-
-
-@app.cell(hide_code=True)
-def _(
-    activity_select1,
+def section_activity_by_ecosystem(
     build_user_velocity_grid,
     developer_activity_area_chart,
     df_github_velocity_all,
     df_merged,
     df_sre_users_all,
     ecosystem_options,
-    ecosystem_select1,
     mo,
-    show_plotly,
 ):
-    def _chart(labels, activity_metric):
-        if not labels:
-            labels = ecosystem_options
-        _df = df_merged[df_merged['repo_label'].isin(labels)][['bucket_month', 'user_name']].drop_duplicates()
-        _df_velocity = _df.merge(df_github_velocity_all, on=['bucket_month', 'user_name'], how='left')
-        _df_users = df_sre_users_all[df_sre_users_all['user_name'].isin(_df['user_name'].unique())]
-        _activity_grid = build_user_velocity_grid(_df_velocity, _df_users)
-        _fig = developer_activity_area_chart(_activity_grid, method=activity_metric)
-        return show_plotly(_fig)
+    import json as _json
 
+    _ACTIVITY_OPTS = ['Active Developers', 'Full-time Developers', 'Velocity']
+    _ECOSYSTEM_OPTS = ['Ethereum']
+    _uid = 'activityByEcosystem'
+
+    _states = {}
+    for _act in _ACTIVITY_OPTS:
+        _labels = ['Ethereum']
+        _df_filt = df_merged[df_merged['repo_label'].isin(_labels)][['bucket_month', 'user_name']].drop_duplicates()
+        _df_vel = _df_filt.merge(df_github_velocity_all, on=['bucket_month', 'user_name'], how='left')
+        _df_usr = df_sre_users_all[df_sre_users_all['user_name'].isin(_df_filt['user_name'].unique())]
+        _grid = build_user_velocity_grid(_df_vel, _df_usr)
+        _fig = developer_activity_area_chart(_grid, method=_act)
+        _states[_act] = {'chart': _json.loads(_fig.to_json())}
+
+    import html as _html_mod
+
+    _opts = list(_states.keys())
+    _djs_safe = _json.dumps(_states).replace('</', '<\\/')
+    _opts_js = _json.dumps(_opts)
+    _btn_html = ''.join(f'<button class="tab-btn" data-idx="{i}">{o}</button>' for i, o in enumerate(_opts))
+
+    _inner = (
+        '<!DOCTYPE html><html><head><meta charset="utf-8">'
+        '<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>'
+        '<style>'
+        '*{box-sizing:border-box;margin:0;padding:0}'
+        'body{font-family:Arial,sans-serif;font-size:13px;padding:4px}'
+        '.tab-btn{padding:6px 14px;border:none;background:none;border-radius:6px;font-size:13px;cursor:pointer;color:#6b7280}'
+        '.tab-btn:hover{background:#f3f4f6;color:#111}'
+        '.tab-btn.active{background:#eff6ff;color:#2563eb;font-weight:600}'
+        '.tab-bar{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px;border-bottom:1px solid #e5e7eb;padding-bottom:8px}'
+        '</style></head><body>'
+        f'<div class="tab-bar">{_btn_html}</div>'
+        '<div id="chart"></div>'
+        f'<script>var D={_djs_safe};var O={_opts_js};'
+        'document.querySelectorAll(".tab-btn").forEach(function(btn,i){'
+        'btn.addEventListener("click",function(){'
+        'document.querySelectorAll(".tab-btn").forEach(function(b){b.classList.remove("active")});'
+        'btn.classList.add("active");'
+        'Plotly.react("chart",D[O[i]].chart.data,D[O[i]].chart.layout,{responsive:true});'
+        '});});'
+        'var _b=document.querySelectorAll(".tab-btn");if(_b.length)_b[0].click();'
+        '</script></body></html>'
+    )
+    _src = _html_mod.escape(_inner, quote=True)
 
     mo.vstack([
         mo.md("---"),
         mo.md("## Speedrun Ethereum has contributed an incremental ~250 monthly active developers to Ethereum"),
-        mo.md("_Measured as the increase in Ethereum-active developers attributable to SRE alumni relative to the pre-SRE baseline._"),
-        mo.hstack([activity_select1, ecosystem_select1, mo.md("ecosystem(s)")], align='start', justify='start'),
-        _chart(labels=ecosystem_select1.value, activity_metric=activity_select1.value),
+        mo.md("_Measured as the increase in Ethereum-active developers attributable to SRE alumni relative to the pre-SRE baseline. Showing Ethereum ecosystem._"),
+        mo.Html(f'<iframe srcdoc="{_src}" style="width:100%;height:520px;border:none;display:block" scrolling="no"></iframe>'),
     ])
     return
 
@@ -641,7 +633,7 @@ def _(
             y=1.00,
             xanchor="left",
             yanchor="top"
-        )    
+        )
     )
     _fig.update_xaxes(
         showline=True,
@@ -748,9 +740,9 @@ def _(mo, show_stat):
     def show_developer_stats(df_users):
         _total_devs = df_users['user_name'].nunique()
         _experienced_devs = df_users[df_users['experience_category'] == 'Experienced']['user_name'].nunique()
-        _batch_devs = df_users[df_users['batch_id'] != '-']['user_name'].nunique() 
-        _challenge_devs = df_users[df_users['challenges_completed']>=1]['user_name'].nunique() 
-        _increase_devs = df_users[df_users['change_category'].str.contains('Increase')]['user_name'].nunique() 
+        _batch_devs = df_users[df_users['batch_id'] != '-']['user_name'].nunique()
+        _challenge_devs = df_users[df_users['challenges_completed']>=1]['user_name'].nunique()
+        _increase_devs = df_users[df_users['change_category'].str.contains('Increase')]['user_name'].nunique()
 
         return mo.hstack([
             show_stat(value=_total_devs, label='Total Developers', caption="With public commits"),
@@ -934,34 +926,64 @@ def _(
 
 
 @app.cell(hide_code=True)
-def _(ui_multiselect_ecosystem):
-    ecosystem_options_funnel = ui_multiselect_ecosystem(label='Select one or more ecosystem(s) to analyze', value='Ethereum')
-    return (ecosystem_options_funnel,)
-
-
-@app.cell(hide_code=True)
-def _(
+def section_experience_funnel(
     df_merged,
-    ecosystem_options_funnel,
     experience_facet_funnels,
     experience_metrics,
     mo,
     show_plotly,
     show_table,
 ):
-    def _chart(ecosystems):
-        _df = experience_metrics(df_merged, repo_labels=ecosystems, n_months=6)
-        _fig = experience_facet_funnels(_df, n_months=6, cols=3)
-        return mo.vstack([
-            show_plotly(_fig),
-            mo.md("The table below provides additional detail on the developer funnel:"),
-            show_table(_df)
-        ])
+    import json as _json2
+
+    _ECOSYSTEMS_FUNNEL = ['Ethereum']
+    _uid2 = 'experienceFunnel'
+
+    _states2 = {}
+    for _eco2 in _ECOSYSTEMS_FUNNEL:
+        _df2 = experience_metrics(df_merged, repo_labels=[_eco2], n_months=6)
+        _fig2 = experience_facet_funnels(_df2, n_months=6, cols=3)
+        _states2[_eco2] = {'chart': _json2.loads(_fig2.to_json())}
+
+    import html as _html_mod2
+
+    _opts2 = list(_states2.keys())
+    _djs2_safe = _json2.dumps(_states2).replace('</', '<\\/')
+    _opts2_js = _json2.dumps(_opts2)
+    _btn2_html = ''.join(f'<button class="tab-btn" data-idx="{i}">{o}</button>' for i, o in enumerate(_opts2))
+
+    _inner2 = (
+        '<!DOCTYPE html><html><head><meta charset="utf-8">'
+        '<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>'
+        '<style>'
+        '*{box-sizing:border-box;margin:0;padding:0}'
+        'body{font-family:Arial,sans-serif;font-size:13px;padding:4px}'
+        '.tab-btn{padding:6px 14px;border:none;background:none;border-radius:6px;font-size:13px;cursor:pointer;color:#6b7280}'
+        '.tab-btn:hover{background:#f3f4f6;color:#111}'
+        '.tab-btn.active{background:#eff6ff;color:#2563eb;font-weight:600}'
+        '.tab-bar{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px;border-bottom:1px solid #e5e7eb;padding-bottom:8px}'
+        '</style></head><body>'
+        f'<div class="tab-bar">{_btn2_html}</div>'
+        '<div id="chart"></div>'
+        f'<script>var D={_djs2_safe};var O={_opts2_js};'
+        'document.querySelectorAll(".tab-btn").forEach(function(btn,i){'
+        'btn.addEventListener("click",function(){'
+        'document.querySelectorAll(".tab-btn").forEach(function(b){b.classList.remove("active")});'
+        'btn.classList.add("active");'
+        'Plotly.react("chart",D[O[i]].chart.data,D[O[i]].chart.layout,{responsive:true});'
+        '});});'
+        'var _b=document.querySelectorAll(".tab-btn");if(_b.length)_b[0].click();'
+        '</script></body></html>'
+    )
+    _src2 = _html_mod2.escape(_inner2, quote=True)
+
+    _df_table2 = experience_metrics(df_merged, repo_labels=['Ethereum'], n_months=6)
 
     mo.vstack([
         mo.md("## Not surprisingly, less experienced developers have higher churn and less overall long-term impact on Ethereum"),
-        ecosystem_options_funnel,
-        _chart(ecosystem_options_funnel.value)
+        mo.Html(f'<iframe srcdoc="{_src2}" style="width:100%;height:520px;border:none;display:block" scrolling="no"></iframe>'),
+        mo.md("The table below provides additional detail on the developer funnel:"),
+        show_table(_df_table2)
     ])
     return
 
@@ -1141,124 +1163,201 @@ def _(SRE_GREEN, SRE_PINK, SRE_YELLOW, ecosystem_options, px):
             rangemode="tozero"
         )
         fig.update_traces(line=dict(width=3))
-        return fig    
+        return fig
     return cohort_year_retention_line_chart, experience_retention_line_chart
 
 
 @app.cell(hide_code=True)
-def _(ui_multiselect_ecosystem):
-    ecosystem_select2 = ui_multiselect_ecosystem(value='Ethereum', label='Share of developers contributing to one or more repos in the')
-    return (ecosystem_select2,)
-
-
-@app.cell(hide_code=True)
-def _(
+def section_experience_retention(
     df_merged,
-    ecosystem_select2,
     experience_retention_line_chart,
     mo,
     show_plotly,
 ):
+    import json as _json3
+
+    _ECOSYSTEMS_RET = ['Ethereum', 'Other EVM Chain', 'Non-EVM Chain', 'Other (Crypto-Related)', 'Other (Non-Crypto)', 'Personal', 'Unknown']
+    _uid3 = 'experienceRetention'
+
+    _states3 = {}
+    for _eco3 in _ECOSYSTEMS_RET:
+        _fig3 = experience_retention_line_chart(
+            df_merged,
+            max_month=12,
+            ecosystems=[_eco3]
+        )
+        _states3[_eco3] = {'chart': _json3.loads(_fig3.to_json())}
+
+    import html as _html_mod3
+
+    _opts3 = list(_states3.keys())
+    _djs3_safe = _json3.dumps(_states3).replace('</', '<\\/')
+    _opts3_js = _json3.dumps(_opts3)
+    _btn3_html = ''.join(f'<button class="tab-btn" data-idx="{i}">{o}</button>' for i, o in enumerate(_opts3))
+
+    _inner3 = (
+        '<!DOCTYPE html><html><head><meta charset="utf-8">'
+        '<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>'
+        '<style>'
+        '*{box-sizing:border-box;margin:0;padding:0}'
+        'body{font-family:Arial,sans-serif;font-size:13px;padding:4px}'
+        '.tab-btn{padding:6px 14px;border:none;background:none;border-radius:6px;font-size:13px;cursor:pointer;color:#6b7280}'
+        '.tab-btn:hover{background:#f3f4f6;color:#111}'
+        '.tab-btn.active{background:#eff6ff;color:#2563eb;font-weight:600}'
+        '.tab-bar{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px;border-bottom:1px solid #e5e7eb;padding-bottom:8px}'
+        '</style></head><body>'
+        f'<div class="tab-bar">{_btn3_html}</div>'
+        '<div id="chart"></div>'
+        f'<script>var D={_djs3_safe};var O={_opts3_js};'
+        'document.querySelectorAll(".tab-btn").forEach(function(btn,i){'
+        'btn.addEventListener("click",function(){'
+        'document.querySelectorAll(".tab-btn").forEach(function(b){b.classList.remove("active")});'
+        'btn.classList.add("active");'
+        'Plotly.react("chart",D[O[i]].chart.data,D[O[i]].chart.layout,{responsive:true});'
+        '});});'
+        'var _b=document.querySelectorAll(".tab-btn");if(_b.length)_b[0].click();'
+        '</script></body></html>'
+    )
+    _src3 = _html_mod3.escape(_inner3, quote=True)
+
     mo.vstack([
         mo.md("---"),
         mo.md("## Developers with > 12 months prior experience remain active contributors to Ethereum at significantly higher rates"),
-        mo.hstack([ecosystem_select2, mo.md("ecosystem since starting SRE")], justify='start', align='start'),
-        show_plotly(
-            experience_retention_line_chart(
-                df_merged,
-                max_month=12,
-                ecosystems=ecosystem_select2.value
-            )
-        ),
+        mo.Html(f'<iframe srcdoc="{_src3}" style="width:100%;height:520px;border:none;display:block" scrolling="no"></iframe>'),
     ])
     return
 
 
 @app.cell(hide_code=True)
-def _(
-    ui_dropdown_activity_metric,
-    ui_dropdown_experience_select,
-    ui_multiselect_ecosystem,
-):
-    activity_select3 = ui_dropdown_activity_metric(value='Active Developers', label='Analyze')
-    ecosystem_select3 = ui_multiselect_ecosystem(value='Ethereum', label='in the')
-    experience_select3 = ui_dropdown_experience_select(value='Experienced', label='ecosystem(s) for developer who were')
-    return activity_select3, ecosystem_select3, experience_select3
-
-
-@app.cell(hide_code=True)
-def _(
-    activity_select3,
+def section_experienced_dev_activity(
     build_user_velocity_grid,
     developer_activity_area_chart,
     df_github_velocity_all,
     df_merged,
     df_sre_users_all,
     ecosystem_options,
-    ecosystem_select3,
-    experience_select3,
     mo,
     show_plotly,
 ):
-    def _chart(labels, experience_level, activity_metric):
+    import json as _json4
 
-        if not labels:
-            labels = ecosystem_options
+    _ACTIVITY_OPTS4 = ['Active Developers', 'Full-time Developers', 'Velocity']
+    _EXPERIENCE_LEVELS4 = ['Experienced', 'Learning', 'Newb']
+    _uid4 = 'experiencedDevActivity'
 
-        _df_target = df_merged[
-            (df_merged['repo_label'].isin(labels)) 
-          & (df_merged['experience_category'] == experience_level)
+    _states4 = {}
+    for _exp4 in _EXPERIENCE_LEVELS4:
+        _df4_target = df_merged[
+            (df_merged['repo_label'].isin(['Ethereum']))
+            & (df_merged['experience_category'] == _exp4)
         ].copy()
+        _df4 = _df4_target[['bucket_month', 'user_name']].drop_duplicates()
+        _df4_vel = _df4.merge(df_github_velocity_all, on=['bucket_month', 'user_name'], how='left')
+        _df4_usr = df_sre_users_all[df_sre_users_all['user_name'].isin(_df4['user_name'].unique())]
+        _grid4 = build_user_velocity_grid(_df4_vel, _df4_usr)
+        _fig4 = developer_activity_area_chart(_grid4, method='Active Developers')
+        _states4[_exp4] = {'chart': _json4.loads(_fig4.to_json())}
 
-        _df = _df_target[['bucket_month', 'user_name']].drop_duplicates()
-        _df_velocity = _df.merge(df_github_velocity_all, on=['bucket_month', 'user_name'], how='left')
-        _df_users = df_sre_users_all[df_sre_users_all['user_name'].isin(_df['user_name'].unique())]
-        _activity_grid = build_user_velocity_grid(_df_velocity, _df_users)
-        _fig = developer_activity_area_chart(_activity_grid, method=activity_metric)
+    import html as _html_mod4
 
-        # _df_monthly = build_repo_label_monthly_time(_df_target[_df_target['cohort_year'] != '2025'], month_limit=12)
-        # _fig_retention_bar = cohort_retention_bar_chart(_df_monthly)
-        # return show_plotly(_fig_retention_bar)
-        return show_plotly(_fig)
+    _opts4 = list(_states4.keys())
+    _djs4_safe = _json4.dumps(_states4).replace('</', '<\\/')
+    _opts4_js = _json4.dumps(_opts4)
+    _btn4_html = ''.join(f'<button class="tab-btn" data-idx="{i}">{o}</button>' for i, o in enumerate(_opts4))
 
+    _inner4 = (
+        '<!DOCTYPE html><html><head><meta charset="utf-8">'
+        '<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>'
+        '<style>'
+        '*{box-sizing:border-box;margin:0;padding:0}'
+        'body{font-family:Arial,sans-serif;font-size:13px;padding:4px}'
+        '.tab-btn{padding:6px 14px;border:none;background:none;border-radius:6px;font-size:13px;cursor:pointer;color:#6b7280}'
+        '.tab-btn:hover{background:#f3f4f6;color:#111}'
+        '.tab-btn.active{background:#eff6ff;color:#2563eb;font-weight:600}'
+        '.tab-bar{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px;border-bottom:1px solid #e5e7eb;padding-bottom:8px}'
+        '</style></head><body>'
+        f'<div class="tab-bar">{_btn4_html}</div>'
+        '<div id="chart"></div>'
+        f'<script>var D={_djs4_safe};var O={_opts4_js};'
+        'document.querySelectorAll(".tab-btn").forEach(function(btn,i){'
+        'btn.addEventListener("click",function(){'
+        'document.querySelectorAll(".tab-btn").forEach(function(b){b.classList.remove("active")});'
+        'btn.classList.add("active");'
+        'Plotly.react("chart",D[O[i]].chart.data,D[O[i]].chart.layout,{responsive:true});'
+        '});});'
+        'var _b=document.querySelectorAll(".tab-btn");if(_b.length)_b[0].click();'
+        '</script></body></html>'
+    )
+    _src4 = _html_mod4.escape(_inner4, quote=True)
 
     mo.vstack([
         mo.md("---"),
         mo.md("## For experienced developers, Speedrun Ethereum functions less as onboarding and more as activation and redirection toward Ethereum"),
-        mo.hstack([activity_select3, ecosystem_select3, experience_select3,mo.md("at the time they started SRE")], align='start', justify='start'),
-        _chart(labels=ecosystem_select3.value, experience_level=experience_select3.value, activity_metric=activity_select3.value),
+        mo.md("_Showing Active Developers metric for Ethereum ecosystem. Select experience level:_"),
+        mo.Html(f'<iframe srcdoc="{_src4}" style="width:100%;height:520px;border:none;display:block" scrolling="no"></iframe>'),
     ])
     return
 
 
 @app.cell(hide_code=True)
-def _(ui_dropdown_experience_select, ui_multiselect_ecosystem):
-    experience_select4 = ui_dropdown_experience_select(value='Experienced', label='Share of')
-    ecosystem_select4 = ui_multiselect_ecosystem(value='Ethereum', label='developers contributing to one or more repos in the')
-    return ecosystem_select4, experience_select4
-
-
-@app.cell(hide_code=True)
-def _(
+def section_cohort_year_retention(
     cohort_year_retention_line_chart,
     df_merged,
-    ecosystem_select4,
-    experience_select4,
     mo,
     show_plotly,
 ):
+    import json as _json5
+
+    _EXPERIENCE_LEVELS5 = ['Experienced', 'Learning', 'Newb']
+    _uid5 = 'cohortYearRetention'
+
+    _states5 = {}
+    for _exp5 in _EXPERIENCE_LEVELS5:
+        _fig5 = cohort_year_retention_line_chart(
+            df_merged,
+            max_month=12,
+            ecosystems=['Ethereum'],
+            experience_category=_exp5
+        )
+        _states5[_exp5] = {'chart': _json5.loads(_fig5.to_json())}
+
+    import html as _html_mod5
+
+    _opts5 = list(_states5.keys())
+    _djs5_safe = _json5.dumps(_states5).replace('</', '<\\/')
+    _opts5_js = _json5.dumps(_opts5)
+    _btn5_html = ''.join(f'<button class="tab-btn" data-idx="{i}">{o}</button>' for i, o in enumerate(_opts5))
+
+    _inner5 = (
+        '<!DOCTYPE html><html><head><meta charset="utf-8">'
+        '<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>'
+        '<style>'
+        '*{box-sizing:border-box;margin:0;padding:0}'
+        'body{font-family:Arial,sans-serif;font-size:13px;padding:4px}'
+        '.tab-btn{padding:6px 14px;border:none;background:none;border-radius:6px;font-size:13px;cursor:pointer;color:#6b7280}'
+        '.tab-btn:hover{background:#f3f4f6;color:#111}'
+        '.tab-btn.active{background:#eff6ff;color:#2563eb;font-weight:600}'
+        '.tab-bar{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px;border-bottom:1px solid #e5e7eb;padding-bottom:8px}'
+        '</style></head><body>'
+        f'<div class="tab-bar">{_btn5_html}</div>'
+        '<div id="chart"></div>'
+        f'<script>var D={_djs5_safe};var O={_opts5_js};'
+        'document.querySelectorAll(".tab-btn").forEach(function(btn,i){'
+        'btn.addEventListener("click",function(){'
+        'document.querySelectorAll(".tab-btn").forEach(function(b){b.classList.remove("active")});'
+        'btn.classList.add("active");'
+        'Plotly.react("chart",D[O[i]].chart.data,D[O[i]].chart.layout,{responsive:true});'
+        '});});'
+        'var _b=document.querySelectorAll(".tab-btn");if(_b.length)_b[0].click();'
+        '</script></body></html>'
+    )
+    _src5 = _html_mod5.escape(_inner5, quote=True)
+
     mo.vstack([
         mo.md("---"),
         mo.md("## Engagement past the 3–month mark is a good predictor of longer-term retention"),
-        mo.hstack([experience_select4, ecosystem_select4, mo.md("ecosystem since starting SRE")], justify='start', align='start'),
-        show_plotly(
-            cohort_year_retention_line_chart(
-                df_merged,
-                max_month=12,
-                ecosystems=ecosystem_select4.value,
-                experience_category=experience_select4.value
-            )
-        ),
+        mo.md("_Showing Ethereum ecosystem by cohort year. Select experience level:_"),
+        mo.Html(f'<iframe srcdoc="{_src5}" style="width:100%;height:520px;border:none;display:block" scrolling="no"></iframe>'),
     ])
     return
 
@@ -1436,24 +1535,6 @@ def _(
     return
 
 
-@app.cell(hide_code=True)
-def _(df_merged, mo, ui_dropdown_experience_select, ui_multiselect_ecosystem):
-    where_now_experience = ui_dropdown_experience_select(label='', value='Experienced')
-    change_categories = sorted(df_merged['change_category'].unique())
-    where_now_change = mo.ui.multiselect(options=change_categories, value=change_categories, label='')
-    where_now_labels = ui_multiselect_ecosystem(label='', value='Ethereum')
-    where_now_months = mo.ui.number(value=3, start=1, stop=12, step=1, label='' )
-    where_now_direction = mo.ui.dropdown(value='After', options=['Before', 'After'], label='')
-    return (
-        change_categories,
-        where_now_change,
-        where_now_direction,
-        where_now_experience,
-        where_now_labels,
-        where_now_months,
-    )
-
-
 @app.function(hide_code=True)
 def where_now_user_table(
     df_merged,
@@ -1615,53 +1696,33 @@ def _(go):
 
 
 @app.cell(hide_code=True)
-def _(
-    change_categories,
+def section_where_now(
     df_merged,
-    ecosystem_options,
     mo,
     plotly_org_wordcloud,
     show_plotly,
-    where_now_change,
-    where_now_direction,
-    where_now_experience,
-    where_now_labels,
-    where_now_months,
 ):
-    def _chart(repo_labels, experience_cat, change_cats, num_months, direction):
-        month_threshold = -num_months if direction == 'Before' else num_months
-        if not repo_labels:
-            repo_labels = ecosystem_options
-        if not change_cats:
-            change_cats = change_categories
+    _fixed_experience = 'Experienced'
+    _fixed_month_threshold = 3
+    _fixed_repo_labels = ['Ethereum']
+    _fixed_change_cats = ['Major Increase', 'Minor Increase']
 
-        user_table = where_now_user_table(
-            df_merged=df_merged,
-            repo_labels=repo_labels,
-            experience_categories=[experience_cat],
-            change_categories=change_cats,
-            month_threshold=month_threshold,
-        )
-        wc = plotly_org_wordcloud(user_table, colormap='RdYlGn')
-        return show_plotly(wc)
+    _user_table_wn = where_now_user_table(
+        df_merged=df_merged,
+        repo_labels=_fixed_repo_labels,
+        experience_categories=[_fixed_experience],
+        change_categories=_fixed_change_cats,
+        month_threshold=_fixed_month_threshold,
+    )
+    _wc = plotly_org_wordcloud(_user_table_wn, colormap='RdYlGn')
 
     mo.vstack([
         mo.md("---"),
         mo.md("## SRE developers have gone on to contribute regularly to many different organizations"),
-        mo.hstack([
-            mo.md("Where"), where_now_experience, mo.md("developers who have"),
-            where_now_change, mo.md("activity in the"), where_now_labels, mo.md("ecosystem(s) since SRE were at least"),
-            where_now_months, mo.md("months"), where_now_direction, mo.md("starting the program")], align='start', justify='start'),
-        _chart(
-            repo_labels=where_now_labels.value,
-            experience_cat=where_now_experience.value,
-            change_cats=where_now_change.value,
-            num_months=where_now_months.value,
-            direction=where_now_direction.value
-        )
+        mo.md("_Showing Experienced developers with increased activity in the Ethereum ecosystem, at least 3 months after starting the program._"),
+        show_plotly(_wc),
     ])
     return
-
 
 
 @app.cell(hide_code=True)
