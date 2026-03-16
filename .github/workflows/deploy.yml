@@ -20,15 +20,7 @@ jobs:
       - name: Install Python deps
         run: uv sync
 
-      - name: Check if notebooks changed
-        id: changed
-        run: |
-          git diff --name-only HEAD~1 HEAD 2>/dev/null | grep -q '^notebooks/' \
-            && echo "notebooks=true" >> $GITHUB_OUTPUT \
-            || echo "notebooks=false" >> $GITHUB_OUTPUT
-
       - name: Export notebooks
-        if: steps.changed.outputs.notebooks == 'true' || github.event_name != 'push'
         env:
           OSO_API_KEY: ${{ secrets.OSO_API_KEY }}
         run: uv run python scripts/export_notebooks.py
