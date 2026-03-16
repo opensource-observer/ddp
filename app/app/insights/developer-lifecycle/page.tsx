@@ -1,9 +1,5 @@
+'use client';
 import MarimoIframe from '@/components/MarimoIframe';
-
 export default function DeveloperLifecycle() {
-  return (
-    <div className="h-full w-full">
-      <MarimoIframe notebookName="notebooks/insights/developer-lifecycle" />
-    </div>
-  );
+  return <MarimoIframe notebookName="notebooks/insights/developer-lifecycle" />;
 }

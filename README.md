@@ -13,8 +13,11 @@ cp .env.example .env
 uv sync
 cd app && pnpm install && cd ..
 
-# 3. Start
-cd app && pnpm dev:all
+# 3. Export notebooks to static HTML
+cd app && pnpm export:notebooks && cd ..
+
+# 4. Start the dev server
+cd app && pnpm dev
 ```
 
 Open http://localhost:3000.
@@ -30,7 +33,6 @@ Open http://localhost:3000.
 ```
 ddp/
 ├── notebooks/              # Marimo notebooks (.py)
-│   ├── home.py
 │   ├── quick-start.py
 │   ├── publications.py
 │   ├── agent-guide.py
@@ -39,17 +41,20 @@ ddp/
 │   │   ├── models/         # Ecosystems, Repositories, Developers, Commits, Events, Timeseries Metrics
 │   │   └── metric-definitions/  # Activity, Alignment, Lifecycle, Retention
 │   └── insights/           # 2025 Developer Trends, Lifecycle, Speedrun Ethereum, DeFi Journeys, Retention
+├── scripts/
+│   └── export_notebooks.py # Exports notebooks to static HTML
 ├── app/                    # Next.js app (UI shell)
 │   ├── app/                # Pages (App Router)
-│   └── components/         # Sidebar, MarimoIframe
-├── serve_notebooks.py      # Marimo ASGI server (port 8000)
+│   ├── components/         # Sidebar, MarimoIframe
+│   └── public/notebooks/   # Exported HTML (generated, gitignored)
 └── pyproject.toml
 ```
 
 ## How it works
 
-- **Marimo server** (`localhost:8000`) — runs notebook kernels via `serve_notebooks.py`
-- **Next.js app** (`localhost:3000`) — navigation shell that embeds notebooks in iframes
+- **Export step** — `scripts/export_notebooks.py` runs `marimo export html` on each notebook, writing static HTML to `app/public/notebooks/`
+- **Next.js app** (`localhost:3000`) — navigation shell that serves the exported HTML via `MarimoIframe`
+- **CI** — the [deploy workflow](.github/workflows/deploy.yml) exports notebooks and builds the site on push to `main`. A [weekly refresh](.github/workflows/refresh-data.yml) re-exports to pick up fresh data.
 
 Each page in the Next.js app is a thin wrapper around a `MarimoIframe` component:
 
@@ -62,6 +67,7 @@ Each page in the Next.js app is a thin wrapper around a `MarimoIframe` component
 1. Create `notebooks/<category>/<name>.py` using the standard template below
 2. Add a page at `app/app/<category>/<name>/page.tsx`
 3. Add a nav entry to `app/components/Sidebar.tsx`
+4. Run `cd app && pnpm export:notebooks` to generate the HTML
 
 ### Notebook template
 
@@ -88,22 +94,8 @@ if __name__ == "__main__":
 
 For detailed notebook conventions, see [`notebooks/claude.md`](notebooks/claude.md).
 
-## Running servers separately
-
-```bash
-# Terminal 1 — Marimo
-uv run python serve_notebooks.py
-
-# Terminal 2 — Next.js
-cd app && pnpm dev
-```
-
-Notebooks are served at `http://localhost:8000/notebooks/<name>` — Marimo must be running for iframes to render.
-
 ## Configuration
 
 | Variable | Description |
 |----------|-------------|
 | `OSO_API_KEY` | Required. OSO data warehouse access key. |
-
-The Marimo port defaults to `8000`. To change it, update `serve_notebooks.py` and the `marimoPort` prop on `MarimoIframe` in any relevant pages.

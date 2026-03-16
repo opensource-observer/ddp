@@ -4,20 +4,33 @@ import { useEffect, useState } from 'react';
 
 interface MarimoIframeProps {
   notebookName: string;
-  marimoPort?: number;
 }
 
-export default function MarimoIframe({ notebookName, marimoPort = 8000 }: MarimoIframeProps) {
+export default function MarimoIframe({ notebookName }: MarimoIframeProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
-  // Remove .py extension if present, and construct URL
+  // Remove .py extension if present, and construct URL to static exported HTML
   const notebookPath = notebookName.replace(/\.py$/, '');
-  const marimoUrl = `http://localhost:${marimoPort}/${notebookPath}`;
+  const notebookUrl = `/${notebookPath}.html`;
 
   useEffect(() => {
     setIsLoading(true);
     setHasError(false);
-  }, [notebookName]);
+    // Use fetch HEAD to detect 404s — iframe onError only fires for network failures,
+    // not HTTP error responses, so a missing file would silently show a 404 page.
+    fetch(notebookUrl, { method: 'HEAD' })
+      .then(res => {
+        if (!res.ok) {
+          setHasError(true);
+          setIsLoading(false);
+        }
+        // If ok, let the iframe's onLoad handle clearing the loading state
+      })
+      .catch(() => {
+        setHasError(true);
+        setIsLoading(false);
+      });
+  }, [notebookUrl]);
 
   const handleLoad = () => {
     setIsLoading(false);
@@ -45,24 +58,23 @@ export default function MarimoIframe({ notebookName, marimoPort = 8000 }: Marimo
           </div>
           <div className="text-red-600 font-semibold text-lg mb-2">Failed to load notebook</div>
           <div className="text-gray-600 text-sm mb-6 text-center max-w-md">
-            Make sure the marimo server is running on port {marimoPort}
+            Notebook not exported yet — run <code className="bg-gray-100 px-1 rounded">pnpm export:notebooks</code>
           </div>
           <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-left max-w-md w-full">
-            <div className="text-xs font-semibold text-gray-500 mb-2">Expected URL:</div>
-            <code className="text-xs text-gray-700 break-all">{marimoUrl}</code>
-          </div>
-          <div className="mt-6 text-gray-500 text-sm">
-            Run: <code className="bg-gray-100 px-2 py-1 rounded text-xs">uv run python serve_notebooks.py</code> from the <code className="bg-gray-100 px-2 py-1 rounded text-xs">ddp</code> directory
+            <div className="text-xs font-semibold text-gray-500 mb-2">Expected path:</div>
+            <code className="text-xs text-gray-700 break-all">{notebookUrl}</code>
           </div>
         </div>
       )}
-      <iframe
-        src={marimoUrl}
-        className="w-full h-full border-0"
-        onLoad={handleLoad}
-        onError={handleError}
-        title={notebookName}
-      />
+      {!hasError && (
+        <iframe
+          src={notebookUrl}
+          className="w-full h-full border-0"
+          onLoad={handleLoad}
+          onError={handleError}
+          title={notebookName}
+        />
+      )}
     </div>
   );
 }

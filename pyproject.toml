@@ -17,6 +17,7 @@ dependencies = [
 
 [tool.marimo.runtime]
 dotenv = [".env", ".env.testing"]
+output_max_bytes = 10_000_000
 
 [dependency-groups]
 dev = [

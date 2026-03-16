@@ -92,226 +92,136 @@ def section_ecosystem_overview(mo):
 
 
 @app.cell(hide_code=True)
-def ecosystem_controls(df, mo):
-    project_list = sorted(list(df['project_display_name'].unique()))
-    project_input = mo.ui.dropdown(
-        options=project_list,
-        value='Ethereum',
-        label='Select Ecosystem',
-        full_width=False
-    )
-    project_input
-    return (project_input,)
+def ecosystem_overview_tabs(ACTIVE_LABELS, CHURNED_LABELS, DORMANT_LABELS, FT_LABELS, PT_LABELS, LIFECYCLE_COLORS, df, mo, go, pd):
+    import json as _json
+    import html as _html_mod
 
+    _ECOSYSTEMS = ['Ethereum', 'Bitcoin', 'Solana', 'Arbitrum', 'Base', 'Polygon', 'AI']
 
-@app.cell(hide_code=True)
-def stats_panel(ACTIVE_LABELS, CHURNED_LABELS, DORMANT_LABELS, FT_LABELS, PT_LABELS, df, mo, pd, project_input):
-    _df = df[df['project_display_name'] == project_input.value].copy()
+    def _stat(value, label, caption=''):
+        return (
+            f'<div style="border:1px solid #e5e7eb;border-radius:8px;padding:12px 16px;flex:1;min-width:140px">'
+            f'<div style="font-size:20px;font-weight:700;color:#111">{value}</div>'
+            f'<div style="font-size:12px;font-weight:600;color:#374151;margin-top:2px">{label}</div>'
+            + (f'<div style="font-size:11px;color:#9ca3af;margin-top:2px">{caption}</div>' if caption else '')
+            + '</div>'
+        )
 
-    _latest_month = _df['bucket_month'].max()
-    _latest = _df[_df['bucket_month'] == _latest_month]
+    _states = {}
+    for _eco in _ECOSYSTEMS:
+        _edf = df[df['project_display_name'] == _eco].copy()
+        if _edf.empty:
+            continue
 
-    _active_count = int(_latest[_latest['label'].isin(ACTIVE_LABELS)]['developers_count'].sum())
-    _ft_count = int(_latest[_latest['label'].isin(FT_LABELS)]['developers_count'].sum())
-    _pt_count = int(_latest[_latest['label'].isin(PT_LABELS)]['developers_count'].sum())
-    _new_count = int(_latest[_latest['label'].isin(['first time'])]['developers_count'].sum())
+        _latest_month = _edf['bucket_month'].max()
+        _latest = _edf[_edf['bucket_month'] == _latest_month]
 
-    _twelve_months_ago = _latest_month - pd.DateOffset(months=12)
-    _trailing_12 = _df[_df['bucket_month'] > _twelve_months_ago]
-    _churn_12_sum = int(_trailing_12[_trailing_12['label'].isin(CHURNED_LABELS + DORMANT_LABELS)]['developers_count'].sum())
-    _active_12_sum = int(_trailing_12[_trailing_12['label'].isin(ACTIVE_LABELS)]['developers_count'].sum())
-    _churn_ratio_12 = (_churn_12_sum / _active_12_sum * 100) if _active_12_sum > 0 else 0
+        _active_count = int(_latest[_latest['label'].isin(ACTIVE_LABELS)]['developers_count'].sum())
+        _ft_count = int(_latest[_latest['label'].isin(FT_LABELS)]['developers_count'].sum())
+        _pt_count = int(_latest[_latest['label'].isin(PT_LABELS)]['developers_count'].sum())
+        _new_count = int(_latest[_latest['label'].isin(['first time'])]['developers_count'].sum())
 
-    _churn_all_sum = int(_df[_df['label'].isin(CHURNED_LABELS + DORMANT_LABELS)]['developers_count'].sum())
-    _active_all_sum = int(_df[_df['label'].isin(ACTIVE_LABELS)]['developers_count'].sum())
-    _churn_ratio_all = (_churn_all_sum / _active_all_sum * 100) if _active_all_sum > 0 else 0
+        _twelve_months_ago = _latest_month - pd.DateOffset(months=12)
+        _trailing_12 = _edf[_edf['bucket_month'] > _twelve_months_ago]
+        _churn_12_sum = int(_trailing_12[_trailing_12['label'].isin(CHURNED_LABELS + DORMANT_LABELS)]['developers_count'].sum())
+        _active_12_sum = int(_trailing_12[_trailing_12['label'].isin(ACTIVE_LABELS)]['developers_count'].sum())
+        _churn_ratio_12 = (_churn_12_sum / _active_12_sum * 100) if _active_12_sum > 0 else 0
 
-    _dormant_current = int(_latest[_latest['label'].isin(DORMANT_LABELS)]['developers_count'].sum())
+        _stats_html = (
+            '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px">'
+            + _stat(f'{_active_count:,}', 'Active Developers', f'Latest month ({str(_latest_month)[:7]})')
+            + _stat(f'{_ft_count:,}', 'Full-Time', '10+ active days/month')
+            + _stat(f'{_pt_count:,}', 'Part-Time', '1-9 active days/month')
+            + _stat(f'{_new_count:,}', 'First-Time Contributors', 'New this month')
+            + _stat(f'{_churn_ratio_12:.1f}%', 'Churn Ratio (12mo)', 'Churned+dormant / active')
+            + '</div>'
+        )
 
-    _six_months_ago = _latest_month - pd.DateOffset(months=6)
-    _trailing_6 = _df[_df['bucket_month'] > _six_months_ago]
-    _dormant_6_monthly = _trailing_6[_trailing_6['label'].isin(DORMANT_LABELS)].groupby('bucket_month')['developers_count'].sum()
-    _dormant_6_avg = int(_dormant_6_monthly.mean()) if len(_dormant_6_monthly) > 0 else 0
+        def _categorize(label):
+            if label == 'first time':
+                return 'First Time'
+            elif label in FT_LABELS:
+                return 'Full Time'
+            elif label in DORMANT_LABELS or label in CHURNED_LABELS:
+                return 'Churned / Dormant'
+            else:
+                return 'Part Time'
 
-    _row1 = mo.hstack([
-        mo.stat(value=f"{_active_count:,}", label="Active Developers", bordered=True, caption=f"Latest month ({str(_latest_month)[:7]})"),
-        mo.stat(value=f"{_ft_count:,}", label="Full-Time", bordered=True, caption="10+ active days/month"),
-        mo.stat(value=f"{_pt_count:,}", label="Part-Time", bordered=True, caption="1-9 active days/month"),
-        mo.stat(value=f"{_new_count:,}", label="First-Time Contributors", bordered=True, caption="New this month"),
-    ], widths="equal", gap=1)
+        _edf['category'] = _edf['label'].apply(_categorize)
+        _grouped = _edf.groupby(['bucket_month', 'category'])['developers_count'].sum().reset_index()
 
-    _row2 = mo.hstack([
-        mo.stat(value=f"{_churn_ratio_12:.1f}%", label="Churn Ratio (12mo)", bordered=True, caption="Churned+dormant / active"),
-        mo.stat(value=f"{_churn_ratio_all:.1f}%", label="Churn Ratio (All-Time)", bordered=True, caption="Churned+dormant / active"),
-        mo.stat(value=f"{_dormant_current:,}", label="Dormant (Current)", bordered=True, caption=f"Latest month ({str(_latest_month)[:7]})"),
-        mo.stat(value=f"{_dormant_6_avg:,}", label="Dormant (6mo Avg)", bordered=True, caption="Average over last 6 months"),
-    ], widths="equal", gap=1)
+        _fig = go.Figure()
+        for _cat in ['First Time', 'Part Time', 'Full Time']:
+            _cat_data = _grouped[_grouped['category'] == _cat]
+            _fig.add_trace(go.Bar(
+                x=_cat_data['bucket_month'],
+                y=_cat_data['developers_count'],
+                name=_cat,
+                marker_color=LIFECYCLE_COLORS[_cat],
+                hovertemplate=f'<b>{_cat}</b><br>%{{x|%b %Y}}<br>Developers: %{{y:,.0f}}<extra></extra>',
+            ))
 
-    mo.vstack([_row1, _row2], gap=1)
-    return
-
-
-@app.cell(hide_code=True)
-def diverging_bar_chart(ACTIVE_LABELS, CHURNED_LABELS, DORMANT_LABELS, FT_LABELS, LIFECYCLE_COLORS, apply_ec_style, df, go, mo, project_input):
-    _df = df[df['project_display_name'] == project_input.value].copy()
-
-    _latest_month = _df['bucket_month'].max()
-    _latest = _df[_df['bucket_month'] == _latest_month]
-    _active_count = int(_latest[_latest['label'].isin(ACTIVE_LABELS)]['developers_count'].sum())
-
-    def _categorize(label):
-        if label == 'first time':
-            return 'First Time'
-        elif label in FT_LABELS:
-            return 'Full Time'
-        elif label in DORMANT_LABELS or label in CHURNED_LABELS:
-            return 'Churned / Dormant'
-        else:
-            return 'Part Time'  # part time, new part time, full time to part time, dormant to part time
-
-    _df['category'] = _df['label'].apply(_categorize)
-    _grouped = _df.groupby(['bucket_month', 'category'])['developers_count'].sum().reset_index()
-
-    _fig = go.Figure()
-
-    for _cat in ['First Time', 'Part Time', 'Full Time']:
-        _cat_data = _grouped[_grouped['category'] == _cat]
+        _cd = _grouped[_grouped['category'] == 'Churned / Dormant']
         _fig.add_trace(go.Bar(
-            x=_cat_data['bucket_month'],
-            y=_cat_data['developers_count'],
-            name=_cat,
-            marker_color=LIFECYCLE_COLORS[_cat],
-            hovertemplate=f'<b>{_cat}</b><br>%{{x|%b %Y}}<br>Developers: %{{y:,.0f}}<extra></extra>',
+            x=_cd['bucket_month'],
+            y=-_cd['developers_count'],
+            name='Churned / Dormant',
+            marker_color=LIFECYCLE_COLORS['Churned / Dormant'],
+            hovertemplate='<b>Churned / Dormant</b><br>%{x|%b %Y}<br>Developers: %{customdata:,.0f}<extra></extra>',
+            customdata=_cd['developers_count'],
         ))
 
-    _cat_data = _grouped[_grouped['category'] == 'Churned / Dormant']
-    _fig.add_trace(go.Bar(
-        x=_cat_data['bucket_month'],
-        y=-_cat_data['developers_count'],
-        name='Churned / Dormant',
-        marker_color=LIFECYCLE_COLORS['Churned / Dormant'],
-        hovertemplate='<b>Churned / Dormant</b><br>%{x|%b %Y}<br>Developers: %{customdata:,.0f}<extra></extra>',
-        customdata=_cat_data['developers_count'],
-    ))
-
-    _fig.update_layout(barmode='relative', height=500)
-
-    apply_ec_style(
-        _fig,
-        title=f"{_active_count:,} monthly active developers in {project_input.value}",
-        subtitle="Developer lifecycle transitions — active (above zero) vs. churned/dormant (below zero)",
-        show_legend=True,
-        right_margin=60,
-    )
-
-    _fig.update_yaxes(
-        zeroline=True,
-        zerolinecolor="#1F2937",
-        zerolinewidth=1.5,
-    )
-
-    mo.ui.plotly(_fig, config={'displayModeBar': False})
-    return
-
-
-@app.cell(hide_code=True)
-def detailed_transitions_header(mo):
-    activity_input = mo.ui.switch(
-        label='Show inactive developers',
-        value=False
-    )
-    mo.hstack([
-        mo.md("""### Detailed Lifecycle Transitions"""),
-        activity_input,
-    ], gap=2, align="end")
-    return (activity_input,)
-
-
-@app.cell(hide_code=True)
-def detailed_stacked_bar(activity_input, df, mo, pd, project_input, px):
-    _df = df[df['project_display_name'] == project_input.value].copy()
-
-    _color_mapping = {
-        'first time': '#4C78A8',
-        'full time': '#7A4D9B',
-        'new full time': '#9C6BD3',
-        'part time to full time': '#B48AEC',
-        'dormant to full time': '#C7A7F2',
-        'part time': '#41AB5D',
-        'new part time': '#74C476',
-        'full time to part time': '#A1D99B',
-        'dormant to part time': '#C7E9C0',
-        'dormant': '#F39C12',
-        'first time to dormant': '#F5B041',
-        'part time to dormant': '#F8C471',
-        'full time to dormant': '#FAD7A0',
-        'churned (after first time)': '#D62728',
-        'churned (after reaching part time)': '#E57373',
-        'churned (after reaching full time)': '#F1948A',
-    }
-    _label_order = [
-        'first time',
-        'full time', 'new full time', 'part time to full time', 'dormant to full time',
-        'part time', 'new part time', 'full time to part time', 'dormant to part time',
-        'dormant', 'first time to dormant', 'part time to dormant', 'full time to dormant',
-        'churned (after first time)', 'churned (after reaching part time)', 'churned (after reaching full time)',
-    ]
-    _inactive_labels = [
-        'dormant', 'first time to dormant', 'part time to dormant', 'full time to dormant',
-        'churned (after first time)', 'churned (after reaching part time)', 'churned (after reaching full time)',
-    ]
-    if activity_input.value:
-        _display_labels = _label_order
-    else:
-        _display_labels = [c for c in _label_order if c not in _inactive_labels]
-
-    _df['label'] = pd.Categorical(_df['label'], categories=_label_order, ordered=True)
-    _fig = px.bar(
-        data_frame=_df[_df['label'].isin(_display_labels)],
-        x='bucket_month',
-        y='developers_count',
-        color='label',
-        color_discrete_map=_color_mapping,
-        category_orders={'label': _label_order},
-    )
-    _fig.update_layout(
-        barmode='stack',
-        template='plotly_white',
-        font=dict(family="Arial, sans-serif", size=12, color="#333"),
-        plot_bgcolor='white',
-        paper_bgcolor='white',
-        margin=dict(t=20, l=70, r=60, b=60),
-        height=500,
-        hovermode='x unified',
-        legend=dict(
-            orientation="h",
-            yanchor="bottom",
-            y=1.02,
-            xanchor="right",
-            x=1,
-            title_text='',
-            bgcolor="rgba(255,255,255,0.8)"
+        _title_text = f'<b>{_active_count:,} monthly active developers in {_eco}</b><br><span style="font-size:14px;color:#666666">Developer lifecycle transitions — active (above zero) vs. churned/dormant (below zero)</span>'
+        _fig.update_layout(
+            barmode='relative',
+            height=500,
+            title=dict(text=_title_text, font=dict(size=22, color='#1B4F72', family='Arial, sans-serif'), x=0, xanchor='left', y=0.95, yanchor='top'),
+            template='plotly_white',
+            font=dict(family='Arial, sans-serif', size=12, color='#333'),
+            plot_bgcolor='white',
+            paper_bgcolor='white',
+            margin=dict(t=100, l=70, r=60, b=60),
+            hovermode='x unified',
+            showlegend=True,
+            legend=dict(orientation='h', yanchor='bottom', y=1.02, xanchor='right', x=1, bgcolor='rgba(255,255,255,0.8)'),
         )
+        _fig.update_xaxes(showgrid=False, showline=True, linecolor='#1F2937', linewidth=1, tickfont=dict(size=11, color='#666'), title='', tickformat='%b %Y')
+        _fig.update_yaxes(showgrid=True, gridcolor='#E5E7EB', gridwidth=1, showline=True, linecolor='#1F2937', linewidth=1, tickfont=dict(size=11, color='#666'), title='', tickformat=',d', zeroline=True, zerolinecolor='#1F2937', zerolinewidth=1.5)
+
+        _states[_eco] = {'stats': _stats_html, 'chart': _json.loads(_fig.to_json())}
+
+    _opts = [o for o in _ECOSYSTEMS if o in _states]
+    _djs_safe = _json.dumps(_states).replace('</', '<\\/')
+    _opts_js = _json.dumps(_opts)
+    _btn_html = ''.join(f'<button class="tab-btn" data-idx="{i}">{o}</button>' for i, o in enumerate(_opts))
+
+    _inner = (
+        '<!DOCTYPE html><html><head><meta charset="utf-8">'
+        '<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>'
+        '<style>'
+        '*{box-sizing:border-box;margin:0;padding:0}'
+        'body{font-family:Arial,sans-serif;font-size:13px;padding:4px}'
+        '.tab-btn{padding:6px 14px;border:none;background:none;border-radius:6px;font-size:13px;cursor:pointer;color:#6b7280}'
+        '.tab-btn:hover{background:#f3f4f6;color:#111}'
+        '.tab-btn.active{background:#eff6ff;color:#2563eb;font-weight:600}'
+        '.tab-bar{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px;border-bottom:1px solid #e5e7eb;padding-bottom:8px}'
+        '</style></head><body>'
+        f'<div class="tab-bar">{_btn_html}</div>'
+        '<div id="stats" style="margin-bottom:12px"></div>'
+        '<div id="chart"></div>'
+        f'<script>var D={_djs_safe};var O={_opts_js};'
+        'document.querySelectorAll(".tab-btn").forEach(function(btn,i){'
+        'btn.addEventListener("click",function(){'
+        'document.querySelectorAll(".tab-btn").forEach(function(b){b.classList.remove("active")});'
+        'btn.classList.add("active");'
+        'document.getElementById("stats").innerHTML=D[O[i]].stats||"";'
+        'Plotly.react("chart",D[O[i]].chart.data,D[O[i]].chart.layout,{responsive:true});'
+        '});});'
+        'var _b=document.querySelectorAll(".tab-btn");if(_b.length)_b[0].click();'
+        '</script></body></html>'
     )
-    _fig.update_xaxes(
-        title='',
-        showgrid=False,
-        linecolor="#1F2937",
-        linewidth=1,
-        tickformat="%b %Y",
-        tickfont=dict(size=11, color="#666"),
-    )
-    _fig.update_yaxes(
-        title="",
-        showgrid=True,
-        gridcolor="#E5E7EB",
-        linecolor="#1F2937",
-        linewidth=1,
-        range=[0, None],
-        tickformat=",d",
-        tickfont=dict(size=11, color="#666"),
-    )
-    mo.ui.plotly(_fig, config={'displayModeBar': False})
+    _src = _html_mod.escape(_inner, quote=True)
+    mo.Html(f'<iframe srcdoc="{_src}" style="width:100%;height:580px;border:none;display:block" scrolling="no"></iframe>')
     return
 
 
@@ -325,34 +235,22 @@ def section_ecosystem_comparison(mo):
 
 
 @app.cell(hide_code=True)
-def comparison_controls(df, mo):
-    _ecosystem_list = sorted(list(df['project_display_name'].unique()))
-    _default_ecosystems = [e for e in ['Ethereum', 'Bitcoin', 'Solana'] if e in _ecosystem_list]
-    comparison_ecosystems = mo.ui.multiselect(
-        options=_ecosystem_list,
-        value=_default_ecosystems,
-        label='Select Ecosystems',
-    )
-    comparison_metric = mo.ui.dropdown(
-        options=['Monthly Active', 'Monthly Churn Rate', 'Full-Time Count', 'First-Time Count'],
-        value='Monthly Active',
-        label='Metric',
-    )
-    mo.hstack([comparison_ecosystems, comparison_metric], gap=2, align="end")
-    return comparison_ecosystems, comparison_metric
+def ecosystem_comparison_tabs(ACTIVE_LABELS, CHURNED_LABELS, DORMANT_LABELS, FT_LABELS, df, mo, go):
+    import json as _json
+    import html as _html_mod
 
+    _ECOSYSTEMS_COMP = ['Ethereum', 'Bitcoin', 'Solana']
+    _METRICS = ['Monthly Active', 'Monthly Churn Rate', 'Full-Time Count', 'First-Time Count']
 
-@app.cell(hide_code=True)
-def comparison_chart(ACTIVE_LABELS, CHURNED_LABELS, DORMANT_LABELS, FT_LABELS, apply_ec_style, comparison_ecosystems, comparison_metric, df, go, mo):
-    _selected = comparison_ecosystems.value
-    _metric = comparison_metric.value
+    _eco_colors = ['#1B4F72', '#7EB8DA', '#5DADE2']
 
-    _eco_colors = ['#1B4F72', '#7EB8DA', '#5DADE2', '#E59866', '#A9CCE3', '#5DADE2']
-
-    _fig = go.Figure()
-    if _selected:
-        for _i, _eco in enumerate(_selected):
+    _states = {}
+    for _metric in _METRICS:
+        _fig = go.Figure()
+        for _i, _eco in enumerate(_ECOSYSTEMS_COMP):
             _eco_df = df[df['project_display_name'] == _eco]
+            if _eco_df.empty:
+                continue
 
             if _metric == 'Monthly Active':
                 _vals = _eco_df[_eco_df['label'].isin(ACTIVE_LABELS)].groupby('bucket_month')['developers_count'].sum()
@@ -374,22 +272,58 @@ def comparison_chart(ACTIVE_LABELS, CHURNED_LABELS, DORMANT_LABELS, FT_LABELS, a
                 hovertemplate=f'<b>{_eco}</b><br>%{{x|%b %Y}}<br>{_metric}: %{{y:,.0f}}<extra></extra>',
             ))
 
-    _title_ecosystems = ', '.join(_selected) if _selected else 'No ecosystems selected'
-    apply_ec_style(
-        _fig,
-        title=f"{_metric}: {_title_ecosystems}",
-        subtitle="Monthly trends across selected ecosystems",
-        y_title=_metric,
-        show_legend=True,
-        right_margin=60,
+        _title_ecosystems = ', '.join(_ECOSYSTEMS_COMP)
+        _title_text = f'<b>{_metric}: {_title_ecosystems}</b><br><span style="font-size:14px;color:#666666">Monthly trends across selected ecosystems</span>'
+        _fig.update_layout(
+            height=450,
+            title=dict(text=_title_text, font=dict(size=22, color='#1B4F72', family='Arial, sans-serif'), x=0, xanchor='left', y=0.95, yanchor='top'),
+            template='plotly_white',
+            font=dict(family='Arial, sans-serif', size=12, color='#333'),
+            plot_bgcolor='white',
+            paper_bgcolor='white',
+            margin=dict(t=100, l=70, r=60, b=60),
+            hovermode='x unified',
+            showlegend=True,
+            legend=dict(orientation='h', yanchor='bottom', y=1.02, xanchor='right', x=1, bgcolor='rgba(255,255,255,0.8)'),
+        )
+        _fig.update_xaxes(showgrid=False, showline=True, linecolor='#1F2937', linewidth=1, tickfont=dict(size=11, color='#666'), title='', tickformat='%b %Y')
+        _fig.update_yaxes(showgrid=True, gridcolor='#E5E7EB', gridwidth=1, showline=True, linecolor='#1F2937', linewidth=1, tickfont=dict(size=11, color='#666'), title=_metric, title_font=dict(size=12, color='#666'), tickformat=',d')
+
+        if _metric == 'Monthly Churn Rate':
+            _fig.update_yaxes(tickformat='.1f', ticksuffix='%')
+
+        _states[_metric] = {'chart': _json.loads(_fig.to_json())}
+
+    _opts = [m for m in _METRICS if m in _states]
+    _djs_safe = _json.dumps(_states).replace('</', '<\\/')
+    _opts_js = _json.dumps(_opts)
+    _btn_html = ''.join(f'<button class="tab-btn" data-idx="{i}">{o}</button>' for i, o in enumerate(_opts))
+
+    _inner = (
+        '<!DOCTYPE html><html><head><meta charset="utf-8">'
+        '<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>'
+        '<style>'
+        '*{box-sizing:border-box;margin:0;padding:0}'
+        'body{font-family:Arial,sans-serif;font-size:13px;padding:4px}'
+        '.tab-btn{padding:6px 14px;border:none;background:none;border-radius:6px;font-size:13px;cursor:pointer;color:#6b7280}'
+        '.tab-btn:hover{background:#f3f4f6;color:#111}'
+        '.tab-btn.active{background:#eff6ff;color:#2563eb;font-weight:600}'
+        '.tab-bar{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px;border-bottom:1px solid #e5e7eb;padding-bottom:8px}'
+        '</style></head><body>'
+        f'<div class="tab-bar">{_btn_html}</div>'
+        '<div id="chart"></div>'
+        f'<script>var D={_djs_safe};var O={_opts_js};'
+        'document.querySelectorAll(".tab-btn").forEach(function(btn,i){'
+        'btn.addEventListener("click",function(){'
+        'document.querySelectorAll(".tab-btn").forEach(function(b){b.classList.remove("active")});'
+        'btn.classList.add("active");'
+        'Plotly.react("chart",D[O[i]].chart.data,D[O[i]].chart.layout,{responsive:true});'
+        '});});'
+        'var _b=document.querySelectorAll(".tab-btn");if(_b.length)_b[0].click();'
+        '</script></body></html>'
     )
-
-    if _metric == 'Monthly Churn Rate':
-        _fig.update_yaxes(tickformat='.1f', ticksuffix='%')
-
-    _fig.update_layout(height=450)
-
-    mo.ui.plotly(_fig, config={'displayModeBar': False})
+    _src = _html_mod.escape(_inner, quote=True)
+    mo.Html(f'<iframe srcdoc="{_src}" style="width:100%;height:520px;border:none;display:block" scrolling="no"></iframe>')
     return
 
 

@@ -3,26 +3,30 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev:all": "concurrently --kill-others \"cd .. && uv run python serve_notebooks.py\" \"next dev\"",
     "dev": "next dev",
     "build": "next build",
-    "start": "next start",
-    "lint": "next lint"
+    "start": "npx serve out",
+    "lint": "next lint",
+    "export:notebooks": "cd .. && uv run --env-file .env python scripts/export_notebooks.py --",
+    "preview": "pnpm export:notebooks && pnpm build && pnpm start"
   },
   "dependencies": {
     "next": "^14.2.32",
+    "plotly.js": "^2.35.2",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "react-plotly.js": "^2.6.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.12",
     "@types/node": "^24.2.1",
+    "@types/plotly.js": "^3.0.10",
     "@types/react": "^18.3.23",
     "@types/react-dom": "^18.3.1",
+    "@types/react-plotly.js": "^2.6.3",
     "autoprefixer": "^10.4.21",
     "postcss": "^8.5.6",
     "tailwindcss": "^4.1.12",
-    "typescript": "^5.9.2",
-    "concurrently": "^8.2.2"
+    "typescript": "^5.9.2"
   }
 }

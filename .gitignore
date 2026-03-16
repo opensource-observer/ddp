@@ -14,11 +14,14 @@ __pycache__/
 # --- Environment variables ---
 .env
 .env.local
+app/.env.*
 
 # --- Next.js (app/) ---
 app/.next/
 app/out/
 app/node_modules/
+app/public/notebooks/
+app/public/data/
 
 # --- OS ---
 .DS_Store
