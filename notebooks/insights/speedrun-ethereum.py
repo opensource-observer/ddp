@@ -524,7 +524,7 @@ def section_activity_by_ecosystem(
     _opts = list(_states.keys())
     _djs_safe = _json.dumps(_states).replace('</', '<\\/')
     _opts_js = _json.dumps(_opts)
-    _btn_html = ''.join(f'<button class="tab-btn" data-idx="{i}">{o}</button>' for i, o in enumerate(_opts))
+    _sel_html = '<div style="margin-bottom:8px"><span style="font-size:11px;color:#6b7280;display:block;margin-bottom:2px">Analyze</span><select id="sel" style="padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;color:#374151;background:#fff;cursor:pointer">' + ''.join(f'<option value="{i}">{o}</option>' for i, o in enumerate(_opts)) + '</select></div>'
 
     _inner = (
         '<!DOCTYPE html><html><head><meta charset="utf-8">'
@@ -532,21 +532,14 @@ def section_activity_by_ecosystem(
         '<style>'
         '*{box-sizing:border-box;margin:0;padding:0}'
         'body{font-family:Arial,sans-serif;font-size:13px;padding:4px}'
-        '.tab-btn{padding:6px 14px;border:none;background:none;border-radius:6px;font-size:13px;cursor:pointer;color:#6b7280}'
-        '.tab-btn:hover{background:#f3f4f6;color:#111}'
-        '.tab-btn.active{background:#eff6ff;color:#2563eb;font-weight:600}'
-        '.tab-bar{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px;border-bottom:1px solid #e5e7eb;padding-bottom:8px}'
         '</style></head><body>'
-        f'<div class="tab-bar">{_btn_html}</div>'
+        f'{_sel_html}'
         '<div id="chart"></div>'
         f'<script>var D={_djs_safe};var O={_opts_js};'
-        'document.querySelectorAll(".tab-btn").forEach(function(btn,i){'
-        'btn.addEventListener("click",function(){'
-        'document.querySelectorAll(".tab-btn").forEach(function(b){b.classList.remove("active")});'
-        'btn.classList.add("active");'
-        'Plotly.react("chart",D[O[i]].chart.data,D[O[i]].chart.layout,{responsive:true});'
-        '});});'
-        'var _b=document.querySelectorAll(".tab-btn");if(_b.length)_b[0].click();'
+        'var sel=document.getElementById("sel");'
+        'function show(i){Plotly.react("chart",D[O[i]].chart.data,D[O[i]].chart.layout,{responsive:true});}'
+        'sel.addEventListener("change",function(){show(parseInt(this.value))});'
+        'show(0);'
         '</script></body></html>'
     )
     _src = _html_mod.escape(_inner, quote=True)
@@ -950,7 +943,7 @@ def section_experience_funnel(
     _opts2 = list(_states2.keys())
     _djs2_safe = _json2.dumps(_states2).replace('</', '<\\/')
     _opts2_js = _json2.dumps(_opts2)
-    _btn2_html = ''.join(f'<button class="tab-btn" data-idx="{i}">{o}</button>' for i, o in enumerate(_opts2))
+    _sel2_html = '<div style="margin-bottom:8px"><span style="font-size:11px;color:#6b7280;display:block;margin-bottom:2px">Ecosystem</span><select id="sel" style="padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;color:#374151;background:#fff;cursor:pointer">' + ''.join(f'<option value="{i}">{o}</option>' for i, o in enumerate(_opts2)) + '</select></div>'
 
     _inner2 = (
         '<!DOCTYPE html><html><head><meta charset="utf-8">'
@@ -958,21 +951,14 @@ def section_experience_funnel(
         '<style>'
         '*{box-sizing:border-box;margin:0;padding:0}'
         'body{font-family:Arial,sans-serif;font-size:13px;padding:4px}'
-        '.tab-btn{padding:6px 14px;border:none;background:none;border-radius:6px;font-size:13px;cursor:pointer;color:#6b7280}'
-        '.tab-btn:hover{background:#f3f4f6;color:#111}'
-        '.tab-btn.active{background:#eff6ff;color:#2563eb;font-weight:600}'
-        '.tab-bar{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px;border-bottom:1px solid #e5e7eb;padding-bottom:8px}'
         '</style></head><body>'
-        f'<div class="tab-bar">{_btn2_html}</div>'
+        f'{_sel2_html}'
         '<div id="chart"></div>'
         f'<script>var D={_djs2_safe};var O={_opts2_js};'
-        'document.querySelectorAll(".tab-btn").forEach(function(btn,i){'
-        'btn.addEventListener("click",function(){'
-        'document.querySelectorAll(".tab-btn").forEach(function(b){b.classList.remove("active")});'
-        'btn.classList.add("active");'
-        'Plotly.react("chart",D[O[i]].chart.data,D[O[i]].chart.layout,{responsive:true});'
-        '});});'
-        'var _b=document.querySelectorAll(".tab-btn");if(_b.length)_b[0].click();'
+        'var sel=document.getElementById("sel");'
+        'function show(i){Plotly.react("chart",D[O[i]].chart.data,D[O[i]].chart.layout,{responsive:true});}'
+        'sel.addEventListener("change",function(){show(parseInt(this.value))});'
+        'show(0);'
         '</script></body></html>'
     )
     _src2 = _html_mod2.escape(_inner2, quote=True)
@@ -1193,7 +1179,7 @@ def section_experience_retention(
     _opts3 = list(_states3.keys())
     _djs3_safe = _json3.dumps(_states3).replace('</', '<\\/')
     _opts3_js = _json3.dumps(_opts3)
-    _btn3_html = ''.join(f'<button class="tab-btn" data-idx="{i}">{o}</button>' for i, o in enumerate(_opts3))
+    _sel3_html = '<div style="margin-bottom:8px"><span style="font-size:11px;color:#6b7280;display:block;margin-bottom:2px">Ecosystem</span><select id="sel" style="padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;color:#374151;background:#fff;cursor:pointer">' + ''.join(f'<option value="{i}">{o}</option>' for i, o in enumerate(_opts3)) + '</select></div>'
 
     _inner3 = (
         '<!DOCTYPE html><html><head><meta charset="utf-8">'
@@ -1201,21 +1187,14 @@ def section_experience_retention(
         '<style>'
         '*{box-sizing:border-box;margin:0;padding:0}'
         'body{font-family:Arial,sans-serif;font-size:13px;padding:4px}'
-        '.tab-btn{padding:6px 14px;border:none;background:none;border-radius:6px;font-size:13px;cursor:pointer;color:#6b7280}'
-        '.tab-btn:hover{background:#f3f4f6;color:#111}'
-        '.tab-btn.active{background:#eff6ff;color:#2563eb;font-weight:600}'
-        '.tab-bar{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px;border-bottom:1px solid #e5e7eb;padding-bottom:8px}'
         '</style></head><body>'
-        f'<div class="tab-bar">{_btn3_html}</div>'
+        f'{_sel3_html}'
         '<div id="chart"></div>'
         f'<script>var D={_djs3_safe};var O={_opts3_js};'
-        'document.querySelectorAll(".tab-btn").forEach(function(btn,i){'
-        'btn.addEventListener("click",function(){'
-        'document.querySelectorAll(".tab-btn").forEach(function(b){b.classList.remove("active")});'
-        'btn.classList.add("active");'
-        'Plotly.react("chart",D[O[i]].chart.data,D[O[i]].chart.layout,{responsive:true});'
-        '});});'
-        'var _b=document.querySelectorAll(".tab-btn");if(_b.length)_b[0].click();'
+        'var sel=document.getElementById("sel");'
+        'function show(i){Plotly.react("chart",D[O[i]].chart.data,D[O[i]].chart.layout,{responsive:true});}'
+        'sel.addEventListener("change",function(){show(parseInt(this.value))});'
+        'show(0);'
         '</script></body></html>'
     )
     _src3 = _html_mod3.escape(_inner3, quote=True)
@@ -1263,7 +1242,7 @@ def section_experienced_dev_activity(
     _opts4 = list(_states4.keys())
     _djs4_safe = _json4.dumps(_states4).replace('</', '<\\/')
     _opts4_js = _json4.dumps(_opts4)
-    _btn4_html = ''.join(f'<button class="tab-btn" data-idx="{i}">{o}</button>' for i, o in enumerate(_opts4))
+    _sel4_html = '<div style="margin-bottom:8px"><span style="font-size:11px;color:#6b7280;display:block;margin-bottom:2px">Experience Level</span><select id="sel" style="padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;color:#374151;background:#fff;cursor:pointer">' + ''.join(f'<option value="{i}">{o}</option>' for i, o in enumerate(_opts4)) + '</select></div>'
 
     _inner4 = (
         '<!DOCTYPE html><html><head><meta charset="utf-8">'
@@ -1271,21 +1250,14 @@ def section_experienced_dev_activity(
         '<style>'
         '*{box-sizing:border-box;margin:0;padding:0}'
         'body{font-family:Arial,sans-serif;font-size:13px;padding:4px}'
-        '.tab-btn{padding:6px 14px;border:none;background:none;border-radius:6px;font-size:13px;cursor:pointer;color:#6b7280}'
-        '.tab-btn:hover{background:#f3f4f6;color:#111}'
-        '.tab-btn.active{background:#eff6ff;color:#2563eb;font-weight:600}'
-        '.tab-bar{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px;border-bottom:1px solid #e5e7eb;padding-bottom:8px}'
         '</style></head><body>'
-        f'<div class="tab-bar">{_btn4_html}</div>'
+        f'{_sel4_html}'
         '<div id="chart"></div>'
         f'<script>var D={_djs4_safe};var O={_opts4_js};'
-        'document.querySelectorAll(".tab-btn").forEach(function(btn,i){'
-        'btn.addEventListener("click",function(){'
-        'document.querySelectorAll(".tab-btn").forEach(function(b){b.classList.remove("active")});'
-        'btn.classList.add("active");'
-        'Plotly.react("chart",D[O[i]].chart.data,D[O[i]].chart.layout,{responsive:true});'
-        '});});'
-        'var _b=document.querySelectorAll(".tab-btn");if(_b.length)_b[0].click();'
+        'var sel=document.getElementById("sel");'
+        'function show(i){Plotly.react("chart",D[O[i]].chart.data,D[O[i]].chart.layout,{responsive:true});}'
+        'sel.addEventListener("change",function(){show(parseInt(this.value))});'
+        'show(0);'
         '</script></body></html>'
     )
     _src4 = _html_mod4.escape(_inner4, quote=True)
@@ -1326,7 +1298,7 @@ def section_cohort_year_retention(
     _opts5 = list(_states5.keys())
     _djs5_safe = _json5.dumps(_states5).replace('</', '<\\/')
     _opts5_js = _json5.dumps(_opts5)
-    _btn5_html = ''.join(f'<button class="tab-btn" data-idx="{i}">{o}</button>' for i, o in enumerate(_opts5))
+    _sel5_html = '<div style="margin-bottom:8px"><span style="font-size:11px;color:#6b7280;display:block;margin-bottom:2px">Experience Level</span><select id="sel" style="padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;color:#374151;background:#fff;cursor:pointer">' + ''.join(f'<option value="{i}">{o}</option>' for i, o in enumerate(_opts5)) + '</select></div>'
 
     _inner5 = (
         '<!DOCTYPE html><html><head><meta charset="utf-8">'
@@ -1334,21 +1306,14 @@ def section_cohort_year_retention(
         '<style>'
         '*{box-sizing:border-box;margin:0;padding:0}'
         'body{font-family:Arial,sans-serif;font-size:13px;padding:4px}'
-        '.tab-btn{padding:6px 14px;border:none;background:none;border-radius:6px;font-size:13px;cursor:pointer;color:#6b7280}'
-        '.tab-btn:hover{background:#f3f4f6;color:#111}'
-        '.tab-btn.active{background:#eff6ff;color:#2563eb;font-weight:600}'
-        '.tab-bar{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px;border-bottom:1px solid #e5e7eb;padding-bottom:8px}'
         '</style></head><body>'
-        f'<div class="tab-bar">{_btn5_html}</div>'
+        f'{_sel5_html}'
         '<div id="chart"></div>'
         f'<script>var D={_djs5_safe};var O={_opts5_js};'
-        'document.querySelectorAll(".tab-btn").forEach(function(btn,i){'
-        'btn.addEventListener("click",function(){'
-        'document.querySelectorAll(".tab-btn").forEach(function(b){b.classList.remove("active")});'
-        'btn.classList.add("active");'
-        'Plotly.react("chart",D[O[i]].chart.data,D[O[i]].chart.layout,{responsive:true});'
-        '});});'
-        'var _b=document.querySelectorAll(".tab-btn");if(_b.length)_b[0].click();'
+        'var sel=document.getElementById("sel");'
+        'function show(i){Plotly.react("chart",D[O[i]].chart.data,D[O[i]].chart.layout,{responsive:true});}'
+        'sel.addEventListener("change",function(){show(parseInt(this.value))});'
+        'show(0);'
         '</script></body></html>'
     )
     _src5 = _html_mod5.escape(_inner5, quote=True)

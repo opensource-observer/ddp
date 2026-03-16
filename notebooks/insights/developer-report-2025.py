@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "unknown"
+__generated_with = "0.18.4"
 app = marimo.App(width="full")
 
 
@@ -19,36 +19,36 @@ def header_title(mo):
 def header_accordion(mo):
     mo.accordion({
         "Overview": mo.md("""
-- As of December 2025, the total number of monthly active developers (MADs) across all crypto ecosystems reached its highest recorded level, driven by growth in newer chains and Layer 2s
-- Ethereum remains the largest single ecosystem by MAD count, though its share of total crypto developers continued to decline as multi-chain activity increases
-- Newcomer developers (those active for less than 1 year) represented a significant portion of 2025 MADs, indicating continued onboarding despite broader market fluctuations
-- Full-time developers (active 10+ months of the year) showed resilience, with retention rates improving year-over-year compared to the 2022-2023 downturn
+    - As of December 2025, the total number of monthly active developers (MADs) across all crypto ecosystems reached its highest recorded level, driven by growth in newer chains and Layer 2s
+    - Ethereum remains the largest single ecosystem by MAD count, though its share of total crypto developers continued to decline as multi-chain activity increases
+    - Newcomer developers (those active for less than 1 year) represented a significant portion of 2025 MADs, indicating continued onboarding despite broader market fluctuations
+    - Full-time developers (active 10+ months of the year) showed resilience, with retention rates improving year-over-year compared to the 2022-2023 downturn
         """),
         "Context": mo.md("""
-- This analysis covers monthly active developers across all crypto ecosystems
-- Data source: Open Dev Data (Electric Capital) via OSO data warehouse
-- Time period: January 2015 to December 2025 (full historical data)
-- Developers are original code authors (merge/PR integrators are not counted unless they authored commits)
-- Monthly active developers are measured using a 28-day rolling activity window
-- Uses curated Open Dev Data repository set (not comprehensive GitHub coverage)
-- Developer identity resolution may miss some connections across accounts or pseudonyms
-- Data freshness depends on Open Dev Data and OSO pipeline update cadence
+    - This analysis covers monthly active developers across all crypto ecosystems
+    - Data source: Open Dev Data (Electric Capital) via OSO data warehouse
+    - Time period: January 2015 to December 2025 (full historical data)
+    - Developers are original code authors (merge/PR integrators are not counted unless they authored commits)
+    - Monthly active developers are measured using a 28-day rolling activity window
+    - Uses curated Open Dev Data repository set (not comprehensive GitHub coverage)
+    - Developer identity resolution may miss some connections across accounts or pseudonyms
+    - Data freshness depends on Open Dev Data and OSO pipeline update cadence
 
-**Metric Definitions**
-- Activity — Monthly Active Developer (MAD) methodology
+    **Metric Definitions**
+    - Activity — Monthly Active Developer (MAD) methodology
 
-**Methodology**
-- **Developers**: Original code authors only (merge/PR integrators excluded unless they authored commits)
-- **Monthly Active Developers**: 28-day rolling activity window
-- **Tenure Categories**: Newcomers (< 1 year), Emerging (1–2 years), Established (2+ years)
-- **Activity Levels**: Full-time (sustained activity over 84-day window), Part-time (intermittent), One-time (sporadic)
+    **Methodology**
+    - **Developers**: Original code authors only (merge/PR integrators excluded unless they authored commits)
+    - **Monthly Active Developers**: 28-day rolling activity window
+    - **Tenure Categories**: Newcomers (< 1 year), Emerging (1–2 years), Established (2+ years)
+    - **Activity Levels**: Full-time (sustained activity over 84-day window), Part-time (intermittent), One-time (sporadic)
 
-> This analysis is inspired by the [Electric Capital Developer Report](https://www.developerreport.com). Data sourced from Open Dev Data via the OSO data warehouse.
+    > This analysis is inspired by the [Electric Capital Developer Report](https://www.developerreport.com). Data sourced from Open Dev Data via the OSO data warehouse.
         """),
         "Data Sources": mo.md("""
-- **Open Dev Data** — Electric Capital's developer activity dataset, [github.com/electric-capital/crypto-ecosystems](https://github.com/electric-capital/crypto-ecosystems)
-- **OSO API** — Data pipeline and metrics, [docs.oso.xyz](https://docs.oso.xyz/)
-- **Key Models** — `oso.stg_opendevdata__eco_mads`, `oso.stg_opendevdata__ecosystems`
+    - **Open Dev Data** — Electric Capital's developer activity dataset, [github.com/electric-capital/crypto-ecosystems](https://github.com/electric-capital/crypto-ecosystems)
+    - **OSO API** — Data pipeline and metrics, [docs.oso.xyz](https://docs.oso.xyz/)
+    - **Key Models** — `oso.stg_opendevdata__eco_mads`, `oso.stg_opendevdata__ecosystems`
         """),
     })
     return
@@ -95,146 +95,140 @@ def setup_constants():
     # Ecosystems to query
     ECOSYSTEMS = ["All Web3 Ecosystems", "Bitcoin", "Ethereum", "Solana"]
     SUPPORTED_ECOSYSTEMS = ["Bitcoin", "Ethereum", "Solana"]
-    return (
-        ACTIVITY_COLORS,
-        ECOSYSTEMS,
-        EC_LIGHT_BLUE,
-        SUPPORTED_ECOSYSTEMS,
-        TENURE_COLORS,
+    return ACTIVITY_COLORS, ECOSYSTEMS, EC_LIGHT_BLUE, TENURE_COLORS
+
+
+@app.function(hide_code=True)
+def apply_ec_style(fig, title=None, subtitle=None, y_title=None, show_legend=True,
+                   right_margin=180):
+    # Build title text with HTML styling
+    title_text = ""
+    if title:
+        title_text = f"<b>{title}</b>"
+        if subtitle:
+            title_text += f"<br><span style='font-size:14px;color:#666666'>{subtitle}</span>"
+
+    fig.update_layout(
+        title=dict(
+            text=title_text,
+            font=dict(size=22, color="#1B4F72", family="Arial, sans-serif"),
+            x=0,
+            xanchor="left",
+            y=0.95,
+            yanchor="top"
+        ) if title else None,
+        template='plotly_white',
+        font=dict(family="Arial, sans-serif", size=12, color="#333"),
+        plot_bgcolor='white',
+        paper_bgcolor='white',
+        margin=dict(t=100 if title else 40, l=70, r=right_margin, b=60),
+        hovermode='x unified',
+        showlegend=show_legend,
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=1.02,
+            xanchor="right",
+            x=1,
+            bgcolor="rgba(255,255,255,0.8)"
+        )
     )
 
+    # Style x-axis (clean, minimal)
+    fig.update_xaxes(
+        showgrid=False,
+        showline=True,
+        linecolor="#1F2937",
+        linewidth=1,
+        tickfont=dict(size=11, color="#666"),
+        title="",
+        tickformat="%b %Y"  # Format as "Jan 2020"
+    )
 
-@app.cell(hide_code=True)
-def helper_apply_ec_style():
-    def apply_ec_style(fig, title=None, subtitle=None, y_title=None, show_legend=True,
-                       right_margin=180):
-        # Build title text with HTML styling
-        title_text = ""
-        if title:
-            title_text = f"<b>{title}</b>"
-            if subtitle:
-                title_text += f"<br><span style='font-size:14px;color:#666666'>{subtitle}</span>"
+    # Style y-axis (light gridlines, clean labels)
+    fig.update_yaxes(
+        showgrid=True,
+        gridcolor="#E5E7EB",
+        gridwidth=1,
+        showline=True,
+        linecolor="#1F2937",
+        linewidth=1,
+        tickfont=dict(size=11, color="#666"),
+        title=y_title if y_title else "",
+        title_font=dict(size=12, color="#666"),
+        tickformat=",d"  # Format with thousands separator
+    )
 
-        fig.update_layout(
-            title=dict(
-                text=title_text,
-                font=dict(size=22, color="#1B4F72", family="Arial, sans-serif"),
-                x=0,
-                xanchor="left",
-                y=0.95,
-                yanchor="top"
-            ) if title else None,
-            template='plotly_white',
-            font=dict(family="Arial, sans-serif", size=12, color="#333"),
-            plot_bgcolor='white',
-            paper_bgcolor='white',
-            margin=dict(t=100 if title else 40, l=70, r=right_margin, b=60),
-            hovermode='x unified',
-            showlegend=show_legend,
-            legend=dict(
-                orientation="h",
-                yanchor="bottom",
-                y=1.02,
-                xanchor="right",
-                x=1,
-                bgcolor="rgba(255,255,255,0.8)"
-            )
-        )
-
-        # Style x-axis (clean, minimal)
-        fig.update_xaxes(
-            showgrid=False,
-            showline=True,
-            linecolor="#1F2937",
-            linewidth=1,
-            tickfont=dict(size=11, color="#666"),
-            title="",
-            tickformat="%b %Y"  # Format as "Jan 2020"
-        )
-
-        # Style y-axis (light gridlines, clean labels)
-        fig.update_yaxes(
-            showgrid=True,
-            gridcolor="#E5E7EB",
-            gridwidth=1,
-            showline=True,
-            linecolor="#1F2937",
-            linewidth=1,
-            tickfont=dict(size=11, color="#666"),
-            title=y_title if y_title else "",
-            title_font=dict(size=12, color="#666"),
-            tickformat=",d"  # Format with thousands separator
-        )
-
-        return fig
-    return (apply_ec_style,)
+    return fig
 
 
-@app.cell(hide_code=True)
-def helper_add_callout_annotation():
-    def add_callout_annotation(fig, y_value, label, value, description,
-                               color="#1B4F72", y_position=None):
-        # Build annotation text with line breaks
-        text = f"<b>{label}</b><br><br><span style='font-size:18px'>{value}</span><br><br><span style='font-size:11px'>{description}</span>"
+@app.function(hide_code=True)
+def add_callout_annotation(fig, y_value, label, value, description,
+                           color="#1B4F72", y_position=None):
+    # Build annotation text with line breaks
+    text = f"<b>{label}</b><br><br><span style='font-size:18px'>{value}</span><br><br><span style='font-size:11px'>{description}</span>"
 
+    fig.add_annotation(
+        x=1.02,
+        y=y_value if y_position is None else y_position,
+        xref="paper",
+        yref="y" if y_position is None else "paper",
+        text=text,
+        showarrow=True,
+        arrowhead=0,
+        arrowwidth=1,
+        arrowcolor="#999999",
+        ax=20,
+        ay=0,
+        bordercolor="#CCCCCC",
+        borderwidth=1,
+        borderpad=8,
+        bgcolor="white",
+        font=dict(size=11, color=color),
+        align="left",
+        xanchor="left"
+    )
+    return fig
+
+
+@app.function(hide_code=True)
+def add_tenure_legend(fig, newcomers, emerging, established, colors):
+    # Position annotations vertically on right side
+    annotations = [
+        (0.85, f"<b>{newcomers:,.0f}</b>", "Newcomers", "<1 year in crypto", colors["Newcomers"]),
+        (0.55, f"<b>{emerging:,.0f}</b>", "Emerging", "1-2 yrs in crypto", colors["Emerging"]),
+        (0.25, f"<b>{established:,.0f}</b>", "Established", "2+ years in crypto", colors["Established"]),
+    ]
+
+    for y_pos, value, label, desc, color in annotations:
         fig.add_annotation(
             x=1.02,
-            y=y_value if y_position is None else y_position,
+            y=y_pos,
             xref="paper",
-            yref="y" if y_position is None else "paper",
-            text=text,
-            showarrow=True,
-            arrowhead=0,
-            arrowwidth=1,
-            arrowcolor="#999999",
-            ax=20,
-            ay=0,
-            bordercolor="#CCCCCC",
-            borderwidth=1,
-            borderpad=8,
-            bgcolor="white",
-            font=dict(size=11, color=color),
+            yref="paper",
+            text=f"{value}<br><b style='color:{color}'>{label}</b><br><span style='font-size:10px;color:#666'>{desc}</span>",
+            showarrow=False,
+            font=dict(size=12, color="#333"),
             align="left",
-            xanchor="left"
+            xanchor="left",
+            bgcolor="white",
+            bordercolor=color,
+            borderwidth=2,
+            borderpad=6
         )
-        return fig
-    return (add_callout_annotation,)
 
-
-@app.cell(hide_code=True)
-def helper_add_tenure_legend():
-    def add_tenure_legend(fig, newcomers, emerging, established, colors):
-        # Position annotations vertically on right side
-        annotations = [
-            (0.85, f"<b>{newcomers:,.0f}</b>", "Newcomers", "<1 year in crypto", colors["Newcomers"]),
-            (0.55, f"<b>{emerging:,.0f}</b>", "Emerging", "1-2 yrs in crypto", colors["Emerging"]),
-            (0.25, f"<b>{established:,.0f}</b>", "Established", "2+ years in crypto", colors["Established"]),
-        ]
-
-        for y_pos, value, label, desc, color in annotations:
-            fig.add_annotation(
-                x=1.02,
-                y=y_pos,
-                xref="paper",
-                yref="paper",
-                text=f"{value}<br><b style='color:{color}'>{label}</b><br><span style='font-size:10px;color:#666'>{desc}</span>",
-                showarrow=False,
-                font=dict(size=12, color="#333"),
-                align="left",
-                xanchor="left",
-                bgcolor="white",
-                bordercolor=color,
-                borderwidth=2,
-                borderpad=6
-            )
-
-        return fig
-    return (add_tenure_legend,)
+    return fig
 
 
 @app.cell(hide_code=True)
 def test_connection(mo, pyoso_db_conn):
-    _test_df = mo.sql("""SELECT 1 AS test""", engine=pyoso_db_conn, output=False)
+    _test_df = mo.sql(
+        f"""
+        SELECT 1 AS test
+        """,
+        output=False,
+        engine=pyoso_db_conn
+    )
     return
 
 
@@ -294,15 +288,7 @@ def section_overall_trends(mo):
 
 
 @app.cell(hide_code=True)
-def chart1_total_mads(
-    EC_LIGHT_BLUE,
-    add_callout_annotation,
-    apply_ec_style,
-    df_all,
-    go,
-    mo,
-    pd,
-):
+def chart1_total_mads(EC_LIGHT_BLUE, df_all, go, mo, pd):
     """Chart 1: Total Monthly Active Developers Over Time"""
     import json as _json
     import html as _html_mod
@@ -435,7 +421,7 @@ def chart1_total_mads(
     _opts = list(_states.keys())
     _djs_safe = _json.dumps(_states).replace('</', '<\\/')
     _opts_js = _json.dumps(_opts)
-    _btn_html = ''.join(f'<button class="tab-btn" data-idx="{i}">{o}</button>' for i, o in enumerate(_opts))
+    _sel_html = '<div style="margin-bottom:8px"><span style="font-size:11px;color:#6b7280;display:block;margin-bottom:2px">Time Range</span><select id="sel" style="padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;color:#374151;background:#fff;cursor:pointer">' + ''.join(f'<option value="{i}">{o}</option>' for i, o in enumerate(_opts)) + '</select></div>'
 
     _inner = (
         '<!DOCTYPE html><html><head><meta charset="utf-8">'
@@ -443,21 +429,14 @@ def chart1_total_mads(
         '<style>'
         '*{box-sizing:border-box;margin:0;padding:0}'
         'body{font-family:Arial,sans-serif;font-size:13px;padding:4px}'
-        '.tab-btn{padding:6px 14px;border:none;background:none;border-radius:6px;font-size:13px;cursor:pointer;color:#6b7280}'
-        '.tab-btn:hover{background:#f3f4f6;color:#111}'
-        '.tab-btn.active{background:#eff6ff;color:#2563eb;font-weight:600}'
-        '.tab-bar{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px;border-bottom:1px solid #e5e7eb;padding-bottom:8px}'
         '</style></head><body>'
-        f'<div class="tab-bar">{_btn_html}</div>'
+        f'{_sel_html}'
         '<div id="chart"></div>'
         f'<script>var D={_djs_safe};var O={_opts_js};'
-        'document.querySelectorAll(".tab-btn").forEach(function(btn,i){'
-        'btn.addEventListener("click",function(){'
-        'document.querySelectorAll(".tab-btn").forEach(function(b){b.classList.remove("active")});'
-        'btn.classList.add("active");'
-        'Plotly.react("chart",D[O[i]].chart.data,D[O[i]].chart.layout,{responsive:true});'
-        '});});'
-        'var _b=document.querySelectorAll(".tab-btn");if(_b.length)_b[0].click();'
+        'var sel=document.getElementById("sel");'
+        'function show(i){Plotly.react("chart",D[O[i]].chart.data,D[O[i]].chart.layout,{responsive:true});}'
+        'sel.addEventListener("change",function(){show(parseInt(this.value))});'
+        'show(0);'
         '</script></body></html>'
     )
     _src = _html_mod.escape(_inner, quote=True)
@@ -466,15 +445,7 @@ def chart1_total_mads(
 
 
 @app.cell(hide_code=True)
-def chart2_tenure_composition(
-    TENURE_COLORS,
-    add_tenure_legend,
-    apply_ec_style,
-    df_all,
-    go,
-    mo,
-    pd,
-):
+def chart2_tenure_composition(TENURE_COLORS, df_all, go, mo, pd):
     """Chart 2: Developer Composition by Tenure - Stacked Area Chart"""
     import json as _json
     import html as _html_mod
@@ -532,7 +503,7 @@ def chart2_tenure_composition(
     _opts = list(_states.keys())
     _djs_safe = _json.dumps(_states).replace('</', '<\\/')
     _opts_js = _json.dumps(_opts)
-    _btn_html = ''.join(f'<button class="tab-btn" data-idx="{i}">{o}</button>' for i, o in enumerate(_opts))
+    _sel_html = '<div style="margin-bottom:8px"><span style="font-size:11px;color:#6b7280;display:block;margin-bottom:2px">Time Range</span><select id="sel" style="padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;color:#374151;background:#fff;cursor:pointer">' + ''.join(f'<option value="{i}">{o}</option>' for i, o in enumerate(_opts)) + '</select></div>'
 
     _inner = (
         '<!DOCTYPE html><html><head><meta charset="utf-8">'
@@ -540,21 +511,14 @@ def chart2_tenure_composition(
         '<style>'
         '*{box-sizing:border-box;margin:0;padding:0}'
         'body{font-family:Arial,sans-serif;font-size:13px;padding:4px}'
-        '.tab-btn{padding:6px 14px;border:none;background:none;border-radius:6px;font-size:13px;cursor:pointer;color:#6b7280}'
-        '.tab-btn:hover{background:#f3f4f6;color:#111}'
-        '.tab-btn.active{background:#eff6ff;color:#2563eb;font-weight:600}'
-        '.tab-bar{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px;border-bottom:1px solid #e5e7eb;padding-bottom:8px}'
         '</style></head><body>'
-        f'<div class="tab-bar">{_btn_html}</div>'
+        f'{_sel_html}'
         '<div id="chart"></div>'
         f'<script>var D={_djs_safe};var O={_opts_js};'
-        'document.querySelectorAll(".tab-btn").forEach(function(btn,i){'
-        'btn.addEventListener("click",function(){'
-        'document.querySelectorAll(".tab-btn").forEach(function(b){b.classList.remove("active")});'
-        'btn.classList.add("active");'
-        'Plotly.react("chart",D[O[i]].chart.data,D[O[i]].chart.layout,{responsive:true});'
-        '});});'
-        'var _b=document.querySelectorAll(".tab-btn");if(_b.length)_b[0].click();'
+        'var sel=document.getElementById("sel");'
+        'function show(i){Plotly.react("chart",D[O[i]].chart.data,D[O[i]].chart.layout,{responsive:true});}'
+        'sel.addEventListener("change",function(){show(parseInt(this.value))});'
+        'show(0);'
         '</script></body></html>'
     )
     _src = _html_mod.escape(_inner, quote=True)
@@ -563,13 +527,7 @@ def chart2_tenure_composition(
 
 
 @app.cell(hide_code=True)
-def chart3_experienced_devs(
-    TENURE_COLORS,
-    apply_ec_style,
-    df_all,
-    go,
-    mo,
-):
+def chart3_experienced_devs(TENURE_COLORS, df_all, go, mo):
     """Chart 3: The Experienced Developer Story - Stacked area with comparison annotations"""
     import json as _json
     import html as _html_mod
@@ -696,7 +654,7 @@ def chart3_experienced_devs(
     _opts = list(_states.keys())
     _djs_safe = _json.dumps(_states).replace('</', '<\\/')
     _opts_js = _json.dumps(_opts)
-    _btn_html = ''.join(f'<button class="tab-btn" data-idx="{i}">{o}</button>' for i, o in enumerate(_opts))
+    _sel_html = '<div style="margin-bottom:8px"><span style="font-size:11px;color:#6b7280;display:block;margin-bottom:2px">Comparison Period</span><select id="sel" style="padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;color:#374151;background:#fff;cursor:pointer">' + ''.join(f'<option value="{i}">{o}</option>' for i, o in enumerate(_opts)) + '</select></div>'
 
     _inner = (
         '<!DOCTYPE html><html><head><meta charset="utf-8">'
@@ -704,21 +662,14 @@ def chart3_experienced_devs(
         '<style>'
         '*{box-sizing:border-box;margin:0;padding:0}'
         'body{font-family:Arial,sans-serif;font-size:13px;padding:4px}'
-        '.tab-btn{padding:6px 14px;border:none;background:none;border-radius:6px;font-size:13px;cursor:pointer;color:#6b7280}'
-        '.tab-btn:hover{background:#f3f4f6;color:#111}'
-        '.tab-btn.active{background:#eff6ff;color:#2563eb;font-weight:600}'
-        '.tab-bar{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px;border-bottom:1px solid #e5e7eb;padding-bottom:8px}'
         '</style></head><body>'
-        f'<div class="tab-bar">{_btn_html}</div>'
+        f'{_sel_html}'
         '<div id="chart"></div>'
         f'<script>var D={_djs_safe};var O={_opts_js};'
-        'document.querySelectorAll(".tab-btn").forEach(function(btn,i){'
-        'btn.addEventListener("click",function(){'
-        'document.querySelectorAll(".tab-btn").forEach(function(b){b.classList.remove("active")});'
-        'btn.classList.add("active");'
-        'Plotly.react("chart",D[O[i]].chart.data,D[O[i]].chart.layout,{responsive:true});'
-        '});});'
-        'var _b=document.querySelectorAll(".tab-btn");if(_b.length)_b[0].click();'
+        'var sel=document.getElementById("sel");'
+        'function show(i){Plotly.react("chart",D[O[i]].chart.data,D[O[i]].chart.layout,{responsive:true});}'
+        'sel.addEventListener("change",function(){show(parseInt(this.value))});'
+        'show(0);'
         '</script></body></html>'
     )
     _src = _html_mod.escape(_inner, quote=True)
@@ -727,13 +678,7 @@ def chart3_experienced_devs(
 
 
 @app.cell(hide_code=True)
-def chart4_developer_changes(
-    TENURE_COLORS,
-    apply_ec_style,
-    df_all,
-    go,
-    mo,
-):
+def chart4_developer_changes(TENURE_COLORS, df_all, go, mo):
     """Chart 4: Where Did Developers Go? - Multi-line chart with change annotations"""
     import json as _json
     import html as _html_mod
@@ -859,7 +804,7 @@ def chart4_developer_changes(
     _opts = list(_states.keys())
     _djs_safe = _json.dumps(_states).replace('</', '<\\/')
     _opts_js = _json.dumps(_opts)
-    _btn_html = ''.join(f'<button class="tab-btn" data-idx="{i}">{o}</button>' for i, o in enumerate(_opts))
+    _sel_html = '<div style="margin-bottom:8px"><span style="font-size:11px;color:#6b7280;display:block;margin-bottom:2px">Comparison Period</span><select id="sel" style="padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;color:#374151;background:#fff;cursor:pointer">' + ''.join(f'<option value="{i}">{o}</option>' for i, o in enumerate(_opts)) + '</select></div>'
 
     _inner = (
         '<!DOCTYPE html><html><head><meta charset="utf-8">'
@@ -867,21 +812,14 @@ def chart4_developer_changes(
         '<style>'
         '*{box-sizing:border-box;margin:0;padding:0}'
         'body{font-family:Arial,sans-serif;font-size:13px;padding:4px}'
-        '.tab-btn{padding:6px 14px;border:none;background:none;border-radius:6px;font-size:13px;cursor:pointer;color:#6b7280}'
-        '.tab-btn:hover{background:#f3f4f6;color:#111}'
-        '.tab-btn.active{background:#eff6ff;color:#2563eb;font-weight:600}'
-        '.tab-bar{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px;border-bottom:1px solid #e5e7eb;padding-bottom:8px}'
         '</style></head><body>'
-        f'<div class="tab-bar">{_btn_html}</div>'
+        f'{_sel_html}'
         '<div id="chart"></div>'
         f'<script>var D={_djs_safe};var O={_opts_js};'
-        'document.querySelectorAll(".tab-btn").forEach(function(btn,i){'
-        'btn.addEventListener("click",function(){'
-        'document.querySelectorAll(".tab-btn").forEach(function(b){b.classList.remove("active")});'
-        'btn.classList.add("active");'
-        'Plotly.react("chart",D[O[i]].chart.data,D[O[i]].chart.layout,{responsive:true});'
-        '});});'
-        'var _b=document.querySelectorAll(".tab-btn");if(_b.length)_b[0].click();'
+        'var sel=document.getElementById("sel");'
+        'function show(i){Plotly.react("chart",D[O[i]].chart.data,D[O[i]].chart.layout,{responsive:true});}'
+        'sel.addEventListener("change",function(){show(parseInt(this.value))});'
+        'show(0);'
         '</script></body></html>'
     )
     _src = _html_mod.escape(_inner, quote=True)
@@ -899,19 +837,13 @@ def section_newcomer_trends(mo):
 
 
 @app.cell(hide_code=True)
-def chart5_newcomer_volatility(
-    EC_LIGHT_BLUE,
-    apply_ec_style,
-    df_all,
-    go,
-    mo,
-    pd,
-):
-    """Chart 5: Newcomer Volatility - Bar Chart by Year (Yearly granularity, selectable time range)"""
+def chart5_newcomer_volatility(EC_LIGHT_BLUE, df_all, go, mo, pd):
+    """Chart 5: Newcomer Volatility - Bar Chart with time granularity + date range"""
     import json as _json
     import html as _html_mod
 
-    _OPTS = ['All Time', 'Last 5 Years', 'Last 3 Years']
+    _GRAN_OPTS = ['Yearly', 'Quarterly', 'Monthly']
+    _RANGE_OPTS = ['All Time', 'Last 5 Years', 'Last 3 Years']
 
     _time_filters = {
         'All Time': None,
@@ -920,51 +852,61 @@ def chart5_newcomer_volatility(
     }
 
     _states = {}
-    for _opt in _OPTS:
-        _df = df_all[df_all['ecosystem_name'] == 'All Web3 Ecosystems'].copy()
-        _cutoff = _time_filters[_opt]
-        if _cutoff is not None:
-            _df = _df[_df['day'] >= _cutoff]
+    for _gran in _GRAN_OPTS:
+        for _range in _RANGE_OPTS:
+            _opt = f'{_gran} | {_range}'
+            _df = df_all[df_all['ecosystem_name'] == 'All Web3 Ecosystems'].copy()
+            _cutoff = _time_filters[_range]
+            if _cutoff is not None:
+                _df = _df[_df['day'] >= _cutoff]
 
-        _df_agg = _df.groupby('year').agg({'newcomers': 'max'}).reset_index()
-        _df_agg['label'] = _df_agg['year'].astype(int).astype(str)
-        _x_vals = _df_agg['label']
+            if _gran == 'Yearly':
+                _df_agg = _df.groupby('year').agg({'newcomers': 'max'}).reset_index()
+                _df_agg['label'] = _df_agg['year'].astype(int).astype(str)
+            elif _gran == 'Quarterly':
+                _df_agg = _df.groupby('quarter').agg({'newcomers': 'max'}).reset_index()
+                _df_agg['label'] = _df_agg['quarter'].dt.year.astype(str) + ' Q' + _df_agg['quarter'].dt.quarter.astype(str)
+            else:  # Monthly
+                _df_agg = _df.groupby('month').agg({'newcomers': 'max'}).reset_index()
+                _df_agg['label'] = _df_agg['month'].dt.strftime('%b %Y')
 
-        _peak_idx = _df_agg['newcomers'].idxmax()
-        _peak_year = _df_agg.loc[_peak_idx, 'label']
-        _peak_value = _df_agg.loc[_peak_idx, 'newcomers']
+            _peak_idx = _df_agg['newcomers'].idxmax()
+            _peak_label = _df_agg.loc[_peak_idx, 'label']
+            _peak_value = _df_agg.loc[_peak_idx, 'newcomers']
 
-        _fig = go.Figure()
+            _show_text = _gran == 'Yearly'
 
-        _fig.add_trace(go.Bar(
-            x=_x_vals,
-            y=_df_agg['newcomers'],
-            marker_color=EC_LIGHT_BLUE,
-            text=_df_agg['newcomers'].apply(lambda x: f'{x:,.0f}'),
-            textposition='outside',
-            textfont=dict(size=10, color="#666"),
-            hovertemplate='<b>%{x}</b><br>Newcomers: %{y:,.0f}<extra></extra>'
-        ))
+            _fig = go.Figure()
 
-        apply_ec_style(
-            _fig,
-            title="Newcomers tend to follow crypto asset price appreciation",
-            subtitle=f"{_peak_value:,.0f} developers joined crypto in {_peak_year}",
-            y_title="Developers",
-            show_legend=False,
-            right_margin=60
-        )
+            _fig.add_trace(go.Bar(
+                x=_df_agg['label'],
+                y=_df_agg['newcomers'],
+                marker_color=EC_LIGHT_BLUE,
+                text=_df_agg['newcomers'].apply(lambda x: f'{x:,.0f}') if _show_text else None,
+                textposition='outside' if _show_text else None,
+                textfont=dict(size=10, color="#666"),
+                hovertemplate='<b>%{x}</b><br>Newcomers: %{y:,.0f}<extra></extra>'
+            ))
 
-        _max_val = _df_agg['newcomers'].max()
-        _fig.update_yaxes(range=[0, _max_val * 1.15])
-        _fig.update_layout(height=450)
+            apply_ec_style(
+                _fig,
+                title="Newcomers tend to follow crypto asset price appreciation",
+                subtitle=f"{_peak_value:,.0f} developers joined crypto in {_peak_label}",
+                y_title="Developers",
+                show_legend=False,
+                right_margin=60
+            )
 
-        _states[_opt] = {'chart': _json.loads(_fig.to_json())}
+            _max_val = _df_agg['newcomers'].max()
+            _fig.update_yaxes(range=[0, _max_val * 1.15])
+            _fig.update_layout(height=450)
 
-    _opts = list(_states.keys())
+            _states[_opt] = {'chart': _json.loads(_fig.to_json())}
+
     _djs_safe = _json.dumps(_states).replace('</', '<\\/')
-    _opts_js = _json.dumps(_opts)
-    _btn_html = ''.join(f'<button class="tab-btn" data-idx="{i}">{o}</button>' for i, o in enumerate(_opts))
+    _gran_sel = '<div style="margin-bottom:8px"><span style="font-size:11px;color:#6b7280;display:block;margin-bottom:2px">Time Granularity</span><select id="sel1" style="padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;color:#374151;background:#fff;cursor:pointer">' + ''.join(f'<option value="{o}">{o}</option>' for o in _GRAN_OPTS) + '</select></div>'
+    _range_sel = '<div style="margin-bottom:8px"><span style="font-size:11px;color:#6b7280;display:block;margin-bottom:2px">Date Range</span><select id="sel2" style="padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;color:#374151;background:#fff;cursor:pointer">' + ''.join(f'<option value="{o}">{o}</option>' for o in _RANGE_OPTS) + '</select></div>'
+    _sel_html = f'<div style="display:flex;gap:12px;flex-wrap:wrap">{_gran_sel}{_range_sel}</div>'
 
     _inner = (
         '<!DOCTYPE html><html><head><meta charset="utf-8">'
@@ -972,21 +914,14 @@ def chart5_newcomer_volatility(
         '<style>'
         '*{box-sizing:border-box;margin:0;padding:0}'
         'body{font-family:Arial,sans-serif;font-size:13px;padding:4px}'
-        '.tab-btn{padding:6px 14px;border:none;background:none;border-radius:6px;font-size:13px;cursor:pointer;color:#6b7280}'
-        '.tab-btn:hover{background:#f3f4f6;color:#111}'
-        '.tab-btn.active{background:#eff6ff;color:#2563eb;font-weight:600}'
-        '.tab-bar{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px;border-bottom:1px solid #e5e7eb;padding-bottom:8px}'
         '</style></head><body>'
-        f'<div class="tab-bar">{_btn_html}</div>'
+        f'{_sel_html}'
         '<div id="chart"></div>'
-        f'<script>var D={_djs_safe};var O={_opts_js};'
-        'document.querySelectorAll(".tab-btn").forEach(function(btn,i){'
-        'btn.addEventListener("click",function(){'
-        'document.querySelectorAll(".tab-btn").forEach(function(b){b.classList.remove("active")});'
-        'btn.classList.add("active");'
-        'Plotly.react("chart",D[O[i]].chart.data,D[O[i]].chart.layout,{responsive:true});'
-        '});});'
-        'var _b=document.querySelectorAll(".tab-btn");if(_b.length)_b[0].click();'
+        f'<script>var D={_djs_safe};'
+        'var sel1=document.getElementById("sel1");var sel2=document.getElementById("sel2");'
+        'function show(){var k=sel1.value+" | "+sel2.value;Plotly.react("chart",D[k].chart.data,D[k].chart.layout,{responsive:true});}'
+        'sel1.addEventListener("change",show);sel2.addEventListener("change",show);'
+        'show();'
         '</script></body></html>'
     )
     _src = _html_mod.escape(_inner, quote=True)
@@ -1004,13 +939,7 @@ def section_ecosystem_landscape(mo):
 
 
 @app.cell(hide_code=True)
-def chart6_btc_eth_share(
-    apply_ec_style,
-    df_all,
-    go,
-    mo,
-    pd,
-):
+def chart6_btc_eth_share(df_all, go, mo, pd):
     """Chart 6: Developer Distribution - tabs for view type, sub-tabs for time range"""
     import json as _json
     import html as _html_mod
@@ -1132,10 +1061,10 @@ def chart6_btc_eth_share(
 
         _states[_opt] = {'chart': _json.loads(_fig.to_json())}
 
-    _opts = list(_states.keys())
     _djs_safe = _json.dumps(_states).replace('</', '<\\/')
-    _opts_js = _json.dumps(_opts)
-    _btn_html = ''.join(f'<button class="tab-btn" data-idx="{i}">{o}</button>' for i, o in enumerate(_opts))
+    _view_sel = '<div style="margin-bottom:8px"><span style="font-size:11px;color:#6b7280;display:block;margin-bottom:2px">View</span><select id="sel1" style="padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;color:#374151;background:#fff;cursor:pointer">' + ''.join(f'<option value="{o}">{o}</option>' for o in _VIEW_OPTS) + '</select></div>'
+    _time_sel = '<div style="margin-bottom:8px"><span style="font-size:11px;color:#6b7280;display:block;margin-bottom:2px">Time Range</span><select id="sel2" style="padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;color:#374151;background:#fff;cursor:pointer">' + ''.join(f'<option value="{o}">{o}</option>' for o in _TIME_OPTS) + '</select></div>'
+    _sel_html = f'<div style="display:flex;gap:12px;flex-wrap:wrap">{_view_sel}{_time_sel}</div>'
 
     _inner = (
         '<!DOCTYPE html><html><head><meta charset="utf-8">'
@@ -1143,21 +1072,14 @@ def chart6_btc_eth_share(
         '<style>'
         '*{box-sizing:border-box;margin:0;padding:0}'
         'body{font-family:Arial,sans-serif;font-size:13px;padding:4px}'
-        '.tab-btn{padding:6px 14px;border:none;background:none;border-radius:6px;font-size:13px;cursor:pointer;color:#6b7280}'
-        '.tab-btn:hover{background:#f3f4f6;color:#111}'
-        '.tab-btn.active{background:#eff6ff;color:#2563eb;font-weight:600}'
-        '.tab-bar{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px;border-bottom:1px solid #e5e7eb;padding-bottom:8px}'
         '</style></head><body>'
-        f'<div class="tab-bar">{_btn_html}</div>'
+        f'{_sel_html}'
         '<div id="chart"></div>'
-        f'<script>var D={_djs_safe};var O={_opts_js};'
-        'document.querySelectorAll(".tab-btn").forEach(function(btn,i){'
-        'btn.addEventListener("click",function(){'
-        'document.querySelectorAll(".tab-btn").forEach(function(b){b.classList.remove("active")});'
-        'btn.classList.add("active");'
-        'Plotly.react("chart",D[O[i]].chart.data,D[O[i]].chart.layout,{responsive:true});'
-        '});});'
-        'var _b=document.querySelectorAll(".tab-btn");if(_b.length)_b[0].click();'
+        f'<script>var D={_djs_safe};'
+        'var sel1=document.getElementById("sel1");var sel2=document.getElementById("sel2");'
+        'function show(){var k=sel1.value+" | "+sel2.value;Plotly.react("chart",D[k].chart.data,D[k].chart.layout,{responsive:true});}'
+        'sel1.addEventListener("change",show);sel2.addEventListener("change",show);'
+        'show();'
         '</script></body></html>'
     )
     _src = _html_mod.escape(_inner, quote=True)
@@ -1175,15 +1097,7 @@ def section_ecosystem_deep_dive(mo):
 
 
 @app.cell(hide_code=True)
-def chart_ecosystem_total_devs(
-    EC_LIGHT_BLUE,
-    add_callout_annotation,
-    apply_ec_style,
-    df_all,
-    go,
-    mo,
-    pd,
-):
+def chart_ecosystem_total_devs(EC_LIGHT_BLUE, df_all, go, mo, pd):
     """Deep Dive Chart 1: Ecosystem Total Active Developers — tabs: ecosystem x time range"""
     import json as _json
     import html as _html_mod
@@ -1220,6 +1134,25 @@ def chart_ecosystem_total_devs(
         _current_devs = _current_row['total_devs']
         _current_date = _current_row['day']
 
+        _df_full = df_all[df_all['ecosystem_name'] == _eco_name].copy()
+        _year_ago = _current_date - pd.DateOffset(years=1)
+        _year_ago_df = _df_full[_df_full['day'] <= _year_ago]
+        if len(_year_ago_df) > 0:
+            _yoy_pct = ((_current_devs - _year_ago_df.iloc[-1]['total_devs']) / _year_ago_df.iloc[-1]['total_devs']) * 100
+            _yoy_str = f"{_yoy_pct:+.1f}%"
+            _yoy_color = "#16a34a" if _yoy_pct > 0 else "#dc2626"
+        else:
+            _yoy_str = "N/A"
+            _yoy_color = "#6b7280"
+
+        _stats_html = (
+            f'<div style="font-size:13px;color:#374151;margin-bottom:8px">'
+            f'<strong>{_current_devs:,.0f}</strong> monthly active developers '
+            f'({_current_date.strftime("%B %Y")}) · '
+            f'<span style="color:{_yoy_color}">{_yoy_str} YoY</span>'
+            f'</div>'
+        )
+
         _fig = go.Figure()
 
         _fig.add_trace(go.Scatter(
@@ -1251,12 +1184,12 @@ def chart_ecosystem_total_devs(
 
         _fig.update_layout(height=450)
 
-        _states[_opt] = {'chart': _json.loads(_fig.to_json())}
+        _states[_opt] = {'stats': _stats_html, 'chart': _json.loads(_fig.to_json())}
 
-    _opts = list(_states.keys())
     _djs_safe = _json.dumps(_states).replace('</', '<\\/')
-    _opts_js = _json.dumps(_opts)
-    _btn_html = ''.join(f'<button class="tab-btn" data-idx="{i}">{o}</button>' for i, o in enumerate(_opts))
+    _eco_sel = '<div style="margin-bottom:8px"><span style="font-size:11px;color:#6b7280;display:block;margin-bottom:2px">Ecosystem</span><select id="sel1" style="padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;color:#374151;background:#fff;cursor:pointer">' + ''.join(f'<option value="{o}">{o}</option>' for o in _ECO_OPTS) + '</select></div>'
+    _time_sel = '<div style="margin-bottom:8px"><span style="font-size:11px;color:#6b7280;display:block;margin-bottom:2px">Time Range</span><select id="sel2" style="padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;color:#374151;background:#fff;cursor:pointer">' + ''.join(f'<option value="{o}">{o}</option>' for o in _TIME_OPTS) + '</select></div>'
+    _sel_html = f'<div style="display:flex;gap:12px;flex-wrap:wrap">{_eco_sel}{_time_sel}</div>'
 
     _inner = (
         '<!DOCTYPE html><html><head><meta charset="utf-8">'
@@ -1264,21 +1197,15 @@ def chart_ecosystem_total_devs(
         '<style>'
         '*{box-sizing:border-box;margin:0;padding:0}'
         'body{font-family:Arial,sans-serif;font-size:13px;padding:4px}'
-        '.tab-btn{padding:6px 14px;border:none;background:none;border-radius:6px;font-size:13px;cursor:pointer;color:#6b7280}'
-        '.tab-btn:hover{background:#f3f4f6;color:#111}'
-        '.tab-btn.active{background:#eff6ff;color:#2563eb;font-weight:600}'
-        '.tab-bar{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px;border-bottom:1px solid #e5e7eb;padding-bottom:8px}'
         '</style></head><body>'
-        f'<div class="tab-bar">{_btn_html}</div>'
+        f'{_sel_html}'
+        '<div id="stats" style="margin-bottom:8px"></div>'
         '<div id="chart"></div>'
-        f'<script>var D={_djs_safe};var O={_opts_js};'
-        'document.querySelectorAll(".tab-btn").forEach(function(btn,i){'
-        'btn.addEventListener("click",function(){'
-        'document.querySelectorAll(".tab-btn").forEach(function(b){b.classList.remove("active")});'
-        'btn.classList.add("active");'
-        'Plotly.react("chart",D[O[i]].chart.data,D[O[i]].chart.layout,{responsive:true});'
-        '});});'
-        'var _b=document.querySelectorAll(".tab-btn");if(_b.length)_b[0].click();'
+        f'<script>var D={_djs_safe};'
+        'var sel1=document.getElementById("sel1");var sel2=document.getElementById("sel2");'
+        'function show(){var k=sel1.value+" | "+sel2.value;document.getElementById("stats").innerHTML=D[k].stats||"";Plotly.react("chart",D[k].chart.data,D[k].chart.layout,{responsive:true});}'
+        'sel1.addEventListener("change",show);sel2.addEventListener("change",show);'
+        'show();'
         '</script></body></html>'
     )
     _src = _html_mod.escape(_inner, quote=True)
@@ -1287,15 +1214,7 @@ def chart_ecosystem_total_devs(
 
 
 @app.cell(hide_code=True)
-def chart_ecosystem_tenure(
-    TENURE_COLORS,
-    add_tenure_legend,
-    apply_ec_style,
-    df_all,
-    go,
-    mo,
-    pd,
-):
+def chart_ecosystem_tenure(TENURE_COLORS, df_all, go, mo, pd):
     """Deep Dive Chart 2: Ecosystem Developer Composition by Tenure"""
     import json as _json
     import html as _html_mod
@@ -1359,10 +1278,10 @@ def chart_ecosystem_tenure(
 
         _states[_opt] = {'chart': _json.loads(_fig.to_json())}
 
-    _opts = list(_states.keys())
     _djs_safe = _json.dumps(_states).replace('</', '<\\/')
-    _opts_js = _json.dumps(_opts)
-    _btn_html = ''.join(f'<button class="tab-btn" data-idx="{i}">{o}</button>' for i, o in enumerate(_opts))
+    _eco_sel = '<div style="margin-bottom:8px"><span style="font-size:11px;color:#6b7280;display:block;margin-bottom:2px">Ecosystem</span><select id="sel1" style="padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;color:#374151;background:#fff;cursor:pointer">' + ''.join(f'<option value="{o}">{o}</option>' for o in _ECO_OPTS) + '</select></div>'
+    _time_sel = '<div style="margin-bottom:8px"><span style="font-size:11px;color:#6b7280;display:block;margin-bottom:2px">Time Range</span><select id="sel2" style="padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;color:#374151;background:#fff;cursor:pointer">' + ''.join(f'<option value="{o}">{o}</option>' for o in _TIME_OPTS) + '</select></div>'
+    _sel_html = f'<div style="display:flex;gap:12px;flex-wrap:wrap">{_eco_sel}{_time_sel}</div>'
 
     _inner = (
         '<!DOCTYPE html><html><head><meta charset="utf-8">'
@@ -1370,21 +1289,14 @@ def chart_ecosystem_tenure(
         '<style>'
         '*{box-sizing:border-box;margin:0;padding:0}'
         'body{font-family:Arial,sans-serif;font-size:13px;padding:4px}'
-        '.tab-btn{padding:6px 14px;border:none;background:none;border-radius:6px;font-size:13px;cursor:pointer;color:#6b7280}'
-        '.tab-btn:hover{background:#f3f4f6;color:#111}'
-        '.tab-btn.active{background:#eff6ff;color:#2563eb;font-weight:600}'
-        '.tab-bar{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px;border-bottom:1px solid #e5e7eb;padding-bottom:8px}'
         '</style></head><body>'
-        f'<div class="tab-bar">{_btn_html}</div>'
+        f'{_sel_html}'
         '<div id="chart"></div>'
-        f'<script>var D={_djs_safe};var O={_opts_js};'
-        'document.querySelectorAll(".tab-btn").forEach(function(btn,i){'
-        'btn.addEventListener("click",function(){'
-        'document.querySelectorAll(".tab-btn").forEach(function(b){b.classList.remove("active")});'
-        'btn.classList.add("active");'
-        'Plotly.react("chart",D[O[i]].chart.data,D[O[i]].chart.layout,{responsive:true});'
-        '});});'
-        'var _b=document.querySelectorAll(".tab-btn");if(_b.length)_b[0].click();'
+        f'<script>var D={_djs_safe};'
+        'var sel1=document.getElementById("sel1");var sel2=document.getElementById("sel2");'
+        'function show(){var k=sel1.value+" | "+sel2.value;Plotly.react("chart",D[k].chart.data,D[k].chart.layout,{responsive:true});}'
+        'sel1.addEventListener("change",show);sel2.addEventListener("change",show);'
+        'show();'
         '</script></body></html>'
     )
     _src = _html_mod.escape(_inner, quote=True)
@@ -1393,14 +1305,7 @@ def chart_ecosystem_tenure(
 
 
 @app.cell(hide_code=True)
-def chart_ecosystem_activity(
-    ACTIVITY_COLORS,
-    apply_ec_style,
-    df_all,
-    go,
-    mo,
-    pd,
-):
+def chart_ecosystem_activity(ACTIVITY_COLORS, df_all, go, mo, pd):
     """Deep Dive Chart 3: Ecosystem Activity Levels"""
     import json as _json
     import html as _html_mod
@@ -1458,10 +1363,10 @@ def chart_ecosystem_activity(
 
         _states[_opt] = {'chart': _json.loads(_fig.to_json())}
 
-    _opts = list(_states.keys())
     _djs_safe = _json.dumps(_states).replace('</', '<\\/')
-    _opts_js = _json.dumps(_opts)
-    _btn_html = ''.join(f'<button class="tab-btn" data-idx="{i}">{o}</button>' for i, o in enumerate(_opts))
+    _eco_sel = '<div style="margin-bottom:8px"><span style="font-size:11px;color:#6b7280;display:block;margin-bottom:2px">Ecosystem</span><select id="sel1" style="padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;color:#374151;background:#fff;cursor:pointer">' + ''.join(f'<option value="{o}">{o}</option>' for o in _ECO_OPTS) + '</select></div>'
+    _time_sel = '<div style="margin-bottom:8px"><span style="font-size:11px;color:#6b7280;display:block;margin-bottom:2px">Time Range</span><select id="sel2" style="padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;color:#374151;background:#fff;cursor:pointer">' + ''.join(f'<option value="{o}">{o}</option>' for o in _TIME_OPTS) + '</select></div>'
+    _sel_html = f'<div style="display:flex;gap:12px;flex-wrap:wrap">{_eco_sel}{_time_sel}</div>'
 
     _inner = (
         '<!DOCTYPE html><html><head><meta charset="utf-8">'
@@ -1469,21 +1374,14 @@ def chart_ecosystem_activity(
         '<style>'
         '*{box-sizing:border-box;margin:0;padding:0}'
         'body{font-family:Arial,sans-serif;font-size:13px;padding:4px}'
-        '.tab-btn{padding:6px 14px;border:none;background:none;border-radius:6px;font-size:13px;cursor:pointer;color:#6b7280}'
-        '.tab-btn:hover{background:#f3f4f6;color:#111}'
-        '.tab-btn.active{background:#eff6ff;color:#2563eb;font-weight:600}'
-        '.tab-bar{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px;border-bottom:1px solid #e5e7eb;padding-bottom:8px}'
         '</style></head><body>'
-        f'<div class="tab-bar">{_btn_html}</div>'
+        f'{_sel_html}'
         '<div id="chart"></div>'
-        f'<script>var D={_djs_safe};var O={_opts_js};'
-        'document.querySelectorAll(".tab-btn").forEach(function(btn,i){'
-        'btn.addEventListener("click",function(){'
-        'document.querySelectorAll(".tab-btn").forEach(function(b){b.classList.remove("active")});'
-        'btn.classList.add("active");'
-        'Plotly.react("chart",D[O[i]].chart.data,D[O[i]].chart.layout,{responsive:true});'
-        '});});'
-        'var _b=document.querySelectorAll(".tab-btn");if(_b.length)_b[0].click();'
+        f'<script>var D={_djs_safe};'
+        'var sel1=document.getElementById("sel1");var sel2=document.getElementById("sel2");'
+        'function show(){var k=sel1.value+" | "+sel2.value;Plotly.react("chart",D[k].chart.data,D[k].chart.layout,{responsive:true});}'
+        'sel1.addEventListener("change",show);sel2.addEventListener("change",show);'
+        'show();'
         '</script></body></html>'
     )
     _src = _html_mod.escape(_inner, quote=True)
@@ -1492,94 +1390,100 @@ def chart_ecosystem_activity(
 
 
 @app.cell(hide_code=True)
-def chart_ecosystem_newcomers_by_year(
-    apply_ec_style,
-    df_all,
-    go,
-    mo,
-):
+def chart_ecosystem_newcomers_by_year(df_all, go, mo):
     """Deep Dive Chart 4: Ecosystem New Developer Acquisition by Year"""
     import json as _json
     import html as _html_mod
 
     _ECO_OPTS = ['Bitcoin', 'Ethereum', 'Solana']
+    _TIME_OPTS = ['All Time', 'Last 10 Years', 'Last 5 Years', 'Last 3 Years']
+
+    _max_year = int(df_all['year'].max()) if len(df_all) > 0 else 2024
+    _year_cutoffs = {
+        'All Time': 2015,
+        'Last 10 Years': _max_year - 9,
+        'Last 5 Years': _max_year - 4,
+        'Last 3 Years': _max_year - 2,
+    }
 
     _bar_color = "#B8C9E8"
 
     _states = {}
     for _eco_name in _ECO_OPTS:
-        _df = df_all[df_all['ecosystem_name'] == _eco_name].copy()
+        for _time_key in _TIME_OPTS:
+            _opt = f'{_eco_name} | {_time_key}'
+            _df = df_all[df_all['ecosystem_name'] == _eco_name].copy()
 
-        if len(_df) == 0:
+            if len(_df) == 0:
+                _fig = go.Figure()
+                _fig.add_annotation(text="No data available", xref="paper", yref="paper",
+                                    x=0.5, y=0.5, showarrow=False, font=dict(size=14, color="#666"))
+                _states[_opt] = {'chart': _json.loads(_fig.to_json())}
+                continue
+
+            _df_agg = _df.groupby('year').agg({'newcomers': 'max'}).reset_index()
+            _df_agg = _df_agg[_df_agg['year'] >= _year_cutoffs[_time_key]]
+
+            _recent_years = _df_agg[_df_agg['year'] >= _df_agg['year'].max() - 2]
+            _recent_values = _recent_years['newcomers'].tolist()
+            _recent_year_labels = _recent_years['year'].astype(int).tolist()
+
+            _min_recent = min(_recent_values) if _recent_values else 0
+            if _min_recent >= 10000:
+                _threshold = (_min_recent // 5000) * 5000
+            elif _min_recent >= 1000:
+                _threshold = (_min_recent // 1000) * 1000
+            else:
+                _threshold = 0
+
+            if _threshold > 0 and len(_recent_year_labels) >= 2:
+                _years_str = ", ".join([f"'{str(y)[-2:]}" for y in _recent_year_labels])
+                _title = f"{_threshold:,.0f}+ new devs supported {_eco_name} in {_years_str}"
+            else:
+                _title = f"{_eco_name} new developers"
+
             _fig = go.Figure()
-            _fig.add_annotation(text="No data available", xref="paper", yref="paper",
-                                x=0.5, y=0.5, showarrow=False, font=dict(size=14, color="#666"))
-            _states[_eco_name] = {'chart': _json.loads(_fig.to_json())}
-            continue
 
-        _df_agg = _df.groupby('year').agg({'newcomers': 'max'}).reset_index()
-        _df_agg = _df_agg[_df_agg['year'] >= 2015]
+            _fig.add_trace(go.Bar(
+                x=_df_agg['year'].astype(int).astype(str),
+                y=_df_agg['newcomers'],
+                marker_color=_bar_color,
+                text=_df_agg['newcomers'].apply(lambda x: f'{x:,.0f}'),
+                textposition='outside',
+                textfont=dict(size=10, color="#666"),
+                hovertemplate='<b>%{x}</b><br>New Developers: %{y:,.0f}<extra></extra>'
+            ))
 
-        _recent_years = _df_agg[_df_agg['year'] >= _df_agg['year'].max() - 2]
-        _recent_values = _recent_years['newcomers'].tolist()
-        _recent_year_labels = _recent_years['year'].astype(int).tolist()
+            if _threshold > 0:
+                _fig.add_hline(
+                    y=_threshold,
+                    line_dash="dash",
+                    line_color="#999",
+                    line_width=1,
+                    annotation_text=f"{_threshold:,.0f}+ new developers supported {_eco_name} for the last {len(_recent_year_labels)} years",
+                    annotation_position="top left",
+                    annotation_font=dict(size=10, color="#666")
+                )
 
-        _min_recent = min(_recent_values) if _recent_values else 0
-        if _min_recent >= 10000:
-            _threshold = (_min_recent // 5000) * 5000
-        elif _min_recent >= 1000:
-            _threshold = (_min_recent // 1000) * 1000
-        else:
-            _threshold = 0
-
-        if _threshold > 0 and len(_recent_year_labels) >= 2:
-            _years_str = ", ".join([f"'{str(y)[-2:]}" for y in _recent_year_labels])
-            _title = f"{_threshold:,.0f}+ new devs supported {_eco_name} in {_years_str}"
-        else:
-            _title = f"{_eco_name} new developers"
-
-        _fig = go.Figure()
-
-        _fig.add_trace(go.Bar(
-            x=_df_agg['year'].astype(int).astype(str),
-            y=_df_agg['newcomers'],
-            marker_color=_bar_color,
-            text=_df_agg['newcomers'].apply(lambda x: f'{x:,.0f}'),
-            textposition='outside',
-            textfont=dict(size=10, color="#666"),
-            hovertemplate='<b>%{x}</b><br>New Developers: %{y:,.0f}<extra></extra>'
-        ))
-
-        if _threshold > 0:
-            _fig.add_hline(
-                y=_threshold,
-                line_dash="dash",
-                line_color="#999",
-                line_width=1,
-                annotation_text=f"{_threshold:,.0f}+ new developers supported {_eco_name} for the last {len(_recent_year_labels)} years",
-                annotation_position="top left",
-                annotation_font=dict(size=10, color="#666")
+            apply_ec_style(
+                _fig,
+                title=_title,
+                subtitle=f"{_eco_name} new developers",
+                y_title="Developers",
+                show_legend=False,
+                right_margin=60
             )
 
-        apply_ec_style(
-            _fig,
-            title=_title,
-            subtitle=f"{_eco_name} new developers",
-            y_title="Developers",
-            show_legend=False,
-            right_margin=60
-        )
+            _max_val = _df_agg['newcomers'].max()
+            _fig.update_yaxes(range=[0, _max_val * 1.18])
+            _fig.update_layout(height=450)
 
-        _max_val = _df_agg['newcomers'].max()
-        _fig.update_yaxes(range=[0, _max_val * 1.18])
-        _fig.update_layout(height=450)
+            _states[_opt] = {'chart': _json.loads(_fig.to_json())}
 
-        _states[_eco_name] = {'chart': _json.loads(_fig.to_json())}
-
-    _opts = list(_states.keys())
     _djs_safe = _json.dumps(_states).replace('</', '<\\/')
-    _opts_js = _json.dumps(_opts)
-    _btn_html = ''.join(f'<button class="tab-btn" data-idx="{i}">{o}</button>' for i, o in enumerate(_opts))
+    _eco_sel = '<div style="margin-bottom:8px"><span style="font-size:11px;color:#6b7280;display:block;margin-bottom:2px">Ecosystem</span><select id="sel1" style="padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;color:#374151;background:#fff;cursor:pointer">' + ''.join(f'<option value="{o}">{o}</option>' for o in _ECO_OPTS) + '</select></div>'
+    _time_sel = '<div style="margin-bottom:8px"><span style="font-size:11px;color:#6b7280;display:block;margin-bottom:2px">Time Range</span><select id="sel2" style="padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;color:#374151;background:#fff;cursor:pointer">' + ''.join(f'<option value="{o}">{o}</option>' for o in _TIME_OPTS) + '</select></div>'
+    _sel_html = f'<div style="display:flex;gap:12px;flex-wrap:wrap">{_eco_sel}{_time_sel}</div>'
 
     _inner = (
         '<!DOCTYPE html><html><head><meta charset="utf-8">'
@@ -1587,21 +1491,14 @@ def chart_ecosystem_newcomers_by_year(
         '<style>'
         '*{box-sizing:border-box;margin:0;padding:0}'
         'body{font-family:Arial,sans-serif;font-size:13px;padding:4px}'
-        '.tab-btn{padding:6px 14px;border:none;background:none;border-radius:6px;font-size:13px;cursor:pointer;color:#6b7280}'
-        '.tab-btn:hover{background:#f3f4f6;color:#111}'
-        '.tab-btn.active{background:#eff6ff;color:#2563eb;font-weight:600}'
-        '.tab-bar{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px;border-bottom:1px solid #e5e7eb;padding-bottom:8px}'
         '</style></head><body>'
-        f'<div class="tab-bar">{_btn_html}</div>'
+        f'{_sel_html}'
         '<div id="chart"></div>'
-        f'<script>var D={_djs_safe};var O={_opts_js};'
-        'document.querySelectorAll(".tab-btn").forEach(function(btn,i){'
-        'btn.addEventListener("click",function(){'
-        'document.querySelectorAll(".tab-btn").forEach(function(b){b.classList.remove("active")});'
-        'btn.classList.add("active");'
-        'Plotly.react("chart",D[O[i]].chart.data,D[O[i]].chart.layout,{responsive:true});'
-        '});});'
-        'var _b=document.querySelectorAll(".tab-btn");if(_b.length)_b[0].click();'
+        f'<script>var D={_djs_safe};'
+        'var sel1=document.getElementById("sel1");var sel2=document.getElementById("sel2");'
+        'function show(){var k=sel1.value+" | "+sel2.value;Plotly.react("chart",D[k].chart.data,D[k].chart.layout,{responsive:true});}'
+        'sel1.addEventListener("change",show);sel2.addEventListener("change",show);'
+        'show();'
         '</script></body></html>'
     )
     _src = _html_mod.escape(_inner, quote=True)
@@ -1619,17 +1516,12 @@ def section_comparative(mo):
 
 
 @app.cell(hide_code=True)
-def comparison_chart(
-    apply_ec_style,
-    df_all,
-    go,
-    mo,
-    pd,
-):
-    """Comparative analysis - tabs: metric x time range (fixed: Ethereum vs Bitcoin)"""
+def comparison_chart(df_all, mo, pd):
+    """Comparative analysis - checkboxes for ecosystems, select for metric + time range"""
     import json as _json
     import html as _html_mod
 
+    _ECO_OPTS = ['Bitcoin', 'Ethereum', 'Solana']
     _METRIC_OPTS = [
         'Total Developers',
         'Newcomers',
@@ -1658,89 +1550,71 @@ def comparison_chart(
         'Last Year': pd.Timestamp('2024-01-01'),
     }
 
-    _selected_ecos = ['Ethereum', 'Bitcoin', 'Solana']
-    _colors = ["#5DADE2", "#F5B041", "#58D68D"]
+    # Pre-compute 84 individual series (3 ecos × 7 metrics × 4 time ranges)
+    # JS assembles traces dynamically — avoids pre-building 196 full chart objects
+    _series = {}
+    for _eco in _ECO_OPTS:
+        for _metric_name in _METRIC_OPTS:
+            for _time_key in _TIME_OPTS:
+                _key = f'{_eco} | {_metric_name} | {_time_key}'
+                _col = _metric_map[_metric_name]
+                _cutoff = _time_filters[_time_key]
+                _df_eco = df_all[df_all['ecosystem_name'] == _eco].copy()
+                if _cutoff is not None:
+                    _df_eco = _df_eco[_df_eco['day'] >= _cutoff]
+                if len(_df_eco) > 0:
+                    _series[_key] = {
+                        'x': [d.strftime('%Y-%m-%d') for d in _df_eco['day']],
+                        'y': [float(v) for v in _df_eco[_col]],
+                    }
 
-    _OPTS = [f'{m} | {t}' for m in _METRIC_OPTS for t in _TIME_OPTS]
+    _sjs = _json.dumps(_series).replace('</', '<\\/')
+    _eco_colors_js = _json.dumps({'Bitcoin': '#F5B041', 'Ethereum': '#5DADE2', 'Solana': '#58D68D'})
 
-    _states = {}
-    for _opt in _OPTS:
-        _metric_name, _time_key = _opt.split(' | ', 1)
-        _col = _metric_map[_metric_name]
-        _cutoff = _time_filters[_time_key]
-
-        _fig = go.Figure()
-
-        for _i, _eco in enumerate(_selected_ecos):
-            _df_eco = df_all[df_all['ecosystem_name'] == _eco].copy()
-            if _cutoff is not None:
-                _df_eco = _df_eco[_df_eco['day'] >= _cutoff]
-
-            if len(_df_eco) > 0:
-                _color = _colors[_i % len(_colors)]
-                _current_val = _df_eco.iloc[-1][_col]
-                _fig.add_trace(go.Scatter(
-                    x=_df_eco['day'],
-                    y=_df_eco[_col],
-                    name=f"{_eco} ({_current_val:,.0f})",
-                    mode='lines',
-                    line=dict(width=2, color=_color),
-                    hovertemplate=f'<b>{_eco}</b><br>%{{x|%b %Y}}<br>{_metric_name}: %{{y:,.0f}}<extra></extra>'
-                ))
-
-        _title = f"Ecosystem Comparison: {_metric_name}"
-
-        apply_ec_style(
-            _fig,
-            title=_title,
-            subtitle=f"{_metric_name} over time",
-            y_title="Developers",
-            show_legend=True,
-            right_margin=60
+    _cb_html = (
+        '<div style="margin-bottom:8px">'
+        '<span style="font-size:11px;color:#6b7280;display:block;margin-bottom:4px">Ecosystems</span>'
+        '<div style="display:flex;gap:10px">'
+        + ''.join(
+            f'<label style="display:flex;align-items:center;gap:4px;font-size:13px;color:#374151;cursor:pointer">'
+            f'<input type="checkbox" class="eco-cb" value="{o}"'
+            + (' checked' if o in ('Bitcoin', 'Ethereum') else '')
+            + f' style="cursor:pointer"> {o}</label>'
+            for o in _ECO_OPTS
         )
-
-        _fig.update_layout(
-            height=450,
-            legend=dict(
-                orientation="v",
-                yanchor="top",
-                y=0.99,
-                xanchor="left",
-                x=0.01,
-                bgcolor="rgba(255,255,255,0.9)",
-                bordercolor="#CCCCCC",
-                borderwidth=1
-            )
-        )
-
-        _states[_opt] = {'chart': _json.loads(_fig.to_json())}
-
-    _opts = list(_states.keys())
-    _djs_safe = _json.dumps(_states).replace('</', '<\\/')
-    _opts_js = _json.dumps(_opts)
-    _btn_html = ''.join(f'<button class="tab-btn" data-idx="{i}">{o}</button>' for i, o in enumerate(_opts))
+        + '</div></div>'
+    )
+    _metric_sel = '<div style="margin-bottom:8px"><span style="font-size:11px;color:#6b7280;display:block;margin-bottom:2px">Metric</span><select id="sel-metric" style="padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;color:#374151;background:#fff;cursor:pointer">' + ''.join(f'<option value="{o}">{o}</option>' for o in _METRIC_OPTS) + '</select></div>'
+    _time_sel = '<div style="margin-bottom:8px"><span style="font-size:11px;color:#6b7280;display:block;margin-bottom:2px">Time Range</span><select id="sel-time" style="padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;color:#374151;background:#fff;cursor:pointer">' + ''.join(f'<option value="{o}">{o}</option>' for o in _TIME_OPTS) + '</select></div>'
+    _sel_html = f'<div style="display:flex;gap:12px;flex-wrap:wrap">{_cb_html}{_metric_sel}{_time_sel}</div>'
 
     _inner = (
         '<!DOCTYPE html><html><head><meta charset="utf-8">'
         '<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>'
-        '<style>'
-        '*{box-sizing:border-box;margin:0;padding:0}'
-        'body{font-family:Arial,sans-serif;font-size:13px;padding:4px}'
-        '.tab-btn{padding:6px 14px;border:none;background:none;border-radius:6px;font-size:13px;cursor:pointer;color:#6b7280}'
-        '.tab-btn:hover{background:#f3f4f6;color:#111}'
-        '.tab-btn.active{background:#eff6ff;color:#2563eb;font-weight:600}'
-        '.tab-bar{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px;border-bottom:1px solid #e5e7eb;padding-bottom:8px}'
-        '</style></head><body>'
-        f'<div class="tab-bar">{_btn_html}</div>'
+        '<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;font-size:13px;padding:4px}</style>'
+        '</head><body>'
+        f'{_sel_html}'
         '<div id="chart"></div>'
-        f'<script>var D={_djs_safe};var O={_opts_js};'
-        'document.querySelectorAll(".tab-btn").forEach(function(btn,i){'
-        'btn.addEventListener("click",function(){'
-        'document.querySelectorAll(".tab-btn").forEach(function(b){b.classList.remove("active")});'
-        'btn.classList.add("active");'
-        'Plotly.react("chart",D[O[i]].chart.data,D[O[i]].chart.layout,{responsive:true});'
-        '});});'
-        'var _b=document.querySelectorAll(".tab-btn");if(_b.length)_b[0].click();'
+        f'<script>var S={_sjs};var EC={_eco_colors_js};'
+        'var cbs=document.querySelectorAll(".eco-cb");'
+        'var selMetric=document.getElementById("sel-metric");'
+        'var selTime=document.getElementById("sel-time");'
+        'function fmt(n){return n.toLocaleString(undefined,{maximumFractionDigits:0});}'
+        'function show(){'
+        'var ecos=Array.from(cbs).filter(function(c){return c.checked;}).map(function(c){return c.value;}).sort();'
+        'if(ecos.length===0){Plotly.purge("chart");document.getElementById("chart").innerHTML="<p style=\'color:#666;padding:16px\'>Select at least one ecosystem</p>";return;}'
+        'var metric=selMetric.value,time=selTime.value;'
+        'var traces=ecos.map(function(eco){'
+        'var s=S[eco+" | "+metric+" | "+time];if(!s)return null;'
+        'return {type:"scatter",mode:"lines",name:eco+" ("+fmt(s.y[s.y.length-1])+")",x:s.x,y:s.y,line:{width:2,color:EC[eco]},hovertemplate:"<b>"+eco+"<\/b><br>%{x}<br>"+metric+": %{y:,.0f}<extra><\/extra>"};'
+        '}).filter(Boolean);'
+        'var title=ecos.length===1?ecos[0]+": "+metric+" Over Time":ecos.length===2?ecos[0]+" vs "+ecos[1]+": "+metric:"Ecosystem Comparison: "+metric;'
+        'Plotly.react("chart",traces,{height:450,margin:{t:80,l:60,r:60,b:60},template:"plotly_white",hovermode:"x unified",showlegend:true,legend:{orientation:"v",yanchor:"top",y:0.99,xanchor:"left",x:0.01,bgcolor:"rgba(255,255,255,0.9)",bordercolor:"#CCC",borderwidth:1},title:{text:title,font:{size:18,color:"#1B4F72"},x:0,xanchor:"left"},xaxis:{showgrid:false,showline:true,linecolor:"#1F2937",linewidth:1,tickformat:"%b %Y"},yaxis:{showgrid:true,gridcolor:"#E5E7EB",showline:true,linecolor:"#1F2937",linewidth:1}},{responsive:true});'
+        '}'
+        'cbs.forEach(function(c){c.addEventListener("change",show);});'
+        'selMetric.addEventListener("change",show);'
+        'selTime.addEventListener("change",show);'
+        'show();'
         '</script></body></html>'
     )
     _src = _html_mod.escape(_inner, quote=True)

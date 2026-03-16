@@ -193,7 +193,7 @@ def ecosystem_overview_tabs(ACTIVE_LABELS, CHURNED_LABELS, DORMANT_LABELS, FT_LA
     _opts = [o for o in _ECOSYSTEMS if o in _states]
     _djs_safe = _json.dumps(_states).replace('</', '<\\/')
     _opts_js = _json.dumps(_opts)
-    _btn_html = ''.join(f'<button class="tab-btn" data-idx="{i}">{o}</button>' for i, o in enumerate(_opts))
+    _sel_html = '<div style="margin-bottom:8px"><span style="font-size:11px;color:#6b7280;display:block;margin-bottom:2px">Ecosystem</span><select id="sel" style="padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;color:#374151;background:#fff;cursor:pointer">' + ''.join(f'<option value="{i}">{o}</option>' for i, o in enumerate(_opts)) + '</select></div>'
 
     _inner = (
         '<!DOCTYPE html><html><head><meta charset="utf-8">'
@@ -201,23 +201,16 @@ def ecosystem_overview_tabs(ACTIVE_LABELS, CHURNED_LABELS, DORMANT_LABELS, FT_LA
         '<style>'
         '*{box-sizing:border-box;margin:0;padding:0}'
         'body{font-family:Arial,sans-serif;font-size:13px;padding:4px}'
-        '.tab-btn{padding:6px 14px;border:none;background:none;border-radius:6px;font-size:13px;cursor:pointer;color:#6b7280}'
-        '.tab-btn:hover{background:#f3f4f6;color:#111}'
-        '.tab-btn.active{background:#eff6ff;color:#2563eb;font-weight:600}'
-        '.tab-bar{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px;border-bottom:1px solid #e5e7eb;padding-bottom:8px}'
         '</style></head><body>'
-        f'<div class="tab-bar">{_btn_html}</div>'
+        f'{_sel_html}'
         '<div id="stats" style="margin-bottom:12px"></div>'
         '<div id="chart"></div>'
         f'<script>var D={_djs_safe};var O={_opts_js};'
-        'document.querySelectorAll(".tab-btn").forEach(function(btn,i){'
-        'btn.addEventListener("click",function(){'
-        'document.querySelectorAll(".tab-btn").forEach(function(b){b.classList.remove("active")});'
-        'btn.classList.add("active");'
-        'document.getElementById("stats").innerHTML=D[O[i]].stats||"";'
-        'Plotly.react("chart",D[O[i]].chart.data,D[O[i]].chart.layout,{responsive:true});'
-        '});});'
-        'var _b=document.querySelectorAll(".tab-btn");if(_b.length)_b[0].click();'
+        'var sel=document.getElementById("sel");'
+        'function show(i){document.getElementById("stats").innerHTML=D[O[i]].stats||"";'
+        'Plotly.react("chart",D[O[i]].chart.data,D[O[i]].chart.layout,{responsive:true});}'
+        'sel.addEventListener("change",function(){show(parseInt(this.value))});'
+        'show(0);'
         '</script></body></html>'
     )
     _src = _html_mod.escape(_inner, quote=True)
@@ -297,7 +290,7 @@ def ecosystem_comparison_tabs(ACTIVE_LABELS, CHURNED_LABELS, DORMANT_LABELS, FT_
     _opts = [m for m in _METRICS if m in _states]
     _djs_safe = _json.dumps(_states).replace('</', '<\\/')
     _opts_js = _json.dumps(_opts)
-    _btn_html = ''.join(f'<button class="tab-btn" data-idx="{i}">{o}</button>' for i, o in enumerate(_opts))
+    _sel_html = '<div style="margin-bottom:8px"><span style="font-size:11px;color:#6b7280;display:block;margin-bottom:2px">Metric</span><select id="sel" style="padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;color:#374151;background:#fff;cursor:pointer">' + ''.join(f'<option value="{i}">{o}</option>' for i, o in enumerate(_opts)) + '</select></div>'
 
     _inner = (
         '<!DOCTYPE html><html><head><meta charset="utf-8">'
@@ -305,21 +298,14 @@ def ecosystem_comparison_tabs(ACTIVE_LABELS, CHURNED_LABELS, DORMANT_LABELS, FT_
         '<style>'
         '*{box-sizing:border-box;margin:0;padding:0}'
         'body{font-family:Arial,sans-serif;font-size:13px;padding:4px}'
-        '.tab-btn{padding:6px 14px;border:none;background:none;border-radius:6px;font-size:13px;cursor:pointer;color:#6b7280}'
-        '.tab-btn:hover{background:#f3f4f6;color:#111}'
-        '.tab-btn.active{background:#eff6ff;color:#2563eb;font-weight:600}'
-        '.tab-bar{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px;border-bottom:1px solid #e5e7eb;padding-bottom:8px}'
         '</style></head><body>'
-        f'<div class="tab-bar">{_btn_html}</div>'
+        f'{_sel_html}'
         '<div id="chart"></div>'
         f'<script>var D={_djs_safe};var O={_opts_js};'
-        'document.querySelectorAll(".tab-btn").forEach(function(btn,i){'
-        'btn.addEventListener("click",function(){'
-        'document.querySelectorAll(".tab-btn").forEach(function(b){b.classList.remove("active")});'
-        'btn.classList.add("active");'
-        'Plotly.react("chart",D[O[i]].chart.data,D[O[i]].chart.layout,{responsive:true});'
-        '});});'
-        'var _b=document.querySelectorAll(".tab-btn");if(_b.length)_b[0].click();'
+        'var sel=document.getElementById("sel");'
+        'function show(i){Plotly.react("chart",D[O[i]].chart.data,D[O[i]].chart.layout,{responsive:true});}'
+        'sel.addEventListener("change",function(){show(parseInt(this.value))});'
+        'show(0);'
         '</script></body></html>'
     )
     _src = _html_mod.escape(_inner, quote=True)
