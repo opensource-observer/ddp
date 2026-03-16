@@ -266,6 +266,16 @@ def query_all_data(ECOSYSTEMS, mo, pd, pyoso_db_conn):
         df_all['year'] = df_all['day'].dt.year
         df_all['quarter'] = df_all['day'].dt.to_period('Q').dt.to_timestamp()
         df_all['month'] = df_all['day'].dt.to_period('M').dt.to_timestamp()
+
+    # Downsample to monthly (last observation per month per ecosystem).
+    # Reduces static HTML export from ~31MB to ~3MB with no visual difference.
+    df_all = (
+        df_all
+        .sort_values(['ecosystem_name', 'day'])
+        .groupby(['ecosystem_name', 'month'])
+        .tail(1)
+        .reset_index(drop=True)
+    )
     return (df_all,)
 
 
