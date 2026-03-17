@@ -6,50 +6,34 @@ app = marimo.App(width="full", css_file="../styles/insights.css")
 
 @app.cell(hide_code=True)
 def header_title(mo):
-    mo.md("""
-    # Retention Analysis
-    <small>Owner: <span class="ddp-badge">OSO Team</span> · Last Updated: <span class="ddp-badge">2026-02-17</span></small>
-
-    Analyze developer retention by ecosystem and cohort year — what percentage of developers who joined in Year X are still active after N years?
-    """)
+    mo.Html('<div class="ddp-header"><h1>Retention Analysis</h1><p>Measuring cohort-based developer retention across crypto ecosystems.</p><div class="ddp-header-meta"><span>Created: <span class="ddp-badge">2026-03-16</span></span></div></div>')
     return
+
+
 
 
 @app.cell(hide_code=True)
 def header_accordion(mo):
     mo.accordion({
-        "Overview": mo.md("""
-- This notebook analyzes developer retention by cohort year: what share of developers who joined ecosystem X in year Y are still active after N years?
-- Retention is measured as the percentage of the original cohort active in subsequent years (Year 0 = always 100%)
-- Industry benchmarks for context:
-
-| Timeframe | Open Source | Strong OSS Ecosystem |
-|:-----------|:------------|:---------------------|
-| 1 year | ~15% | 25-35% |
-| 2 years | ~8% | 15-20% |
-        """),
-        "Context": mo.md("""
+        "Metrics & Definitions": mo.md("""
 **Definitions**
 
-- **Cohort**: Developers grouped by the year (or month) of their first contribution to the ecosystem
+- **Cohort**: Developers grouped by the year of their first contribution to the ecosystem
 - **Retention Rate**: Percentage of the original cohort that remains active in subsequent periods
 - **Years Since Join**: Time elapsed since first contribution (Year 0 = joined year, always 100%)
 
 **Methodology**
 
 1. **Cohort Assignment**: Each developer is assigned to a cohort based on their first contribution date
-2. **Activity Tracking**: We track whether the developer had any activity in subsequent time periods
+2. **Activity Tracking**: We track whether the developer had any activity in subsequent years
 3. **Retention Rate**: Percentage of the original cohort that remains active
-
-**Limitations**
-
-- Multi-ecosystem developers may churn from one ecosystem but remain active in another
-- Identity resolution is based on Electric Capital's developer fingerprinting
-- Newer cohorts have less retention history to analyze
-
-**Metric Definitions**
-- Retention — Cohort-based retention methodology
-- Activity — Monthly Active Developer (MAD) methodology
+        """),
+        "Assumptions & Limitations": mo.md("""
+- **Multi-ecosystem developers**: Developers active in multiple ecosystems are counted separately per ecosystem — a developer who churns from one ecosystem may still be active in another
+- **Identity resolution**: Developer identities are resolved by Electric Capital's fingerprinting; the same person using different accounts may be counted multiple times
+- **Newer cohorts**: More recent cohorts have shorter observation windows and therefore fewer data points for retention analysis
+- **Public commits only**: Only public GitHub activity is tracked; private repos and non-GitHub platforms are excluded
+- **Activity windows**: Activity is measured using 28-day rolling windows via Open Dev Data's `repo_developer_28d_activities` model
         """),
         "Data Sources": mo.md("""
 - **Open Dev Data (Electric Capital)** — Developer activity data, [github.com/electric-capital/crypto-ecosystems](https://github.com/electric-capital/crypto-ecosystems)

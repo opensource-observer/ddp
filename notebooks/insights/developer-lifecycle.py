@@ -6,61 +6,10 @@ app = marimo.App(width="full", css_file="../styles/insights.css")
 
 @app.cell(hide_code=True)
 def header_title(mo):
-    mo.md("""
-    # Lifecycle Analysis
-    <small>Owner: <span class="ddp-badge">OSO Team</span> · Last Updated: <span class="ddp-badge">2026-02-17</span></small>
-
-    Visualize the full lifecycle of a developer joining, contributing, and leaving an ecosystem.
-    """)
+    mo.Html('<div class="ddp-header"><h1>Lifecycle Analysis</h1><p>Tracking how developers move through lifecycle states across crypto ecosystems.</p><div class="ddp-header-meta"><span>Created: <span class="ddp-badge">2026-03-16</span></span></div></div>')
     return
 
 
-@app.cell(hide_code=True)
-def header_accordion(mo):
-    mo.accordion({
-        "Overview": mo.md("""
-- This notebook tracks developer lifecycle states — the month-by-month progression of developers joining, contributing, and eventually churning from an ecosystem
-- It reveals how the balance between newcomers, established contributors, and churned developers shifts over time and across ecosystems
-- Key metrics: monthly active developers by lifecycle state, churn ratio, dormant developer count
-        """),
-        "Context": mo.md("""
-**Lifecycle labels** classify each developer's monthly activity into one of 16 granular states. These roll up into 4 categories used in the summary chart:
-
-| Category | Label | Description |
-|:---------|:------|:------------|
-| **First Time** | `first time` | First-ever contribution to the ecosystem |
-| **Full Time** | `full time` | 10+ active days, continuing from prior month |
-| | `new full time` | First month reaching 10+ active days |
-| | `part time to full time` | Transitioned from part-time level |
-| | `dormant to full time` | Returned from dormancy at full-time level |
-| **Part Time** | `part time` | 1-9 active days, continuing from prior month |
-| | `new part time` | First month at part-time level |
-| | `full time to part time` | Stepped down from full-time level |
-| | `dormant to part time` | Returned from dormancy at part-time level |
-| **Churned / Dormant** | `dormant` | No activity this month (previously active) |
-| | `first time to dormant` | Dormant after first contribution |
-| | `part time to dormant` | Dormant after part-time activity |
-| | `full time to dormant` | Dormant after full-time activity |
-| | `churned (after first time)` | Extended inactivity after first contribution |
-| | `churned (after reaching part time)` | Extended inactivity after reaching part time |
-| | `churned (after reaching full time)` | Extended inactivity after reaching full time |
-
-**Active** = First Time + Full Time + Part Time (all 9 labels above the Churned/Dormant group)
-
-**Churn Ratio** = sum(churned + dormant) / sum(active) over the trailing window (12mo or all-time)
-
-Data is bucketed monthly; private repos excluded; contributions include commits, issues, pull requests, and code reviews.
-
-**Metric Definitions**
-- Lifecycle — Developer stage definitions
-- Activity — Monthly Active Developer (MAD) methodology
-        """),
-        "Data Sources": mo.md("""
-- **Open Dev Data (Electric Capital)** — Ecosystem and developer taxonomy, [github.com/electric-capital/crypto-ecosystems](https://github.com/electric-capital/crypto-ecosystems)
-- **Key Models** — `oso.int_crypto_ecosystems_developer_lifecycle_monthly_aggregated`
-        """),
-    })
-    return
 
 
 @app.cell(hide_code=True)
@@ -416,6 +365,53 @@ def helper_apply_ec_style():
 
         return fig
     return (apply_ec_style,)
+
+
+@app.cell(hide_code=True)
+def header_accordion(mo):
+    mo.accordion({
+        "Metrics & Definitions": mo.md("""
+**Lifecycle labels** classify each developer's monthly activity into one of 16 granular states. These roll up into 4 categories used in the summary chart:
+
+| Category | Label | Description |
+|:---------|:------|:------------|
+| **First Time** | `first time` | First-ever contribution to the ecosystem |
+| **Full Time** | `full time` | 10+ active days, continuing from prior month |
+| | `new full time` | First month reaching 10+ active days |
+| | `part time to full time` | Transitioned from part-time level |
+| | `dormant to full time` | Returned from dormancy at full-time level |
+| **Part Time** | `part time` | 1-9 active days, continuing from prior month |
+| | `new part time` | First month at part-time level |
+| | `full time to part time` | Stepped down from full-time level |
+| | `dormant to part time` | Returned from dormancy at part-time level |
+| **Churned / Dormant** | `dormant` | No activity this month (previously active) |
+| | `first time to dormant` | Dormant after first contribution |
+| | `part time to dormant` | Dormant after part-time activity |
+| | `full time to dormant` | Dormant after full-time activity |
+| | `churned (after first time)` | Extended inactivity after first contribution |
+| | `churned (after reaching part time)` | Extended inactivity after reaching part time |
+| | `churned (after reaching full time)` | Extended inactivity after reaching full time |
+
+**Active** = First Time + Full Time + Part Time (all 9 labels above the Churned/Dormant group)
+
+**Churn Ratio** = sum(churned + dormant) / sum(active) over the trailing window (12mo or all-time)
+
+**Metric Definitions**
+- Lifecycle — Developer stage definitions
+- Activity — Monthly Active Developer (MAD) methodology
+        """),
+        "Assumptions & Limitations": mo.md("""
+- **Activity windows**: Developer activity is measured using 28-day rolling windows; a developer is considered active if they have at least 1 active day in the window
+- **Ecosystem assignment**: Repos are mapped to ecosystems via recursive repo mapping from Open Dev Data — a repo may belong to multiple ecosystems through the parent-child hierarchy
+- **Identity resolution**: Developer identities are resolved by Electric Capital's fingerprinting; the same person using different accounts may be counted multiple times
+- **Public GitHub only**: Only public GitHub commits and activity are tracked; private repos and non-GitHub platforms are excluded
+        """),
+        "Data Sources": mo.md("""
+- **Open Dev Data (Electric Capital)** — Ecosystem and developer taxonomy, [github.com/electric-capital/crypto-ecosystems](https://github.com/electric-capital/crypto-ecosystems)
+- **Key Models** — `oso.int_crypto_ecosystems_developer_lifecycle_monthly_aggregated`
+        """),
+    })
+    return
 
 
 @app.cell(hide_code=True)
