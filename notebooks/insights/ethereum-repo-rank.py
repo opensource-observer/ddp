@@ -113,12 +113,12 @@ def _(df_trending, leaderboard_window, leaderboard_sort, leaderboard_page, mo):
 
     def _rank_badge(i):
         if i == 0:
-            return '<span style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:#fef3c7;font-size:0.78em;">🥇</span>'
+            return '<span class="ddp-rank-badge ddp-rank-1">🥇</span>'
         if i == 1:
-            return '<span style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:#f3f4f6;font-size:0.78em;">🥈</span>'
+            return '<span class="ddp-rank-badge ddp-rank-2">🥈</span>'
         if i == 2:
-            return '<span style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:#fef2f2;font-size:0.78em;">🥉</span>'
-        return f'<span style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:#f9fafb;color:#6b7280;font-size:0.75em;font-weight:500;">#{i+1}</span>'
+            return '<span class="ddp-rank-badge ddp-rank-3">🥉</span>'
+        return f'<span class="ddp-rank-badge">#{i+1}</span>'
 
     # Sort indicators for column headers
     _eth_arrow = " ↓" if leaderboard_sort.value == "Eth Builder Attention" else ""
@@ -152,7 +152,7 @@ def _(df_trending, leaderboard_window, leaderboard_sort, leaderboard_page, mo):
         <td style="{_td}text-align:center;font-size:0.82em;letter-spacing:-1px;">{_heat(_r["momentum"])}</td>
         </tr>""")
 
-    _table_html = f"""<div style="border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;background:white;box-shadow:0 1px 3px rgba(0,0,0,0.04);">
+    _table_html = f"""<div class="ddp-card">
         <table style="width:100%;border-collapse:collapse;table-layout:fixed;">
         <colgroup>
         <col style="width:44px;">
@@ -180,7 +180,7 @@ def _(df_trending, leaderboard_window, leaderboard_sort, leaderboard_page, mo):
         </table>
         </div>"""
 
-    _footer_text = f'<span style="color:#94a3b8;font-size:0.78em;">Showing {_start+1}–{_end} of {len(_df)} repos with Ethereum builder signal</span>'
+    _footer_text = f'<span class="ddp-note">Showing {_start+1}–{_end} of {len(_df)} repos with Ethereum builder signal</span>'
 
     mo.vstack([
         mo.hstack([
