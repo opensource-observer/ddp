@@ -8,7 +8,7 @@ app = marimo.App(width="full", css_file="../styles/insights.css")
 def header_title(mo):
     mo.md("""
     # Case Study: Speedrun Ethereum
-    <small>Owner: <span style="background-color: #f0f0f0; padding: 2px 4px; border-radius: 3px;">OSO Team</span> · Last Updated: <span style="background-color: #f0f0f0; padding: 2px 4px; border-radius: 3px;">2026-02-17</span></small>
+    <small>Owner: <span class="ddp-badge">OSO Team</span> · Last Updated: <span class="ddp-badge">2026-02-17</span></small>
 
     An in-depth case study on the role Speedrun Ethereum has played in onboarding and retaining new Ethereum developers.
     """)
@@ -524,7 +524,7 @@ def section_activity_by_ecosystem(
     _opts = list(_states.keys())
     _djs_safe = _json.dumps(_states).replace('</', '<\\/')
     _opts_js = _json.dumps(_opts)
-    _sel_html = '<div style="margin-bottom:8px"><span style="font-size:11px;color:#6b7280;display:block;margin-bottom:2px">Analyze</span><select id="sel" style="padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;color:#374151;background:#fff;cursor:pointer">' + ''.join(f'<option value="{i}">{o}</option>' for i, o in enumerate(_opts)) + '</select></div>'
+    _sel_html = '<div style="margin-bottom:8px"><span class="ddp-select-label">Analyze</span><select id="sel" class="ddp-select">' + ''.join(f'<option value="{i}">{o}</option>' for i, o in enumerate(_opts)) + '</select></div>'
 
     _inner = (
         '<!DOCTYPE html><html><head><meta charset="utf-8">'
@@ -548,7 +548,7 @@ def section_activity_by_ecosystem(
         mo.md("---"),
         mo.md("## Speedrun Ethereum has contributed an incremental ~250 monthly active developers to Ethereum"),
         mo.md("_Measured as the increase in Ethereum-active developers attributable to SRE alumni relative to the pre-SRE baseline. Showing Ethereum ecosystem._"),
-        mo.Html(f'<iframe srcdoc="{_src}" style="width:100%;height:520px;border:none;display:block" scrolling="no"></iframe>'),
+        mo.Html(f'<iframe srcdoc="{_src}" class="ddp-chart-frame" scrolling="no"></iframe>'),
     ])
     return
 
@@ -943,7 +943,7 @@ def section_experience_funnel(
     _opts2 = list(_states2.keys())
     _djs2_safe = _json2.dumps(_states2).replace('</', '<\\/')
     _opts2_js = _json2.dumps(_opts2)
-    _sel2_html = '<div style="margin-bottom:8px"><span style="font-size:11px;color:#6b7280;display:block;margin-bottom:2px">Ecosystem</span><select id="sel" style="padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;color:#374151;background:#fff;cursor:pointer">' + ''.join(f'<option value="{i}">{o}</option>' for i, o in enumerate(_opts2)) + '</select></div>'
+    _sel2_html = '<div style="margin-bottom:8px"><span class="ddp-select-label">Ecosystem</span><select id="sel" class="ddp-select">' + ''.join(f'<option value="{i}">{o}</option>' for i, o in enumerate(_opts2)) + '</select></div>'
 
     _inner2 = (
         '<!DOCTYPE html><html><head><meta charset="utf-8">'
@@ -967,7 +967,7 @@ def section_experience_funnel(
 
     mo.vstack([
         mo.md("## Not surprisingly, less experienced developers have higher churn and less overall long-term impact on Ethereum"),
-        mo.Html(f'<iframe srcdoc="{_src2}" style="width:100%;height:520px;border:none;display:block" scrolling="no"></iframe>'),
+        mo.Html(f'<iframe srcdoc="{_src2}" class="ddp-chart-frame" scrolling="no"></iframe>'),
         mo.md("The table below provides additional detail on the developer funnel:"),
         show_table(_df_table2)
     ])
@@ -1179,7 +1179,7 @@ def section_experience_retention(
     _opts3 = list(_states3.keys())
     _djs3_safe = _json3.dumps(_states3).replace('</', '<\\/')
     _opts3_js = _json3.dumps(_opts3)
-    _sel3_html = '<div style="margin-bottom:8px"><span style="font-size:11px;color:#6b7280;display:block;margin-bottom:2px">Ecosystem</span><select id="sel" style="padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;color:#374151;background:#fff;cursor:pointer">' + ''.join(f'<option value="{i}">{o}</option>' for i, o in enumerate(_opts3)) + '</select></div>'
+    _sel3_html = '<div style="margin-bottom:8px"><span class="ddp-select-label">Ecosystem</span><select id="sel" class="ddp-select">' + ''.join(f'<option value="{i}">{o}</option>' for i, o in enumerate(_opts3)) + '</select></div>'
 
     _inner3 = (
         '<!DOCTYPE html><html><head><meta charset="utf-8">'
@@ -1202,7 +1202,7 @@ def section_experience_retention(
     mo.vstack([
         mo.md("---"),
         mo.md("## Developers with > 12 months prior experience remain active contributors to Ethereum at significantly higher rates"),
-        mo.Html(f'<iframe srcdoc="{_src3}" style="width:100%;height:520px;border:none;display:block" scrolling="no"></iframe>'),
+        mo.Html(f'<iframe srcdoc="{_src3}" class="ddp-chart-frame" scrolling="no"></iframe>'),
     ])
     return
 
@@ -1242,7 +1242,7 @@ def section_experienced_dev_activity(
     _opts4 = list(_states4.keys())
     _djs4_safe = _json4.dumps(_states4).replace('</', '<\\/')
     _opts4_js = _json4.dumps(_opts4)
-    _sel4_html = '<div style="margin-bottom:8px"><span style="font-size:11px;color:#6b7280;display:block;margin-bottom:2px">Experience Level</span><select id="sel" style="padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;color:#374151;background:#fff;cursor:pointer">' + ''.join(f'<option value="{i}">{o}</option>' for i, o in enumerate(_opts4)) + '</select></div>'
+    _sel4_html = '<div style="margin-bottom:8px"><span class="ddp-select-label">Experience Level</span><select id="sel" class="ddp-select">' + ''.join(f'<option value="{i}">{o}</option>' for i, o in enumerate(_opts4)) + '</select></div>'
 
     _inner4 = (
         '<!DOCTYPE html><html><head><meta charset="utf-8">'
@@ -1266,7 +1266,7 @@ def section_experienced_dev_activity(
         mo.md("---"),
         mo.md("## For experienced developers, Speedrun Ethereum functions less as onboarding and more as activation and redirection toward Ethereum"),
         mo.md("_Showing Active Developers metric for Ethereum ecosystem. Select experience level:_"),
-        mo.Html(f'<iframe srcdoc="{_src4}" style="width:100%;height:520px;border:none;display:block" scrolling="no"></iframe>'),
+        mo.Html(f'<iframe srcdoc="{_src4}" class="ddp-chart-frame" scrolling="no"></iframe>'),
     ])
     return
 
@@ -1298,7 +1298,7 @@ def section_cohort_year_retention(
     _opts5 = list(_states5.keys())
     _djs5_safe = _json5.dumps(_states5).replace('</', '<\\/')
     _opts5_js = _json5.dumps(_opts5)
-    _sel5_html = '<div style="margin-bottom:8px"><span style="font-size:11px;color:#6b7280;display:block;margin-bottom:2px">Experience Level</span><select id="sel" style="padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;color:#374151;background:#fff;cursor:pointer">' + ''.join(f'<option value="{i}">{o}</option>' for i, o in enumerate(_opts5)) + '</select></div>'
+    _sel5_html = '<div style="margin-bottom:8px"><span class="ddp-select-label">Experience Level</span><select id="sel" class="ddp-select">' + ''.join(f'<option value="{i}">{o}</option>' for i, o in enumerate(_opts5)) + '</select></div>'
 
     _inner5 = (
         '<!DOCTYPE html><html><head><meta charset="utf-8">'
@@ -1322,7 +1322,7 @@ def section_cohort_year_retention(
         mo.md("---"),
         mo.md("## Engagement past the 3–month mark is a good predictor of longer-term retention"),
         mo.md("_Showing Ethereum ecosystem by cohort year. Select experience level:_"),
-        mo.Html(f'<iframe srcdoc="{_src5}" style="width:100%;height:520px;border:none;display:block" scrolling="no"></iframe>'),
+        mo.Html(f'<iframe srcdoc="{_src5}" class="ddp-chart-frame" scrolling="no"></iframe>'),
     ])
     return
 
