@@ -69,37 +69,6 @@ def _(mo):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md("""## Data Models""")
-    return
-
-
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md("""
-    ### Underlying Tables
-
-    The alignment calculation relies on these key tables:
-
-    | Table | Purpose |
-    |:-------|:---------|
-    | `stg_opendevdata__repo_developer_28d_activities` | Developer commit activity per repository (28-day rolling) |
-    | `stg_opendevdata__ecosystems` | Ecosystem definitions and hierarchy |
-    | `stg_opendevdata__ecosystems_repos_recursive` | Maps repositories to ecosystems (including child ecosystems) |
-    | `int_opendevdata__repositories_with_repo_id` | Repository ID mappings across systems |
-
-    ### Key Fields
-
-    - `canonical_developer_id`: Unique developer identifier (Electric Capital fingerprinted)
-    - `repo_id`: Repository identifier in OpenDevData
-    - `ecosystem_id`: Ecosystem identifier
-    - `day`: The date of the rolling 28-day window end
-    - `commits`: Number of commits in the window
-    """)
-    return
-
-
-@app.cell(hide_code=True)
-def _(mo):
     mo.md("""## Live Data Exploration""")
     return
 
@@ -517,21 +486,32 @@ def _(mo, pyoso_db_conn, ecosystem_selector, px):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md("""
-    ## Related Models
+    mo.accordion({
+        "Methodology": mo.md("""
+        **Formula**: `Alignment(d, e, t) = Commits_to_e(d, t) / Total_commits(d, t) × 100%`
 
-    **Metric Definitions**
-    - **Activity**: [activity.py](./activity.py) — MAD metric methodology
-    - **Lifecycle**: [lifecycle.py](./lifecycle.py) — Developer stage definitions
-    - **Retention**: [retention.py](./retention.py) — Cohort-based developer retention
+        Alignment measures how concentrated a developer's activity is within a single ecosystem. A developer committing exclusively to Ethereum repos has 100% alignment; one splitting time across Ethereum and Solana has proportional alignment to each.
 
-    **Data Models**
-    - **Ecosystems**: [ecosystems.py](../models/ecosystems.py) — Ecosystem definitions and hierarchy
-    - **Developers**: [developers.py](../models/developers.py) — Unified developer identities
-
-    **Insights**
-    - DeFi Developer Journeys — Developer flows across ecosystems
-    """)
+        **Properties**:
+        - Mutually exclusive: each repo maps to one or more ecosystems
+        - Complete: alignment percentages sum to 100% per developer
+        - Activity-based: measured by commit counts over a 28-day rolling window
+        """),
+        "Assumptions & Limitations": mo.md("""
+        - Tracks commits only (excludes PRs, issues, reviews)
+        - A repo can belong to multiple ecosystems — commits to such repos are counted toward each
+        - 28-day rolling window means alignment can shift rapidly
+        - Identity resolution may merge or split developer profiles incorrectly
+        - Ecosystem classification depends on Electric Capital's repo mapping
+        """),
+        "Data Sources": mo.md("""
+        - `oso.stg_opendevdata__repo_developer_28d_activities` — 28-day rolling activity per developer per repo
+        - `oso.stg_opendevdata__ecosystems_repos_recursive` — Recursive repo-to-ecosystem mapping
+        - `oso.stg_opendevdata__ecosystems` — Ecosystem definitions
+        - `oso.int_opendevdata__repositories_with_repo_id` — Repository ID bridge
+        - Full catalog: [docs.oso.xyz](https://docs.oso.xyz)
+        """),
+    })
     return
 
 
