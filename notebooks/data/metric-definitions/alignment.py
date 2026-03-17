@@ -9,17 +9,23 @@ def _(mo):
     mo.md("""
     # Alignment
 
-    The **alignment metric** measures how a developer's activity is distributed across ecosystems.
-    It answers: "What percentage of this developer's work goes to each ecosystem?"
+    **Ecosystem alignment** measures how concentrated a developer's commit activity is within a single ecosystem versus spread across many. A developer who commits exclusively to Ethereum repos has 100% Ethereum alignment; one splitting time between Ethereum and Solana has proportional alignment to each.
+
+    This metric underpins several DDP analyses: the **DeFi Builder Journeys** insight extends it into a richer multi-channel model tracking activity across home projects, other crypto, personal repos, and OSS contributions. The **Speedrun Ethereum** insight uses a related concept — repo ecosystem classification — to categorize where SRE alumni contribute.
 
     **Preview:**
     ```sql
     SELECT
-      canonical_developer_id,
-      ecosystem_name,
-      alignment_pct
-    FROM oso.stg_opendevdata__repo_developer_28d_activities
-    LIMIT 5
+      rda.canonical_developer_id,
+      e.name AS ecosystem_name,
+      rda.num_commits
+    FROM oso.stg_opendevdata__repo_developer_28d_activities rda
+    JOIN oso.stg_opendevdata__ecosystems_repos_recursive err
+      ON rda.repo_id = err.repo_id
+    JOIN oso.stg_opendevdata__ecosystems e
+      ON err.ecosystem_id = e.id
+    WHERE rda.day >= CURRENT_DATE - INTERVAL '28' DAY
+    LIMIT 10
     ```
     """)
     return
@@ -34,35 +40,33 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md("""
-    ### Alignment Calculation
+    ### Base Calculation
 
-    For a given developer `d` and time period `t`, alignment to ecosystem `e` is calculated as:
+    For a developer `d` in a 28-day window `t`, alignment to ecosystem `e` is:
 
     ```
-    Alignment(d, e, t) = Commits_to_ecosystem_e(d, t) / Total_commits(d, t) × 100%
+    Alignment(d, e, t) = Commits_to_e(d, t) / Total_commits(d, t) × 100%
     ```
 
-    **Where:**
-    - `Commits_to_ecosystem_e(d, t)` = Number of commits by developer `d` to repositories in ecosystem `e` during period `t`
-    - `Total_commits(d, t)` = Total commits by developer `d` across all ecosystems during period `t`
+    Repositories are mapped to ecosystems via Electric Capital's recursive classification (`stg_opendevdata__ecosystems_repos_recursive`). A repo can belong to multiple ecosystems (eg, a repo in both "Ethereum" and "DeFi"), so a single commit may contribute to multiple ecosystem alignments.
 
-    ### Properties
+    ### Alignment Buckets
 
-    1. **Mutually Exclusive Assignment**: Each repository belongs to one or more ecosystems
-    2. **Complete Coverage**: Sum of alignments equals 100% for each developer-period combination
-    3. **Activity-Based**: Uses commit counts (could alternatively use commit days or other activity measures)
+    | Bucket | Range | Interpretation |
+    |:-------|:------|:---------------|
+    | Exclusive | 100% | All commits to one ecosystem |
+    | Highly aligned | 75–99% | Strong primary ecosystem |
+    | Majority aligned | 50–74% | Primary ecosystem with significant cross-pollination |
+    | Split | 25–49% | Multi-ecosystem developer |
+    | Peripheral | 1–24% | Minor contributor to this ecosystem |
 
-    ### Example
+    ### Extended Models
 
-    If developer Alice made 100 commits in March 2025:
-    - 70 commits to Ethereum repositories
-    - 20 commits to Optimism repositories
-    - 10 commits to AI repositories
+    The DDP insights build on this base metric in two ways:
 
-    Her March 2025 alignment would be:
-    - **Ethereum: 70%**
-    - **Optimism: 20%**
-    - **AI: 10%**
+    **Multi-channel alignment** (DeFi Builder Journeys): Instead of ecosystem-level commit distribution, tracks activity across 5 strategic channels — home project, other crypto, personal repos, OSS, and interest (watch/fork) activity. Each channel measures `repo_event_days` rather than raw commits. This captures a richer picture of how builders split their attention.
+
+    **Repo classification** (Speedrun Ethereum): Categorizes each repository into one of 6 labels (Ethereum, Other EVM, Non-EVM Chain, Other Crypto, Personal, Unknown) using a hierarchical CASE statement over ecosystem flags. This is used to understand where SRE alumni contribute, not to compute per-developer percentages.
     """)
     return
 
@@ -488,27 +492,27 @@ def _(mo, pyoso_db_conn, ecosystem_selector, px):
 def _(mo):
     mo.accordion({
         "Methodology": mo.md("""
-        **Formula**: `Alignment(d, e, t) = Commits_to_e(d, t) / Total_commits(d, t) × 100%`
+        **Base alignment** uses commit counts over a rolling 28-day window, computed by joining developer activity to ecosystem repo mappings. The percentage is: commits to ecosystem repos / total commits across all repos.
 
-        Alignment measures how concentrated a developer's activity is within a single ecosystem. A developer committing exclusively to Ethereum repos has 100% alignment; one splitting time across Ethereum and Solana has proportional alignment to each.
+        **Multi-ecosystem repos**: A repo mapped to both "Ethereum" and "DeFi" means commits to that repo count toward both ecosystems. This can cause alignment percentages to sum to >100% when viewed across ecosystems for a single developer.
 
-        **Properties**:
-        - Mutually exclusive: each repo maps to one or more ecosystems
-        - Complete: alignment percentages sum to 100% per developer
-        - Activity-based: measured by commit counts over a 28-day rolling window
+        **DeFi Builder Journeys** extends this into a 5-channel model (`mart_developer_alignment_monthly`) that tracks `repo_event_days` (not raw commits) across: home project, other crypto, personal, OSS, and interest/watching activity. This is a customer-scoped model computed from the same underlying activity data.
+
+        **Speedrun Ethereum** uses a hierarchical repo classification (Ethereum > Other EVM > Non-EVM > Other Crypto > Personal > Unknown) rather than percentage-based alignment. This is a categorical assignment, not a continuous metric.
         """),
         "Assumptions & Limitations": mo.md("""
-        - Tracks commits only (excludes PRs, issues, reviews)
-        - A repo can belong to multiple ecosystems — commits to such repos are counted toward each
-        - 28-day rolling window means alignment can shift rapidly
-        - Identity resolution may merge or split developer profiles incorrectly
-        - Ecosystem classification depends on Electric Capital's repo mapping
+        - Tracks commits only — excludes PRs, issues, code reviews, stars, forks
+        - A repo can belong to multiple ecosystems, inflating cross-ecosystem alignment sums
+        - 28-day rolling window means alignment can shift rapidly with burst activity
+        - Identity resolution heuristics may merge or split developer profiles
+        - Ecosystem classification depends entirely on Electric Capital's repo-to-ecosystem mapping — unmapped repos are invisible
+        - The extended multi-channel model (DeFi Builder Journeys) uses `repo_event_days` which weights days of activity equally regardless of commit volume
         """),
         "Data Sources": mo.md("""
-        - `oso.stg_opendevdata__repo_developer_28d_activities` — 28-day rolling activity per developer per repo
-        - `oso.stg_opendevdata__ecosystems_repos_recursive` — Recursive repo-to-ecosystem mapping
-        - `oso.stg_opendevdata__ecosystems` — Ecosystem definitions
-        - `oso.int_opendevdata__repositories_with_repo_id` — Repository ID bridge
+        - `oso.stg_opendevdata__repo_developer_28d_activities` — 28-day rolling activity per developer per repo (public)
+        - `oso.stg_opendevdata__ecosystems_repos_recursive` — Recursive repo-to-ecosystem mapping (public)
+        - `oso.stg_opendevdata__ecosystems` — Ecosystem definitions with `is_crypto`, `is_chain` flags (public)
+        - `ethereum.devpanels.mart_developer_alignment_monthly` — 5-channel monthly alignment (customer-scoped)
         - Full catalog: [docs.oso.xyz](https://docs.oso.xyz)
         """),
     })
