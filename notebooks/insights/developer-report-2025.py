@@ -11,7 +11,7 @@ def header_title(mo):
 
 
 @app.cell(hide_code=True)
-def header_accordion(mo):
+def header_accordion(mo, _report_complete):
     mo.accordion({
         "Metrics & Definitions": mo.md("""
     - **Time period**: January 2015 to December 2025 (full historical data)
@@ -1634,7 +1634,8 @@ def comparison_chart(df_all, mo, pd):
     )
     _src = _html_mod.escape(_inner, quote=True)
     mo.Html(f'<iframe srcdoc="{_src}" class="ddp-chart-frame" scrolling="no"></iframe>')
-    return
+    _report_complete = True
+    return (_report_complete,)
 
 
 if __name__ == "__main__":

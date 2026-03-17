@@ -37,8 +37,23 @@ Never pin a marimo version. The top of every notebook file must have:
 
 ```python
 __generated_with = "unknown"
-app = marimo.App(width="full")
+app = marimo.App(width="full", css_file="styles/root.css")
 ```
+
+The `css_file` path is relative to the notebook file. Use the correct variant:
+- Root notebooks (`notebooks/*.py`): `css_file="styles/root.css"`
+- Data notebooks (`notebooks/data/**/*.py`): `css_file="../../styles/data.css"`
+- Insight notebooks (`notebooks/insights/*.py`): `css_file="../styles/insights.css"`
+
+CSS is built from `notebooks/styles/base.css` + variant partials by `scripts/build_css.py`. Run `uv run scripts/build_css.py` after editing any CSS source file.
+
+### Filter ecosystem queries
+
+When querying `oso.stg_opendevdata__ecosystems` and listing/ranking multiple ecosystems, always add:
+```sql
+WHERE e.is_crypto = 1 AND e.is_category = 0
+```
+This filters out ODD's internal category ecosystems. Not needed when filtering by a specific ecosystem name (e.g., `WHERE e.name = 'Ethereum'`).
 
 ### Use Trino SQL
 All queries run against a Trino data warehouse via pyoso. Write Trino-compatible SQL:
