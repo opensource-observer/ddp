@@ -11,7 +11,7 @@ app = marimo.App(width="full", css_file="../styles/insights.css")
 
 @app.cell(hide_code=True)
 def _(mo):
-    _header_html = '<div class="ddp-header"><h1>Repo Rank</h1><p>Tracking which repos are trending in the Ethereum builder community.</p><div class="ddp-header-meta"><span style="display:inline-flex;align-items:center;gap:4px;"><span class="ddp-live-dot"></span> Live data</span><span>Updated 2026-03-16</span><span>&middot;</span><span>Kariba Labs / <a href="https://www.oso.xyz" target="_blank">OSO</a></span></div></div>'
+    _header_html = '<div class="ddp-header"><h1>Repo Rank</h1><p>Tracking which repos are trending in the Ethereum builder community.</p><div class="ddp-header-meta"><span style="display:inline-flex;align-items:center;gap:4px;"><span class="ddp-live-dot"></span> Live data</span><span>Created: <span class="ddp-badge">2026-03-16</span></span></div></div>'
     mo.Html(_header_html)
     return
 
@@ -37,7 +37,7 @@ def _(df_trending, eth_dev_set, df_engagement_raw, mo):
     mo.hstack(
         [
             mo.stat(value=f"{_panel_size:,}", label="Ethereum Builders Tracked", bordered=True, caption="≥12 months commit activity"),
-            mo.stat(value=f"{_active_eth}", label="Eth Builders Active on Trending Repos", bordered=True, caption=f"{_active_eth/_panel_size*100:.1f}% of panel"),
+            mo.stat(value=f"{_active_eth}", label="Active on Trending Repos", bordered=True, caption=f"{_active_eth/_panel_size*100:.1f}% of panel"),
             mo.stat(value=_top_eth_repo, label="#1 by Eth Builder Attention", bordered=True, caption=f"{_top_eth_devs} distinct eth builders"),
             mo.stat(value=_top_all_repo, label="#1 by All Builder Attention", bordered=True, caption=f"{_top_all_devs:,} distinct builders"),
         ],
