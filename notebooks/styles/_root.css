@@ -1,0 +1,36 @@
+/*
+ * DDP Root Notebook Overrides
+ * For: quick-start.py, publications.py, agent-guide.py
+ * Prose-optimized layout for documentation/onboarding content.
+ */
+
+/* Constrain prose width for readability */
+.marimo-output > div {
+  max-width: 720px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Accordion styling */
+details {
+  border: 1px solid var(--ddp-border);
+  border-radius: 6px;
+  padding: 0.5em 1em;
+  margin: 0.75em 0;
+}
+details summary {
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0.25em 0;
+}
+
+/* Links with accent color */
+.marimo-output a {
+  color: var(--ddp-accent);
+}
+
+/* Numbered section headers */
+h2 {
+  padding-bottom: 0.3em;
+  border-bottom: 1px solid var(--ddp-border);
+}

@@ -1,0 +1,248 @@
+/*
+ * DDP Notebook Base Styles
+ *
+ * Shared foundation for all marimo notebooks in the Developer Data Portal.
+ * This file is concatenated with variant partials (_root.css, _data.css,
+ * _insights.css) by scripts/build_css.py to produce self-contained CSS files.
+ *
+ * Font: System stack — matches the Next.js shell exactly. Overrides marimo's
+ * default PT Sans to eliminate the visual mismatch between sidebar and content.
+ *
+ * Color provenance (update both here and app/app/globals.css if colors change):
+ *   - Chart palette: --ddp-primary, --ddp-secondary, --ddp-tertiary
+ *   - Shell accent: --ddp-accent (indigo-600, shared with Tailwind config)
+ *   - Slate scale: --ddp-text, --ddp-border, etc. (Tailwind slate palette)
+ */
+
+/* === Custom Properties === */
+:root {
+  --ddp-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  --ddp-font-mono: 'Fira Mono', 'Fira Code', ui-monospace, monospace;
+  --ddp-primary: #4C78A8;
+  --ddp-secondary: #F58518;
+  --ddp-tertiary: #72B7B2;
+  --ddp-text: #0f172a;
+  --ddp-text-muted: #64748b;
+  --ddp-bg: #ffffff;
+  --ddp-border: #e2e8f0;
+  --ddp-surface: #f8fafc;
+  --ddp-accent: #4f46e5;
+}
+
+/* === Nuclear font override ===
+ * Marimo components use inline styles and deeply nested React elements.
+ * A targeted selector list can't catch them all. The universal selector
+ * with !important is the only way to guarantee the system font everywhere. */
+*, *::before, *::after {
+  box-sizing: border-box;
+  font-family: var(--ddp-font) !important;
+}
+code, code *, pre, pre *, .cm-editor, .cm-editor * {
+  font-family: var(--ddp-font-mono) !important;
+}
+
+/* === Base === */
+body {
+  margin: 0;
+  padding: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--ddp-text);
+  background: var(--ddp-bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* === Headings ===
+ * Weight 600 (semibold) throughout — quieter than marimo's 700-800 defaults.
+ * Tight letter-spacing for a modern, dense feel. .prose targets marimo's
+ * Tailwind Typography wrapper around markdown output. */
+h1, .prose h1 {
+  font-size: 1.5em !important;
+  font-weight: 600 !important;
+  line-height: 1.25 !important;
+  letter-spacing: -0.02em !important;
+  margin: 0 0 0.4em !important;
+  color: var(--ddp-text) !important;
+}
+h2, .prose h2 {
+  font-size: 1.2em !important;
+  font-weight: 600 !important;
+  line-height: 1.3 !important;
+  letter-spacing: -0.01em !important;
+  margin: 1.25em 0 0.35em !important;
+  color: var(--ddp-text) !important;
+}
+h3, .prose h3 {
+  font-size: 1.05em !important;
+  font-weight: 600 !important;
+  line-height: 1.35 !important;
+  margin: 1em 0 0.25em !important;
+  color: var(--ddp-text) !important;
+}
+
+/* === Body text === */
+p, li, .prose p, .prose li {
+  line-height: 1.5 !important;
+  color: var(--ddp-text) !important;
+  font-size: inherit !important;
+}
+
+small, .text-muted {
+  color: var(--ddp-text-muted);
+}
+
+/* === Inline code === */
+code {
+  font-size: 0.8125em;
+  background: var(--ddp-surface);
+  padding: 0.15em 0.4em;
+  border-radius: 3px;
+  color: var(--ddp-text);
+}
+.prose code {
+  font-size: 0.8125em !important;
+  background: var(--ddp-surface) !important;
+  color: var(--ddp-text) !important;
+}
+
+/* === Code blocks === */
+pre code {
+  display: block;
+  padding: 0.75em 1em;
+  overflow-x: auto;
+  background: var(--ddp-surface);
+  border: 1px solid var(--ddp-border);
+  border-radius: 4px;
+  font-size: 0.8125em;
+  line-height: 1.6;
+}
+
+/* === Links === */
+a {
+  color: var(--ddp-accent);
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+
+/* === Scrollbar === */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+
+/* === Tables === */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8125em;
+}
+th {
+  text-align: left;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--ddp-border);
+  color: var(--ddp-text-muted);
+  font-weight: 500;
+  font-size: 0.8125em;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+td {
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--ddp-border);
+  color: var(--ddp-text);
+}
+
+/* === Marimo stat cards ===
+ * Normalize the oversized stat values and labels to feel like
+ * part of the same app as the sidebar. */
+/* Equal-height stat cards: stretch within flex row, clamp long values */
+[data-testid="marimo-stat"] {
+  border-color: var(--ddp-border) !important;
+  border-radius: 6px !important;
+  align-self: stretch !important;
+  min-height: 0 !important;
+}
+[data-testid="marimo-stat"] > div {
+  height: 100% !important;
+}
+[data-testid="marimo-stat"] [class*="label"],
+[data-testid="marimo-stat"] [class*="Label"] {
+  font-size: 0.75em !important;
+  font-weight: 500 !important;
+  color: var(--ddp-text-muted) !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.03em !important;
+}
+[data-testid="marimo-stat"] [class*="value"],
+[data-testid="marimo-stat"] [class*="Value"] {
+  font-size: 1.5em !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.02em !important;
+  color: var(--ddp-text) !important;
+  overflow-wrap: break-word !important;
+  word-break: break-word !important;
+}
+[data-testid="marimo-stat"] [class*="caption"],
+[data-testid="marimo-stat"] [class*="Caption"] {
+  font-size: 0.75em !important;
+  color: var(--ddp-text-muted) !important;
+}
+
+/* === Marimo tables (data grid) === */
+[data-testid="marimo-table"] th,
+[class*="TableHeader"] th {
+  font-size: 0.6875em !important;
+  font-weight: 500 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.04em !important;
+  color: var(--ddp-text-muted) !important;
+}
+
+/* === Marimo UI elements === */
+select, button, input {
+  font-size: 0.8125em !important;
+}
+
+/* === Plotly chart overrides ===
+ * Plotly uses inline SVG text — we can't override font-family on those,
+ * but we can normalize the container spacing. */
+.js-plotly-plot {
+  max-width: 100%;
+  margin: 0.5em 0;
+}
+
+/* === Mobile: Tablet === */
+@media (max-width: 768px) {
+  h1, .prose h1 { font-size: 1.3em !important; }
+  h2, .prose h2 { font-size: 1.1em !important; }
+  h3, .prose h3 { font-size: 1em !important; }
+
+  #root {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
+
+  table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .marimo-output .flex-row {
+    flex-direction: column !important;
+  }
+}
+
+/* === Mobile: Phone === */
+@media (max-width: 480px) {
+  h1, .prose h1 { font-size: 1.2em !important; }
+
+  .marimo-output .flex-row {
+    flex-direction: column !important;
+    gap: 0.5rem !important;
+  }
+}

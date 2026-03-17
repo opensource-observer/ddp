@@ -1,7 +1,7 @@
 import marimo
 
 __generated_with = "unknown"
-app = marimo.App(width="full")
+app = marimo.App(width="full", css_file="../styles/insights.css")
 
 
 # =============================================================================
@@ -11,7 +11,7 @@ app = marimo.App(width="full")
 
 @app.cell(hide_code=True)
 def _(mo):
-    _header_html = '<div style="margin-bottom:4px;"><h1 style="font-size:1.75em;font-weight:800;color:#0f172a;letter-spacing:-0.02em;margin:0 0 6px 0;line-height:1.15;">Repo Rank</h1><p style="font-size:0.95em;color:#475569;margin:0 0 10px 0;line-height:1.5;max-width:720px;">Tracking which repos are trending in the Ethereum builder community.</p><div style="display:flex;gap:12px;align-items:center;font-size:0.75em;color:#94a3b8;"><span style="display:inline-flex;align-items:center;gap:4px;"><span style="width:6px;height:6px;border-radius:50%;background:#10b981;display:inline-block;"></span> Live data</span><span>Updated 2026-03-16</span><span>&middot;</span><span>Kariba Labs / <a href="https://www.oso.xyz" target="_blank" style="color:#94a3b8;">OSO</a></span></div></div>'
+    _header_html = '<div class="ddp-header"><h1>Repo Rank</h1><p>Tracking which repos are trending in the Ethereum builder community.</p><div class="ddp-header-meta"><span style="display:inline-flex;align-items:center;gap:4px;"><span class="ddp-live-dot"></span> Live data</span><span>Updated 2026-03-16</span><span>&middot;</span><span>Kariba Labs / <a href="https://www.oso.xyz" target="_blank">OSO</a></span></div></div>'
     mo.Html(_header_html)
     return
 

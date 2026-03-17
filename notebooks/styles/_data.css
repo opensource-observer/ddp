@@ -1,0 +1,47 @@
+/*
+ * DDP Data Notebook Overrides
+ * For: data/sources/*.py, data/models/*.py, data/metric-definitions/*.py
+ * Reference/documentation style with table-heavy content.
+ */
+
+/* Zebra striping for tables */
+tbody tr:nth-child(even) {
+  background: var(--ddp-surface);
+}
+
+/* Code blocks in documentation */
+pre code {
+  font-size: 0.8125em;
+  line-height: 1.6;
+}
+
+/* Mermaid diagram container */
+.marimo-output svg.mermaid {
+  display: block;
+  max-width: 600px;
+  margin: 1em auto;
+}
+
+/* Accordion previews (render_table_preview) */
+details {
+  border: 1px solid var(--ddp-border);
+  border-radius: 6px;
+  margin: 0.5em 0;
+  overflow: hidden;
+}
+details summary {
+  font-weight: 600;
+  font-size: 0.9em;
+  padding: 0.6em 1em;
+  background: var(--ddp-surface);
+  cursor: pointer;
+}
+details > div {
+  padding: 0.5em 1em;
+}
+
+/* Field documentation tables */
+table th {
+  background: var(--ddp-surface);
+  white-space: nowrap;
+}

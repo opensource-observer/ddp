@@ -1,7 +1,7 @@
 import marimo
 
 __generated_with = "unknown"
-app = marimo.App(width="full")
+app = marimo.App(width="full", css_file="styles/root.css")
 
 
 @app.cell(hide_code=True)

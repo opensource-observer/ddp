@@ -1,14 +1,14 @@
 import marimo
 
 __generated_with = "unknown"
-app = marimo.App(width="full")
+app = marimo.App(width="full", css_file="../styles/insights.css")
 
 
 @app.cell(hide_code=True)
 def header_title(mo):
     mo.md(r"""
     # DeFi Builder Journeys
-    <small>Owner: <span style="background-color: #f0f0f0; padding: 2px 4px; border-radius: 3px;">OSO Team</span> · Last Updated: <span style="background-color: #f0f0f0; padding: 2px 4px; border-radius: 3px;">2026-03-16</span></small>
+    <small>Owner: <span class="ddp-badge">OSO Team</span> · Last Updated: <span class="ddp-badge">2026-03-16</span></small>
     """)
     return
 

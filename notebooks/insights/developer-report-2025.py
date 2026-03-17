@@ -1,7 +1,7 @@
 import marimo
 
 __generated_with = "0.18.4"
-app = marimo.App(width="full")
+app = marimo.App(width="full", css_file="../styles/insights.css")
 
 
 @app.cell(hide_code=True)

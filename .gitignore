@@ -6,6 +6,11 @@
 # --- Marimo (cache) ---
 __marimo__
 
+# --- Generated notebook CSS (built by scripts/build_css.py) ---
+notebooks/styles/root.css
+notebooks/styles/data.css
+notebooks/styles/insights.css
+
 # --- Python ---
 .venv/
 __pycache__/
@@ -28,6 +33,7 @@ app/public/data/
 
 # --- Claude Code (local settings) ---
 .claude/
+.mcp.json
 
 # --- Editor / IDE ---
 .vscode/

@@ -16,7 +16,7 @@ REPO_ROOT = Path(__file__).parent.parent
 NOTEBOOKS_DIR = REPO_ROOT / "notebooks"
 OUTPUT_DIR = REPO_ROOT / "app" / "public" / "notebooks"
 
-EXCLUDE_DIRS = {"__marimo__"}
+EXCLUDE_DIRS = {"__marimo__", "styles"}
 
 
 def find_notebooks():
@@ -56,6 +56,16 @@ def main():
              "If omitted, all notebooks are exported.",
     )
     args = parser.parse_args()
+
+    # Build CSS variants before exporting
+    print("Building CSS variants...")
+    build_result = subprocess.run(
+        [sys.executable, str(Path(__file__).parent / "build_css.py")],
+    )
+    if build_result.returncode != 0:
+        print("CSS build failed.", file=sys.stderr)
+        sys.exit(1)
+    print()
 
     if args.notebooks:
         notebooks = []
