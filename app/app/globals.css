@@ -4,6 +4,14 @@
   --foreground-rgb: 0, 0, 0;
   --background-start-rgb: 255, 255, 255;
   --background-end-rgb: 255, 255, 255;
+
+  /* Sidebar tokens (matching OSO kuma frontend-ui) */
+  --sidebar-bg: hsl(0 0% 98%);
+  --sidebar-foreground: hsl(240 5.3% 26.1%);
+  --sidebar-primary: hsl(240 5.9% 10%);
+  --sidebar-accent: hsl(240 4.8% 95.9%);
+  --sidebar-border: hsl(220 13% 91%);
+  --sidebar-muted: hsl(240 3.8% 46.1%);
 }
 
 * {
