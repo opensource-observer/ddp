@@ -1,49 +1,29 @@
 import marimo
 
-__generated_with = "0.18.4"
+__generated_with = "unknown"
 app = marimo.App(width="full", css_file="../styles/insights.css")
 
 
 @app.cell(hide_code=True)
 def header_title(mo):
-    mo.md("""
-    # 2025 Developer Trends
-    <small>Owner: <span class="ddp-badge">OSO Team</span> · Last Updated: <span class="ddp-badge">2026-02-17</span></small>
-
-    Explore an interactive reproduction of the [Electric Capital Developer Report](https://www.developerreport.com), updated with 2025 data.
-    """)
+    mo.Html('<div class="ddp-header"><h1>2025 Developer Trends</h1><p>Exploring monthly active developer trends across crypto ecosystems using Electric Capital data.</p><div class="ddp-header-meta"><span>Created: <span class="ddp-badge">2026-03-16</span></span></div></div>')
     return
 
 
 @app.cell(hide_code=True)
 def header_accordion(mo):
     mo.accordion({
-        "Overview": mo.md("""
-    - As of December 2025, the total number of monthly active developers (MADs) across all crypto ecosystems reached its highest recorded level, driven by growth in newer chains and Layer 2s
-    - Ethereum remains the largest single ecosystem by MAD count, though its share of total crypto developers continued to decline as multi-chain activity increases
-    - Newcomer developers (those active for less than 1 year) represented a significant portion of 2025 MADs, indicating continued onboarding despite broader market fluctuations
-    - Full-time developers (active 10+ months of the year) showed resilience, with retention rates improving year-over-year compared to the 2022-2023 downturn
-        """),
-        "Context": mo.md("""
-    - This analysis covers monthly active developers across all crypto ecosystems
-    - Data source: Open Dev Data (Electric Capital) via OSO data warehouse
-    - Time period: January 2015 to December 2025 (full historical data)
-    - Developers are original code authors (merge/PR integrators are not counted unless they authored commits)
-    - Monthly active developers are measured using a 28-day rolling activity window
-    - Uses curated Open Dev Data repository set (not comprehensive GitHub coverage)
-    - Developer identity resolution may miss some connections across accounts or pseudonyms
-    - Data freshness depends on Open Dev Data and OSO pipeline update cadence
-
-    **Metric Definitions**
-    - Activity — Monthly Active Developer (MAD) methodology
-
-    **Methodology**
-    - **Developers**: Original code authors only (merge/PR integrators excluded unless they authored commits)
-    - **Monthly Active Developers**: 28-day rolling activity window
-    - **Tenure Categories**: Newcomers (< 1 year), Emerging (1–2 years), Established (2+ years)
+        "Metrics & Definitions": mo.md("""
+    - **Time period**: January 2015 to December 2025 (full historical data)
+    - **Monthly Active Developer (MAD)**: A developer who authored at least 1 commit in a given month (measured using a 28-day rolling activity window)
+    - **Tenure Categories**: Newcomers (< 1 year active), Emerging (1–2 years), Established (2+ years)
     - **Activity Levels**: Full-time (sustained activity over 84-day window), Part-time (intermittent), One-time (sporadic)
-
-    > This analysis is inspired by the [Electric Capital Developer Report](https://www.developerreport.com). Data sourced from Open Dev Data via the OSO data warehouse.
+        """),
+        "Assumptions & Limitations": mo.md("""
+    - **Commit-only activity measure**: Developer activity is based on commits only — pull requests, code reviews, and issue comments are not counted
+    - **Public repos only**: Private repositories are excluded from the dataset
+    - **Identity resolution**: Developer identities are resolved across forges using Electric Capital's methodology, but some cross-account connections may be missed
+    - **Ecosystem classification**: Ecosystem assignments follow the Electric Capital taxonomy; projects may belong to multiple ecosystems
         """),
         "Data Sources": mo.md("""
     - **Open Dev Data** — Electric Capital's developer activity dataset, [github.com/electric-capital/crypto-ecosystems](https://github.com/electric-capital/crypto-ecosystems)
