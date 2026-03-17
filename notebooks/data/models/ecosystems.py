@@ -141,6 +141,8 @@ def _(mo, pyoso_db_conn):
       COUNT(DISTINCT er.repo_id) AS repo_count
     FROM oso.stg_opendevdata__ecosystems_repos_recursive er
     JOIN oso.stg_opendevdata__ecosystems e ON er.ecosystem_id = e.id
+    WHERE e.is_crypto = 1
+      AND e.is_category = 0
     GROUP BY e.name
     ORDER BY repo_count DESC
     LIMIT 20
@@ -382,6 +384,8 @@ def _(mo):
       COUNT(DISTINCT er.repo_id) AS repo_count
     FROM oso.stg_opendevdata__ecosystems e
     JOIN oso.stg_opendevdata__ecosystems_repos_recursive er ON e.id = er.ecosystem_id
+    WHERE e.is_crypto = 1
+      AND e.is_category = 0
     GROUP BY e.name, e.is_crypto, e.is_chain, e.is_category
     ORDER BY repo_count DESC
     LIMIT 20
@@ -402,6 +406,8 @@ def _(mo, pyoso_db_conn):
           COUNT(DISTINCT er.repo_id) AS repo_count
         FROM oso.stg_opendevdata__ecosystems e
         JOIN oso.stg_opendevdata__ecosystems_repos_recursive er ON e.id = er.ecosystem_id
+        WHERE e.is_crypto = 1
+          AND e.is_category = 0
         GROUP BY e.name, e.is_crypto, e.is_chain, e.is_category
         ORDER BY repo_count DESC
         LIMIT 20
