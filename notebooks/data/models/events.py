@@ -976,19 +976,6 @@ def _(mo, pyoso_db_conn):
     return
 
 
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md("""
-    ## Related Models
-
-    - **Commits**: commits.py — Commit-level activity from Open Dev Data with identity resolution and code churn metrics
-    - **Repositories**: repositories.py — Repository mappings, identifiers, and the bridge model for cross-source joins
-    - **Developers**: developers.py — Unified developer identities across GitHub and Open Dev Data
-    - **Ecosystems**: ecosystems.py — Ecosystem hierarchies and repository-to-ecosystem mappings
-    - **Activity Metrics**: activity.py — Monthly Active Developer (MAD) metric definitions built on event data
-    """)
-    return
-
 
 @app.cell
 def setup_pyoso():

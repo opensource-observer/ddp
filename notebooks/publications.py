@@ -6,14 +6,11 @@ app = marimo.App(width="full", css_file="styles/root.css")
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.vstack([
-        mo.md("""
+    mo.md("""
     # Publications
 
     Research and analysis powered by DDP data.
-    """),
-        mo.callout(mo.md("This page is a placeholder. Links and descriptions may be incomplete or inaccurate."), kind="warn"),
-    ])
+    """)
     return
 
 

@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.18.4"
+__generated_with = "unknown"
 app = marimo.App(width="full", css_file="../../styles/data.css")
 
 
