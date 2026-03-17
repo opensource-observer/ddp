@@ -6,63 +6,7 @@ app = marimo.App(width="full", css_file="../styles/insights.css")
 
 @app.cell(hide_code=True)
 def header_title(mo):
-    mo.md("""
-    # Case Study: Speedrun Ethereum
-    <small>Owner: <span style="background-color: #f0f0f0; padding: 2px 4px; border-radius: 3px;">OSO Team</span> · Last Updated: <span style="background-color: #f0f0f0; padding: 2px 4px; border-radius: 3px;">2026-02-17</span></small>
-
-    An in-depth case study on the role Speedrun Ethereum has played in onboarding and retaining new Ethereum developers.
-    """)
-    return
-
-
-@app.cell(hide_code=True)
-def header_accordion(mo):
-    mo.accordion({
-        "Overview": mo.md("""
-- Speedrun Ethereum (SRE) is a self-paced challenge program that has onboarded 17,000+ developers into the Ethereum ecosystem
-- This analysis examines whether SRE successfully converts newcomers into sustained Ethereum contributors — and the data suggests it does
-- Key questions: What share of SRE graduates remain active in Ethereum after 1–2 years? How does prior experience affect outcomes? Where do graduates go after SRE?
-        """),
-        "Context": mo.md("""
-We conducted this analysis as part of a broader inquiry into the state of the Ethereum developer ecosystem in 2025, grounded in three working hypotheses:
-
-1. Developer retention is a leading indicator of ecosystem health and, over time, a meaningful predictor of long-term token price, value accrual, network GDP, etc.
-2. Ethereum's early open-source culture is eroding as the crypto ecosystem matures, becomes more competitive, and partners with tradfi/web2.
-3. Other ecosystems (eg, AI) have emerged as powerful bottom-up attractors for ambitious, mission-driven developers.
-
-Using Speedrun Ethereum as a focused case study, the data suggests that bottom-up programs still work. Speedrun Ethereum is successfully counteracting these headwinds by onboarding, retaining, and anchoring net-new developers in the Ethereum ecosystem.
-
-**Working hypotheses:**
-1. Developer retention is a leading indicator of ecosystem health
-2. Ethereum's early open-source culture is under pressure from competition and crypto maturation
-3. AI and other ecosystems are attracting ambitious developers who might otherwise go to Ethereum
-
-**Key definitions:**
-- **Users**: Developers with GitHub profiles saved in the SRE registry (not all 17K+ total users)
-- **Cohort Month**: Profile `createdAt` date rounded to the nearest month
-- **Batch ID**: Some though not all developers were assigned a learning batch (group) when they went through the program
-- **Challenges Completed**: The number of SRE challenges the user successfully completed (according to their profile)
-- **Location**: Where available, the country code of the user
-- **Forked `scaffold-eth`**: Whether the user has one or more of the scaffold-eth repos forked to their personal GitHub
-- **Experience Categories**: *Newb* (minimal prior GitHub activity), *Learning* (<1 year prior), *Experienced* (>12 months prior), *Delayed Start* (became active several months after SRE start)
-- **Active Month**: ≥1 qualifying Push or PullRequest event on a public GitHub repo
-- **Ecosystem Classification**: Repos classified as *Ethereum*, *Other EVM Chain*, *Personal*, or *Other* via Electric Capital mappings
-- **Retention**: Share of a cohort active at month *t*, normalized at month 0
-- **Full-time month**: >10 days of qualifying activity
-- **Velocity**: Sum over active days of (1 + ln(events per day))
-- **Change Categories**: Average monthly activity changes after SRE compared to before
-
-**Metric Definitions**
-- Activity — Monthly Active Developer (MAD) methodology
-- Retention — Cohort-based retention methodology
-        """),
-        "Data Sources": mo.md("""
-- **SRE GitHub users** — `int_sre_github_users`: user registry, cohorts, batches, challenges completed
-- **GitHub events** — `int_sre_github_events_by_user`: public GitHub events joined to SRE users, from [GitHub Archive](https://gharchive.org)
-- **Ecosystem mappings** — `stg_opendevdata__*`: Electric Capital's repo → ecosystem mappings, via [Open Dev Data](https://opendevdata.org/)
-- **Further reading**: [Speedrun Ethereum](https://speedrunethereum.com/) · [Pyoso docs](https://docs.opensource.observer/docs/get-started/python) · [Marimo docs](https://docs.marimo.io/)
-        """),
-    })
+    mo.Html('<div class="ddp-header"><h1>Speedrun Ethereum</h1><p>Measuring the impact of Speedrun Ethereum on developer onboarding and ecosystem growth.</p><div class="ddp-header-meta"><span>Created: <span class="ddp-badge">2026-03-16</span></span></div></div>')
     return
 
 
@@ -524,20 +468,22 @@ def section_activity_by_ecosystem(
     _opts = list(_states.keys())
     _djs_safe = _json.dumps(_states).replace('</', '<\\/')
     _opts_js = _json.dumps(_opts)
-    _sel_html = '<div style="margin-bottom:8px"><span style="font-size:11px;color:#6b7280;display:block;margin-bottom:2px">Analyze</span><select id="sel" style="padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;color:#374151;background:#fff;cursor:pointer">' + ''.join(f'<option value="{i}">{o}</option>' for i, o in enumerate(_opts)) + '</select></div>'
+    _sel_html = '<div style="margin-bottom:8px"><span class="ddp-select-label">Analyze</span><select id="sel" class="ddp-select">' + ''.join(f'<option value="{i}">{o}</option>' for i, o in enumerate(_opts)) + '</select></div>'
 
     _inner = (
         '<!DOCTYPE html><html><head><meta charset="utf-8">'
         '<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>'
         '<style>'
-        '*{box-sizing:border-box;margin:0;padding:0}'
-        'body{font-family:Arial,sans-serif;font-size:13px;padding:4px}'
+        '*{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important}'
+        'body{font-size:14px;color:#0f172a;padding:4px}'
+        '.ddp-select{padding:4px 8px;border:1px solid #e2e8f0;border-radius:4px;font-size:0.8125em;color:#0f172a;background:#fff;cursor:pointer;outline:none}'
+        '.ddp-select-label{font-size:0.6875em;color:#64748b;display:block;margin-bottom:2px}'
         '</style></head><body>'
         f'{_sel_html}'
         '<div id="chart"></div>'
         f'<script>var D={_djs_safe};var O={_opts_js};'
         'var sel=document.getElementById("sel");'
-        'function show(i){Plotly.react("chart",D[O[i]].chart.data,D[O[i]].chart.layout,{responsive:true});}'
+        'function show(i){Plotly.react("chart",D[O[i]].chart.data,D[O[i]].chart.layout,{responsive:true,displayModeBar:false});}'
         'sel.addEventListener("change",function(){show(parseInt(this.value))});'
         'show(0);'
         '</script></body></html>'
@@ -548,7 +494,7 @@ def section_activity_by_ecosystem(
         mo.md("---"),
         mo.md("## Speedrun Ethereum has contributed an incremental ~250 monthly active developers to Ethereum"),
         mo.md("_Measured as the increase in Ethereum-active developers attributable to SRE alumni relative to the pre-SRE baseline. Showing Ethereum ecosystem._"),
-        mo.Html(f'<iframe srcdoc="{_src}" style="width:100%;height:520px;border:none;display:block" scrolling="no"></iframe>'),
+        mo.Html(f'<iframe srcdoc="{_src}" class="ddp-chart-frame" scrolling="no"></iframe>'),
     ])
     return
 
@@ -943,20 +889,22 @@ def section_experience_funnel(
     _opts2 = list(_states2.keys())
     _djs2_safe = _json2.dumps(_states2).replace('</', '<\\/')
     _opts2_js = _json2.dumps(_opts2)
-    _sel2_html = '<div style="margin-bottom:8px"><span style="font-size:11px;color:#6b7280;display:block;margin-bottom:2px">Ecosystem</span><select id="sel" style="padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;color:#374151;background:#fff;cursor:pointer">' + ''.join(f'<option value="{i}">{o}</option>' for i, o in enumerate(_opts2)) + '</select></div>'
+    _sel2_html = '<div style="margin-bottom:8px"><span class="ddp-select-label">Ecosystem</span><select id="sel" class="ddp-select">' + ''.join(f'<option value="{i}">{o}</option>' for i, o in enumerate(_opts2)) + '</select></div>'
 
     _inner2 = (
         '<!DOCTYPE html><html><head><meta charset="utf-8">'
         '<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>'
         '<style>'
-        '*{box-sizing:border-box;margin:0;padding:0}'
-        'body{font-family:Arial,sans-serif;font-size:13px;padding:4px}'
+        '*{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important}'
+        'body{font-size:14px;color:#0f172a;padding:4px}'
+        '.ddp-select{padding:4px 8px;border:1px solid #e2e8f0;border-radius:4px;font-size:0.8125em;color:#0f172a;background:#fff;cursor:pointer;outline:none}'
+        '.ddp-select-label{font-size:0.6875em;color:#64748b;display:block;margin-bottom:2px}'
         '</style></head><body>'
         f'{_sel2_html}'
         '<div id="chart"></div>'
         f'<script>var D={_djs2_safe};var O={_opts2_js};'
         'var sel=document.getElementById("sel");'
-        'function show(i){Plotly.react("chart",D[O[i]].chart.data,D[O[i]].chart.layout,{responsive:true});}'
+        'function show(i){Plotly.react("chart",D[O[i]].chart.data,D[O[i]].chart.layout,{responsive:true,displayModeBar:false});}'
         'sel.addEventListener("change",function(){show(parseInt(this.value))});'
         'show(0);'
         '</script></body></html>'
@@ -967,7 +915,7 @@ def section_experience_funnel(
 
     mo.vstack([
         mo.md("## Not surprisingly, less experienced developers have higher churn and less overall long-term impact on Ethereum"),
-        mo.Html(f'<iframe srcdoc="{_src2}" style="width:100%;height:520px;border:none;display:block" scrolling="no"></iframe>'),
+        mo.Html(f'<iframe srcdoc="{_src2}" class="ddp-chart-frame" scrolling="no"></iframe>'),
         mo.md("The table below provides additional detail on the developer funnel:"),
         show_table(_df_table2)
     ])
@@ -1179,20 +1127,22 @@ def section_experience_retention(
     _opts3 = list(_states3.keys())
     _djs3_safe = _json3.dumps(_states3).replace('</', '<\\/')
     _opts3_js = _json3.dumps(_opts3)
-    _sel3_html = '<div style="margin-bottom:8px"><span style="font-size:11px;color:#6b7280;display:block;margin-bottom:2px">Ecosystem</span><select id="sel" style="padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;color:#374151;background:#fff;cursor:pointer">' + ''.join(f'<option value="{i}">{o}</option>' for i, o in enumerate(_opts3)) + '</select></div>'
+    _sel3_html = '<div style="margin-bottom:8px"><span class="ddp-select-label">Ecosystem</span><select id="sel" class="ddp-select">' + ''.join(f'<option value="{i}">{o}</option>' for i, o in enumerate(_opts3)) + '</select></div>'
 
     _inner3 = (
         '<!DOCTYPE html><html><head><meta charset="utf-8">'
         '<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>'
         '<style>'
-        '*{box-sizing:border-box;margin:0;padding:0}'
-        'body{font-family:Arial,sans-serif;font-size:13px;padding:4px}'
+        '*{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important}'
+        'body{font-size:14px;color:#0f172a;padding:4px}'
+        '.ddp-select{padding:4px 8px;border:1px solid #e2e8f0;border-radius:4px;font-size:0.8125em;color:#0f172a;background:#fff;cursor:pointer;outline:none}'
+        '.ddp-select-label{font-size:0.6875em;color:#64748b;display:block;margin-bottom:2px}'
         '</style></head><body>'
         f'{_sel3_html}'
         '<div id="chart"></div>'
         f'<script>var D={_djs3_safe};var O={_opts3_js};'
         'var sel=document.getElementById("sel");'
-        'function show(i){Plotly.react("chart",D[O[i]].chart.data,D[O[i]].chart.layout,{responsive:true});}'
+        'function show(i){Plotly.react("chart",D[O[i]].chart.data,D[O[i]].chart.layout,{responsive:true,displayModeBar:false});}'
         'sel.addEventListener("change",function(){show(parseInt(this.value))});'
         'show(0);'
         '</script></body></html>'
@@ -1202,7 +1152,7 @@ def section_experience_retention(
     mo.vstack([
         mo.md("---"),
         mo.md("## Developers with > 12 months prior experience remain active contributors to Ethereum at significantly higher rates"),
-        mo.Html(f'<iframe srcdoc="{_src3}" style="width:100%;height:520px;border:none;display:block" scrolling="no"></iframe>'),
+        mo.Html(f'<iframe srcdoc="{_src3}" class="ddp-chart-frame" scrolling="no"></iframe>'),
     ])
     return
 
@@ -1242,20 +1192,22 @@ def section_experienced_dev_activity(
     _opts4 = list(_states4.keys())
     _djs4_safe = _json4.dumps(_states4).replace('</', '<\\/')
     _opts4_js = _json4.dumps(_opts4)
-    _sel4_html = '<div style="margin-bottom:8px"><span style="font-size:11px;color:#6b7280;display:block;margin-bottom:2px">Experience Level</span><select id="sel" style="padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;color:#374151;background:#fff;cursor:pointer">' + ''.join(f'<option value="{i}">{o}</option>' for i, o in enumerate(_opts4)) + '</select></div>'
+    _sel4_html = '<div style="margin-bottom:8px"><span class="ddp-select-label">Experience Level</span><select id="sel" class="ddp-select">' + ''.join(f'<option value="{i}">{o}</option>' for i, o in enumerate(_opts4)) + '</select></div>'
 
     _inner4 = (
         '<!DOCTYPE html><html><head><meta charset="utf-8">'
         '<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>'
         '<style>'
-        '*{box-sizing:border-box;margin:0;padding:0}'
-        'body{font-family:Arial,sans-serif;font-size:13px;padding:4px}'
+        '*{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important}'
+        'body{font-size:14px;color:#0f172a;padding:4px}'
+        '.ddp-select{padding:4px 8px;border:1px solid #e2e8f0;border-radius:4px;font-size:0.8125em;color:#0f172a;background:#fff;cursor:pointer;outline:none}'
+        '.ddp-select-label{font-size:0.6875em;color:#64748b;display:block;margin-bottom:2px}'
         '</style></head><body>'
         f'{_sel4_html}'
         '<div id="chart"></div>'
         f'<script>var D={_djs4_safe};var O={_opts4_js};'
         'var sel=document.getElementById("sel");'
-        'function show(i){Plotly.react("chart",D[O[i]].chart.data,D[O[i]].chart.layout,{responsive:true});}'
+        'function show(i){Plotly.react("chart",D[O[i]].chart.data,D[O[i]].chart.layout,{responsive:true,displayModeBar:false});}'
         'sel.addEventListener("change",function(){show(parseInt(this.value))});'
         'show(0);'
         '</script></body></html>'
@@ -1266,7 +1218,7 @@ def section_experienced_dev_activity(
         mo.md("---"),
         mo.md("## For experienced developers, Speedrun Ethereum functions less as onboarding and more as activation and redirection toward Ethereum"),
         mo.md("_Showing Active Developers metric for Ethereum ecosystem. Select experience level:_"),
-        mo.Html(f'<iframe srcdoc="{_src4}" style="width:100%;height:520px;border:none;display:block" scrolling="no"></iframe>'),
+        mo.Html(f'<iframe srcdoc="{_src4}" class="ddp-chart-frame" scrolling="no"></iframe>'),
     ])
     return
 
@@ -1298,20 +1250,22 @@ def section_cohort_year_retention(
     _opts5 = list(_states5.keys())
     _djs5_safe = _json5.dumps(_states5).replace('</', '<\\/')
     _opts5_js = _json5.dumps(_opts5)
-    _sel5_html = '<div style="margin-bottom:8px"><span style="font-size:11px;color:#6b7280;display:block;margin-bottom:2px">Experience Level</span><select id="sel" style="padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;color:#374151;background:#fff;cursor:pointer">' + ''.join(f'<option value="{i}">{o}</option>' for i, o in enumerate(_opts5)) + '</select></div>'
+    _sel5_html = '<div style="margin-bottom:8px"><span class="ddp-select-label">Experience Level</span><select id="sel" class="ddp-select">' + ''.join(f'<option value="{i}">{o}</option>' for i, o in enumerate(_opts5)) + '</select></div>'
 
     _inner5 = (
         '<!DOCTYPE html><html><head><meta charset="utf-8">'
         '<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>'
         '<style>'
-        '*{box-sizing:border-box;margin:0;padding:0}'
-        'body{font-family:Arial,sans-serif;font-size:13px;padding:4px}'
+        '*{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important}'
+        'body{font-size:14px;color:#0f172a;padding:4px}'
+        '.ddp-select{padding:4px 8px;border:1px solid #e2e8f0;border-radius:4px;font-size:0.8125em;color:#0f172a;background:#fff;cursor:pointer;outline:none}'
+        '.ddp-select-label{font-size:0.6875em;color:#64748b;display:block;margin-bottom:2px}'
         '</style></head><body>'
         f'{_sel5_html}'
         '<div id="chart"></div>'
         f'<script>var D={_djs5_safe};var O={_opts5_js};'
         'var sel=document.getElementById("sel");'
-        'function show(i){Plotly.react("chart",D[O[i]].chart.data,D[O[i]].chart.layout,{responsive:true});}'
+        'function show(i){Plotly.react("chart",D[O[i]].chart.data,D[O[i]].chart.layout,{responsive:true,displayModeBar:false});}'
         'sel.addEventListener("change",function(){show(parseInt(this.value))});'
         'show(0);'
         '</script></body></html>'
@@ -1322,7 +1276,7 @@ def section_cohort_year_retention(
         mo.md("---"),
         mo.md("## Engagement past the 3–month mark is a good predictor of longer-term retention"),
         mo.md("_Showing Ethereum ecosystem by cohort year. Select experience level:_"),
-        mo.Html(f'<iframe srcdoc="{_src5}" style="width:100%;height:520px;border:none;display:block" scrolling="no"></iframe>'),
+        mo.Html(f'<iframe srcdoc="{_src5}" class="ddp-chart-frame" scrolling="no"></iframe>'),
     ])
     return
 
@@ -1687,6 +1641,45 @@ def section_where_now(
         mo.md("_Showing Experienced developers with increased activity in the Ethereum ecosystem, at least 3 months after starting the program._"),
         show_plotly(_wc),
     ])
+    return
+
+
+@app.cell(hide_code=True)
+def header_accordion(mo):
+    mo.accordion({
+        "Metrics & Definitions": mo.md("""
+**Key definitions:**
+- **Users**: Developers with GitHub profiles saved in the SRE registry (not all 17K+ total users)
+- **Cohort Month**: Profile `createdAt` date rounded to the nearest month
+- **Batch ID**: Some though not all developers were assigned a learning batch (group) when they went through the program
+- **Challenges Completed**: The number of SRE challenges the user successfully completed (according to their profile)
+- **Location**: Where available, the country code of the user
+- **Forked `scaffold-eth`**: Whether the user has one or more of the scaffold-eth repos forked to their personal GitHub
+- **Experience Categories**: *Newb* (minimal prior GitHub activity), *Learning* (<1 year prior), *Experienced* (>12 months prior), *Delayed Start* (became active several months after SRE start)
+- **Active Month**: ≥1 qualifying Push or PullRequest event on a public GitHub repo
+- **Ecosystem Classification**: Repos classified as *Ethereum*, *Other EVM Chain*, *Personal*, or *Other* via Electric Capital mappings
+- **Retention**: Share of a cohort active at month *t*, normalized at month 0
+- **Full-time month**: >10 days of qualifying activity
+- **Velocity**: Sum over active days of (1 + ln(events per day))
+- **Change Categories**: Average monthly activity changes after SRE compared to before
+
+**Metric Definitions:**
+- **Activity** — Monthly Active Developer (MAD) methodology
+- **Retention** — Cohort-based retention methodology
+        """),
+        "Assumptions & Limitations": mo.md("""
+- **SRE data completeness**: The SRE registry only covers developers who created a GitHub profile through the program — the full 17K+ user count includes developers not represented in this dataset
+- **GitHub-only activity tracking**: All activity metrics are derived from public GitHub events; off-chain contributions, forum participation, and private repo activity are not captured
+- **Attribution methodology**: Correlations between SRE participation and ecosystem activity do not imply causation — developers who complete SRE may have become active Ethereum contributors regardless
+- **Time period scope**: Analysis is bounded by GitHub Archive availability and the SRE registry snapshot date; recent cohorts have shorter observation windows and lower apparent retention by construction
+        """),
+        "Data Sources": mo.md("""
+- **SRE GitHub users** — `int_sre_github_users`: user registry, cohorts, batches, challenges completed
+- **GitHub events** — `int_sre_github_events_by_user`: public GitHub events joined to SRE users, from [GitHub Archive](https://gharchive.org)
+- **Ecosystem mappings** — `stg_opendevdata__*`: Electric Capital's repo → ecosystem mappings, via [Open Dev Data](https://opendevdata.org/)
+- **Further reading**: [Speedrun Ethereum](https://speedrunethereum.com/) · [Pyoso docs](https://docs.opensource.observer/docs/get-started/python) · [Marimo docs](https://docs.marimo.io/)
+        """),
+    })
     return
 
 

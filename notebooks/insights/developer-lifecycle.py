@@ -6,61 +6,10 @@ app = marimo.App(width="full", css_file="../styles/insights.css")
 
 @app.cell(hide_code=True)
 def header_title(mo):
-    mo.md("""
-    # Lifecycle Analysis
-    <small>Owner: <span style="background-color: #f0f0f0; padding: 2px 4px; border-radius: 3px;">OSO Team</span> · Last Updated: <span style="background-color: #f0f0f0; padding: 2px 4px; border-radius: 3px;">2026-02-17</span></small>
-
-    Visualize the full lifecycle of a developer joining, contributing, and leaving an ecosystem.
-    """)
+    mo.Html('<div class="ddp-header"><h1>Lifecycle Analysis</h1><p>Tracking how developers move through lifecycle states across crypto ecosystems.</p><div class="ddp-header-meta"><span>Created: <span class="ddp-badge">2026-03-16</span></span></div></div>')
     return
 
 
-@app.cell(hide_code=True)
-def header_accordion(mo):
-    mo.accordion({
-        "Overview": mo.md("""
-- This notebook tracks developer lifecycle states — the month-by-month progression of developers joining, contributing, and eventually churning from an ecosystem
-- It reveals how the balance between newcomers, established contributors, and churned developers shifts over time and across ecosystems
-- Key metrics: monthly active developers by lifecycle state, churn ratio, dormant developer count
-        """),
-        "Context": mo.md("""
-**Lifecycle labels** classify each developer's monthly activity into one of 16 granular states. These roll up into 4 categories used in the summary chart:
-
-| Category | Label | Description |
-|:---------|:------|:------------|
-| **First Time** | `first time` | First-ever contribution to the ecosystem |
-| **Full Time** | `full time` | 10+ active days, continuing from prior month |
-| | `new full time` | First month reaching 10+ active days |
-| | `part time to full time` | Transitioned from part-time level |
-| | `dormant to full time` | Returned from dormancy at full-time level |
-| **Part Time** | `part time` | 1-9 active days, continuing from prior month |
-| | `new part time` | First month at part-time level |
-| | `full time to part time` | Stepped down from full-time level |
-| | `dormant to part time` | Returned from dormancy at part-time level |
-| **Churned / Dormant** | `dormant` | No activity this month (previously active) |
-| | `first time to dormant` | Dormant after first contribution |
-| | `part time to dormant` | Dormant after part-time activity |
-| | `full time to dormant` | Dormant after full-time activity |
-| | `churned (after first time)` | Extended inactivity after first contribution |
-| | `churned (after reaching part time)` | Extended inactivity after reaching part time |
-| | `churned (after reaching full time)` | Extended inactivity after reaching full time |
-
-**Active** = First Time + Full Time + Part Time (all 9 labels above the Churned/Dormant group)
-
-**Churn Ratio** = sum(churned + dormant) / sum(active) over the trailing window (12mo or all-time)
-
-Data is bucketed monthly; private repos excluded; contributions include commits, issues, pull requests, and code reviews.
-
-**Metric Definitions**
-- Lifecycle — Developer stage definitions
-- Activity — Monthly Active Developer (MAD) methodology
-        """),
-        "Data Sources": mo.md("""
-- **Open Dev Data (Electric Capital)** — Ecosystem and developer taxonomy, [github.com/electric-capital/crypto-ecosystems](https://github.com/electric-capital/crypto-ecosystems)
-- **Key Models** — `oso.int_crypto_ecosystems_developer_lifecycle_monthly_aggregated`
-        """),
-    })
-    return
 
 
 @app.cell(hide_code=True)
@@ -100,10 +49,10 @@ def ecosystem_overview_tabs(ACTIVE_LABELS, CHURNED_LABELS, DORMANT_LABELS, FT_LA
 
     def _stat(value, label, caption=''):
         return (
-            f'<div style="border:1px solid #e5e7eb;border-radius:8px;padding:12px 16px;flex:1;min-width:140px">'
-            f'<div style="font-size:20px;font-weight:700;color:#111">{value}</div>'
-            f'<div style="font-size:12px;font-weight:600;color:#374151;margin-top:2px">{label}</div>'
-            + (f'<div style="font-size:11px;color:#9ca3af;margin-top:2px">{caption}</div>' if caption else '')
+            f'<div class="ddp-stat-box">'
+            f'<div class="ddp-stat-value">{value}</div>'
+            f'<div class="ddp-stat-label">{label}</div>'
+            + (f'<div class="ddp-stat-caption">{caption}</div>' if caption else '')
             + '</div>'
         )
 
@@ -128,7 +77,7 @@ def ecosystem_overview_tabs(ACTIVE_LABELS, CHURNED_LABELS, DORMANT_LABELS, FT_LA
         _churn_ratio_12 = (_churn_12_sum / _active_12_sum * 100) if _active_12_sum > 0 else 0
 
         _stats_html = (
-            '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px">'
+            '<div class="ddp-stat-row">'
             + _stat(f'{_active_count:,}', 'Active Developers', f'Latest month ({str(_latest_month)[:7]})')
             + _stat(f'{_ft_count:,}', 'Full-Time', '10+ active days/month')
             + _stat(f'{_pt_count:,}', 'Part-Time', '1-9 active days/month')
@@ -193,14 +142,16 @@ def ecosystem_overview_tabs(ACTIVE_LABELS, CHURNED_LABELS, DORMANT_LABELS, FT_LA
     _opts = [o for o in _ECOSYSTEMS if o in _states]
     _djs_safe = _json.dumps(_states).replace('</', '<\\/')
     _opts_js = _json.dumps(_opts)
-    _sel_html = '<div style="margin-bottom:8px"><span style="font-size:11px;color:#6b7280;display:block;margin-bottom:2px">Ecosystem</span><select id="sel" style="padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;color:#374151;background:#fff;cursor:pointer">' + ''.join(f'<option value="{i}">{o}</option>' for i, o in enumerate(_opts)) + '</select></div>'
+    _sel_html = '<div style="margin-bottom:8px"><span class="ddp-select-label">Ecosystem</span><select id="sel" class="ddp-select">' + ''.join(f'<option value="{i}">{o}</option>' for i, o in enumerate(_opts)) + '</select></div>'
 
     _inner = (
         '<!DOCTYPE html><html><head><meta charset="utf-8">'
         '<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>'
         '<style>'
-        '*{box-sizing:border-box;margin:0;padding:0}'
-        'body{font-family:Arial,sans-serif;font-size:13px;padding:4px}'
+        '*{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important}'
+        'body{font-size:14px;color:#0f172a;padding:4px}'
+        '.ddp-select{padding:4px 8px;border:1px solid #e2e8f0;border-radius:4px;font-size:0.8125em;color:#0f172a;background:#fff;cursor:pointer;outline:none}'
+        '.ddp-select-label{font-size:0.6875em;color:#64748b;display:block;margin-bottom:2px}'
         '</style></head><body>'
         f'{_sel_html}'
         '<div id="stats" style="margin-bottom:12px"></div>'
@@ -208,13 +159,13 @@ def ecosystem_overview_tabs(ACTIVE_LABELS, CHURNED_LABELS, DORMANT_LABELS, FT_LA
         f'<script>var D={_djs_safe};var O={_opts_js};'
         'var sel=document.getElementById("sel");'
         'function show(i){document.getElementById("stats").innerHTML=D[O[i]].stats||"";'
-        'Plotly.react("chart",D[O[i]].chart.data,D[O[i]].chart.layout,{responsive:true});}'
+        'Plotly.react("chart",D[O[i]].chart.data,D[O[i]].chart.layout,{responsive:true,displayModeBar:false});}'
         'sel.addEventListener("change",function(){show(parseInt(this.value))});'
         'show(0);'
         '</script></body></html>'
     )
     _src = _html_mod.escape(_inner, quote=True)
-    mo.Html(f'<iframe srcdoc="{_src}" style="width:100%;height:580px;border:none;display:block" scrolling="no"></iframe>')
+    mo.Html(f'<iframe srcdoc="{_src}" class="ddp-chart-frame-tall" scrolling="no"></iframe>')
     return
 
 
@@ -290,26 +241,28 @@ def ecosystem_comparison_tabs(ACTIVE_LABELS, CHURNED_LABELS, DORMANT_LABELS, FT_
     _opts = [m for m in _METRICS if m in _states]
     _djs_safe = _json.dumps(_states).replace('</', '<\\/')
     _opts_js = _json.dumps(_opts)
-    _sel_html = '<div style="margin-bottom:8px"><span style="font-size:11px;color:#6b7280;display:block;margin-bottom:2px">Metric</span><select id="sel" style="padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;color:#374151;background:#fff;cursor:pointer">' + ''.join(f'<option value="{i}">{o}</option>' for i, o in enumerate(_opts)) + '</select></div>'
+    _sel_html = '<div style="margin-bottom:8px"><span class="ddp-select-label">Metric</span><select id="sel" class="ddp-select">' + ''.join(f'<option value="{i}">{o}</option>' for i, o in enumerate(_opts)) + '</select></div>'
 
     _inner = (
         '<!DOCTYPE html><html><head><meta charset="utf-8">'
         '<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>'
         '<style>'
-        '*{box-sizing:border-box;margin:0;padding:0}'
-        'body{font-family:Arial,sans-serif;font-size:13px;padding:4px}'
+        '*{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important}'
+        'body{font-size:14px;color:#0f172a;padding:4px}'
+        '.ddp-select{padding:4px 8px;border:1px solid #e2e8f0;border-radius:4px;font-size:0.8125em;color:#0f172a;background:#fff;cursor:pointer;outline:none}'
+        '.ddp-select-label{font-size:0.6875em;color:#64748b;display:block;margin-bottom:2px}'
         '</style></head><body>'
         f'{_sel_html}'
         '<div id="chart"></div>'
         f'<script>var D={_djs_safe};var O={_opts_js};'
         'var sel=document.getElementById("sel");'
-        'function show(i){Plotly.react("chart",D[O[i]].chart.data,D[O[i]].chart.layout,{responsive:true});}'
+        'function show(i){Plotly.react("chart",D[O[i]].chart.data,D[O[i]].chart.layout,{responsive:true,displayModeBar:false});}'
         'sel.addEventListener("change",function(){show(parseInt(this.value))});'
         'show(0);'
         '</script></body></html>'
     )
     _src = _html_mod.escape(_inner, quote=True)
-    mo.Html(f'<iframe srcdoc="{_src}" style="width:100%;height:520px;border:none;display:block" scrolling="no"></iframe>')
+    mo.Html(f'<iframe srcdoc="{_src}" class="ddp-chart-frame-tall" scrolling="no"></iframe>')
     return
 
 
@@ -412,6 +365,53 @@ def helper_apply_ec_style():
 
         return fig
     return (apply_ec_style,)
+
+
+@app.cell(hide_code=True)
+def header_accordion(mo):
+    mo.accordion({
+        "Metrics & Definitions": mo.md("""
+**Lifecycle labels** classify each developer's monthly activity into one of 16 granular states. These roll up into 4 categories used in the summary chart:
+
+| Category | Label | Description |
+|:---------|:------|:------------|
+| **First Time** | `first time` | First-ever contribution to the ecosystem |
+| **Full Time** | `full time` | 10+ active days, continuing from prior month |
+| | `new full time` | First month reaching 10+ active days |
+| | `part time to full time` | Transitioned from part-time level |
+| | `dormant to full time` | Returned from dormancy at full-time level |
+| **Part Time** | `part time` | 1-9 active days, continuing from prior month |
+| | `new part time` | First month at part-time level |
+| | `full time to part time` | Stepped down from full-time level |
+| | `dormant to part time` | Returned from dormancy at part-time level |
+| **Churned / Dormant** | `dormant` | No activity this month (previously active) |
+| | `first time to dormant` | Dormant after first contribution |
+| | `part time to dormant` | Dormant after part-time activity |
+| | `full time to dormant` | Dormant after full-time activity |
+| | `churned (after first time)` | Extended inactivity after first contribution |
+| | `churned (after reaching part time)` | Extended inactivity after reaching part time |
+| | `churned (after reaching full time)` | Extended inactivity after reaching full time |
+
+**Active** = First Time + Full Time + Part Time (all 9 labels above the Churned/Dormant group)
+
+**Churn Ratio** = sum(churned + dormant) / sum(active) over the trailing window (12mo or all-time)
+
+**Metric Definitions**
+- Lifecycle — Developer stage definitions
+- Activity — Monthly Active Developer (MAD) methodology
+        """),
+        "Assumptions & Limitations": mo.md("""
+- **Activity windows**: Developer activity is measured using 28-day rolling windows; a developer is considered active if they have at least 1 active day in the window
+- **Ecosystem assignment**: Repos are mapped to ecosystems via recursive repo mapping from Open Dev Data — a repo may belong to multiple ecosystems through the parent-child hierarchy
+- **Identity resolution**: Developer identities are resolved by Electric Capital's fingerprinting; the same person using different accounts may be counted multiple times
+- **Public GitHub only**: Only public GitHub commits and activity are tracked; private repos and non-GitHub platforms are excluded
+        """),
+        "Data Sources": mo.md("""
+- **Open Dev Data (Electric Capital)** — Ecosystem and developer taxonomy, [github.com/electric-capital/crypto-ecosystems](https://github.com/electric-capital/crypto-ecosystems)
+- **Key Models** — `oso.int_crypto_ecosystems_developer_lifecycle_monthly_aggregated`
+        """),
+    })
+    return
 
 
 @app.cell(hide_code=True)

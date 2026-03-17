@@ -6,10 +6,7 @@ app = marimo.App(width="full", css_file="../styles/insights.css")
 
 @app.cell(hide_code=True)
 def header_title(mo):
-    mo.md(r"""
-    # DeFi Builder Journeys
-    <small>Owner: <span class="ddp-badge">OSO Team</span> · Last Updated: <span class="ddp-badge">2026-03-16</span></small>
-    """)
+    mo.Html('<div class="ddp-header"><h1>DeFi Builder Journeys</h1><p>Analyzing builder activity across 40 top DeFi protocols on Ethereum and other major L1s.</p><div class="ddp-header-meta"><span>Created: <span class="ddp-badge">2026-03-16</span></span></div></div>')
     return
 
 
@@ -1331,6 +1328,51 @@ def transform_pipeline_composition(
 
 
 @app.cell(hide_code=True)
+def section_conclusion(mo):
+    mo.accordion({
+        "Metrics & Definitions": mo.md("""
+        - Ecosystem Classification:
+            - Ethereum: Projects with >80% of TVL on Ethereum (L1 + L2s like Arbitrum, Polygon, Base, Optimism, etc.)
+            - Solana: Projects whose top chain by TVL is Solana
+            - Other: Remaining non-Ethereum, non-Solana projects (including Hyperliquid, Bitcoin, etc.)
+        - Project Classifications:
+            - Home Project: The DeFi project a builder is primarily associated with, based on their most active repository contributions.
+            - Feeder Projects: Projects where a builder contributed or starred repositories before onboarding to their home DeFi project.
+        - Builder Classifications:
+            - Qualifying Builder: A builder with 12+ months of sustained contribution to a top DeFi project's home repositories.
+            - Monthly Active Builders (MABs): Count of unique qualified builders with at least one contribution event in a given month.
+            - Newcomer: A qualified builder with fewer than 6 months of observable open-source activity before onboarding to their home project (came in cold).
+            - Cohort Retention: The percentage of builders from a given onboarding cohort (year) who remain active on their home project at each subsequent time interval.
+        - Lifecycle:
+            - Onboarding: A builder's first month of activity on their home project.
+            - Offboarding: A builder is considered offboarded if they have been inactive on their home project for 6+ consecutive months.
+            - Still Active: A builder who has contributed to their home project within the most recent 6 months of data.
+        - Flows:
+            - Net Flow: The year-over-year difference between builders entering and exiting an ecosystem. Positive means net talent gain.
+            - Cross-Ecosystem Flow (Ethereum <-> Other Crypto): The horizontal bar in the Net Flows section counts unique builders who moved between Ethereum and other crypto ecosystems over the full time period. This uses a different method from the annual inflow/outflow bars, which count year-over-year flows by source/destination category; the two methods do not sum to each other.
+            - Year-over-Year Flows: The annual bar chart breaks down builder inflows (entering) and outflows (leaving) by partner category (Other Crypto, Non-Crypto OSS, Inactive). The net flow line shows the cumulative balance; these year-over-year counts sum to the total net flow shown in the stat cards.
+        """),
+        "Assumptions & Limitations": mo.md("""
+        - TVL as inclusion criterion: We use TVL to identify economically meaningful protocols, which excludes low-stakes forks and testnet-only experiments; this analysis focuses on capital-securing DeFi.
+        - Excluded protocols: Some high-TVL protocols have minimal observable OSS activity, so they may appear in tables but contribute little to flow analysis.
+        - Private repositories: Activity in private repos is not visible to GitHub Archive, so teams that develop behind closed doors (or move to private repos after open-source phases) may appear to go inactive; this is one of the most consequential limitations.
+        - Post-hire behavior: Some builders are hired by crypto firms and stop public contributions, so the inactive count may be inflated; we cannot distinguish left crypto from went private.
+        - Bot and noise filtering: We exclude known bots, but some automated contributions may still slip through.
+        - Identity resolution: OpenDevData maps multiple accounts to canonical IDs, but imperfect mapping may double-count some builders.
+        - Scope: This is a structured analysis of visible OSS builder flows across economically significant DeFi protocols, not a census of all crypto builders or proprietary development.
+        """),
+        "Data Sources": mo.md("""
+        - [DefiLlama](https://defillama.com/) --- Top DeFi protocols by TVL (40 selected)
+        - [OSS Directory](https://github.com/opensource-observer/oss-directory) --- Protocol to GitHub mapping
+        - [OpenDevData (Electric Capital)](https://github.com/electric-capital/crypto-ecosystems) --- Ecosystem classifications
+        - [GitHub Archive](https://www.gharchive.org/) --- Builder activity events
+        - [OSO API](https://docs.oso.xyz/) --- Data pipeline and metrics
+        """),
+    })
+    return
+
+
+@app.cell(hide_code=True)
 def settings_color_palette():
     # Color palette — semantic colors reused across all charts
     ETHEREUM_COLOR = '#6F5AE0'
@@ -1479,7 +1521,7 @@ def insight_protocol_table(
         ),
         _table,
         mo.md(
-            '<small style="color:#64748B">'
+            '<small class="ddp-note">'
             '**Note on TVL figures:** TVL values are sourced from DefiLlama and may differ from other sources '
             'due to double-counting across chains, stablecoin classification differences, or timing of snapshots. '
             'ETH TVL Share includes Ethereum L1 and major L2s.'
@@ -1600,7 +1642,7 @@ def insight_alluvial_journeys(
 
         _svg = [
             f'<svg viewBox="0 0 {_VB_W} {_target_h:.0f}" '
-            f'style="width:100%;max-width:1100px;height:auto;" xmlns="http://www.w3.org/2000/svg" '
+            f'style="width:100%;height:auto;" xmlns="http://www.w3.org/2000/svg" '
             f'font-family="system-ui, -apple-system, sans-serif">',
             '<style>.al-lk{transition:opacity .15s}.al-lk:hover{opacity:.7!important}</style>',
         ]
@@ -1711,14 +1753,14 @@ def insight_feeder_projects(
         def _render_cell(eng):
             _cell = _grid.get((_active_label, eng), {'Crypto': [], 'OSS': []})
             return (
-                f'<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">'
+                f'<div class="ddp-grid-2">'
                 f'<div><div style="font-size:11px;font-weight:600;color:{_active_color};text-transform:uppercase;letter-spacing:0.5px;padding-bottom:4px;border-bottom:2px solid {_active_color}">Crypto Ecosystems</div>{_render_list(_cell.get("Crypto", []), _active_color)}</div>'
                 f'<div><div style="font-size:11px;font-weight:600;color:{_active_color};text-transform:uppercase;letter-spacing:0.5px;padding-bottom:4px;border-bottom:2px solid {_active_color}">Other / Non-Crypto OSS</div>{_render_list(_cell.get("OSS", []), _active_color)}</div>'
                 f'</div>'
             )
 
         _html = (
-            f'<div style="width:100%;max-width:1100px;margin:0;font-family:system-ui,-apple-system,sans-serif">'
+            f'<div style="margin:0;font-family:system-ui,-apple-system,sans-serif">'
             f'<div style="display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid #E5E7EB;border-radius:8px;overflow:hidden">'
             f'<div style="background:{_header_bg};padding:10px 16px;border-bottom:1px solid {_header_border};border-right:1px solid #E5E7EB;text-align:center">'
             f'<span style="font-size:13px;font-weight:700;color:#1F2937">Contributing</span>'
@@ -2095,7 +2137,7 @@ def insight_ecosystem_overview(
             ], justify='space-around', widths='equal'),
         ]
         if _chart is not None:
-            _elements.append(mo.md(f'Aggregate TVL and monthly active builders across {_eco_name} DeFi projects over time.<br><small style="color:#64748B">This is not a correlation chart --- TVL (background) and builder counts (foreground) are shown together to provide context on ecosystem-level trends, not to imply a causal relationship.</small>'))
+            _elements.append(mo.md(f'Aggregate TVL and monthly active builders across {_eco_name} DeFi projects over time.<br><small class="ddp-note">This is not a correlation chart --- TVL (background) and builder counts (foreground) are shown together to provide context on ecosystem-level trends, not to imply a causal relationship.</small>'))
             _elements.append(_chart)
 
         return mo.vstack(_elements)
@@ -2122,23 +2164,23 @@ def ethereum_content(
         ecosystem_overview_content['Ethereum'],
         mo.md("---"),
         mo.md("## Where does Ethereum DeFi builder talent flow over time?"),
-        mo.md('<small style="color:#64748B">Each column is a year. Colored bands show where builders are active. Flows between columns trace how builders move between states year-over-year. Wider bands = more builders.</small>'),
+        mo.md('<small class="ddp-note">Each column is a year. Colored bands show where builders are active. Flows between columns trace how builders move between states year-over-year. Wider bands = more builders.</small>'),
         alluvial_content['Ethereum'],
         mo.md("---"),
         mo.md("## Is Ethereum DeFi retaining builder talent over time?"),
-        mo.md('<small style="color:#64748B">Bars above zero = builders entering the ecosystem; below zero = leaving. The dark line tracks net flow. Categories: **Other Crypto** = non-Ethereum chains, **Non-Crypto OSS** = traditional open source, **Inactive** = no observable activity for 12+ months. 2025 data is partial.</small>'),
+        mo.md('<small class="ddp-note">Bars above zero = builders entering the ecosystem; below zero = leaving. The dark line tracks net flow. Categories: **Other Crypto** = non-Ethereum chains, **Non-Crypto OSS** = traditional open source, **Inactive** = no observable activity for 12+ months. 2025 data is partial.</small>'),
         balance_content['Ethereum'],
         mo.md("---"),
         mo.md("## How long do Ethereum DeFi builders stay active after onboarding?"),
-        mo.md('<small style="color:#64748B">Each line tracks a cohort of builders from their onboarding year. Retention = % still active on home project at each interval. Recent cohorts have shorter curves because less time has elapsed.</small>'),
+        mo.md('<small class="ddp-note">Each line tracks a cohort of builders from their onboarding year. Retention = % still active on home project at each interval. Recent cohorts have shorter curves because less time has elapsed.</small>'),
         cohort_content['Ethereum'],
         mo.md("---"),
         mo.md("## Where do new Ethereum DeFi builders come from?"),
-        mo.md('<small style="color:#64748B">Breakdown of builder onboarding pipeline by year. Newcomers had less than 6 months of prior OSS activity before joining DeFi.</small>'),
+        mo.md('<small class="ddp-note">Breakdown of builder onboarding pipeline by year. Newcomers had less than 6 months of prior OSS activity before joining DeFi.</small>'),
         inflow_content['Ethereum'],
         mo.md("---"),
         mo.md("## Which projects seed the Ethereum DeFi builder pipeline?"),
-        mo.md('<small style="color:#64748B">Top feeder projects by number of builders who contributed before joining Ethereum DeFi. Includes both crypto and non-crypto open source projects.</small>'),
+        mo.md('<small class="ddp-note">Top feeder projects by number of builders who contributed before joining Ethereum DeFi. Includes both crypto and non-crypto open source projects.</small>'),
         feeder_content['Ethereum'],
     ])
     ethereum_tab_content = _eth
@@ -2159,23 +2201,23 @@ def solana_content(
         ecosystem_overview_content['Solana'],
         mo.md("---"),
         mo.md("## Where does Solana DeFi builder talent flow over time?"),
-        mo.md('<small style="color:#64748B">Each column is a year. Colored bands show where builders are active. Flows between columns trace how builders move between states year-over-year. Wider bands = more builders.</small>'),
+        mo.md('<small class="ddp-note">Each column is a year. Colored bands show where builders are active. Flows between columns trace how builders move between states year-over-year. Wider bands = more builders.</small>'),
         alluvial_content['Solana'],
         mo.md("---"),
         mo.md("## Is Solana DeFi retaining builder talent over time?"),
-        mo.md('<small style="color:#64748B">Bars above zero = builders entering the ecosystem; below zero = leaving. The dark line tracks net flow. Categories: **Ethereum** = Ethereum L1+L2 projects, **Non-Crypto OSS** = traditional open source, **Inactive** = no observable activity for 12+ months. 2025 data is partial.</small>'),
+        mo.md('<small class="ddp-note">Bars above zero = builders entering the ecosystem; below zero = leaving. The dark line tracks net flow. Categories: **Ethereum** = Ethereum L1+L2 projects, **Non-Crypto OSS** = traditional open source, **Inactive** = no observable activity for 12+ months. 2025 data is partial.</small>'),
         balance_content['Solana'],
         mo.md("---"),
         mo.md("## How long do Solana DeFi builders stay active after onboarding?"),
-        mo.md('<small style="color:#64748B">Each line tracks a cohort of builders from their onboarding year. Retention = % still active on home project at each interval. Recent cohorts have shorter curves because less time has elapsed.</small>'),
+        mo.md('<small class="ddp-note">Each line tracks a cohort of builders from their onboarding year. Retention = % still active on home project at each interval. Recent cohorts have shorter curves because less time has elapsed.</small>'),
         cohort_content['Solana'],
         mo.md("---"),
         mo.md("## Where do new Solana DeFi builders come from?"),
-        mo.md('<small style="color:#64748B">Breakdown of builder onboarding pipeline by year. Newcomers had less than 6 months of prior OSS activity before joining DeFi.</small>'),
+        mo.md('<small class="ddp-note">Breakdown of builder onboarding pipeline by year. Newcomers had less than 6 months of prior OSS activity before joining DeFi.</small>'),
         inflow_content['Solana'],
         mo.md("---"),
         mo.md("## Which projects seed the Solana DeFi builder pipeline?"),
-        mo.md('<small style="color:#64748B">Top feeder projects by number of builders who contributed before joining Solana DeFi. Includes both crypto and non-crypto open source projects.</small>'),
+        mo.md('<small class="ddp-note">Top feeder projects by number of builders who contributed before joining Solana DeFi. Includes both crypto and non-crypto open source projects.</small>'),
         feeder_content['Solana'],
     ])
     solana_tab_content = _sol
@@ -2196,23 +2238,23 @@ def other_ecosystem_content(
         ecosystem_overview_content['Other'],
         mo.md("---"),
         mo.md("## Where does other DeFi builder talent flow over time?"),
-        mo.md('<small style="color:#64748B">Each column is a year. Colored bands show where builders are active. Flows between columns trace how builders move between states year-over-year. Wider bands = more builders.</small>'),
+        mo.md('<small class="ddp-note">Each column is a year. Colored bands show where builders are active. Flows between columns trace how builders move between states year-over-year. Wider bands = more builders.</small>'),
         alluvial_content['Other'],
         mo.md("---"),
         mo.md("## Is other DeFi retaining builder talent over time?"),
-        mo.md('<small style="color:#64748B">Bars above zero = builders entering the ecosystem; below zero = leaving. The dark line tracks net flow. Categories: **Ethereum** = Ethereum L1+L2 projects, **Non-Crypto OSS** = traditional open source, **Inactive** = no observable activity for 12+ months. 2025 data is partial.</small>'),
+        mo.md('<small class="ddp-note">Bars above zero = builders entering the ecosystem; below zero = leaving. The dark line tracks net flow. Categories: **Ethereum** = Ethereum L1+L2 projects, **Non-Crypto OSS** = traditional open source, **Inactive** = no observable activity for 12+ months. 2025 data is partial.</small>'),
         balance_content['Other'],
         mo.md("---"),
         mo.md("## How long do other DeFi builders stay active after onboarding?"),
-        mo.md('<small style="color:#64748B">Each line tracks a cohort of builders from their onboarding year. Retention = % still active on home project at each interval. Recent cohorts have shorter curves because less time has elapsed.</small>'),
+        mo.md('<small class="ddp-note">Each line tracks a cohort of builders from their onboarding year. Retention = % still active on home project at each interval. Recent cohorts have shorter curves because less time has elapsed.</small>'),
         cohort_content['Other'],
         mo.md("---"),
         mo.md("## Where do new other DeFi builders come from?"),
-        mo.md('<small style="color:#64748B">Breakdown of builder onboarding pipeline by year. Newcomers had less than 6 months of prior OSS activity before joining DeFi.</small>'),
+        mo.md('<small class="ddp-note">Breakdown of builder onboarding pipeline by year. Newcomers had less than 6 months of prior OSS activity before joining DeFi.</small>'),
         inflow_content['Other'],
         mo.md("---"),
         mo.md("## Which projects seed the other DeFi builder pipeline?"),
-        mo.md('<small style="color:#64748B">Top feeder projects by number of builders who contributed before joining other DeFi ecosystems. Includes both crypto and non-crypto open source projects.</small>'),
+        mo.md('<small class="ddp-note">Top feeder projects by number of builders who contributed before joining other DeFi ecosystems. Includes both crypto and non-crypto open source projects.</small>'),
         feeder_content['Other'],
     ])
     other_tab_content = _other
@@ -2407,11 +2449,11 @@ def comparison_tab(
         static_plotly(_fig_grid),
         mo.md("---"),
         mo.md("### Monthly active builders over time"),
-        mo.md('<small style="color:#64748B">Aggregate monthly active builder count across all projects in each group.</small>'),
+        mo.md('<small class="ddp-note">Aggregate monthly active builder count across all projects in each group.</small>'),
         static_plotly(_fig_devs),
         mo.md("---"),
         mo.md("### Cross-ecosystem flows: tug of war"),
-        mo.md('<small style="color:#64748B">Direct builder movement between Ethereum and non-Ethereum DeFi. Counts builders whose primary ecosystem changed year-over-year.</small>'),
+        mo.md('<small class="ddp-note">Direct builder movement between Ethereum and non-Ethereum DeFi. Counts builders whose primary ecosystem changed year-over-year.</small>'),
         static_plotly(_fig_tow),
         mo.hstack([
             mo.stat(value=f'{"+" if _eth_bs["net"] >= 0 else ""}{_eth_bs["net"]}', label='Ethereum total net', bordered=True, caption=f'{_eth_bs["count_before"]} \u2192 {_eth_bs["count_after"]} ({_eth_bs["first_year"]}\u2013{_eth_bs["last_year"]})'),
@@ -2419,59 +2461,14 @@ def comparison_tab(
         ], widths='equal', gap=1),
         mo.md("---"),
         mo.md("### Retention: who sticks around longer?"),
-        mo.md('<small style="color:#64748B">Average retention across all year cohorts (2020\u20132024). Each curve averages the % still active at each quarter interval.</small>'),
+        mo.md('<small class="ddp-note">Average retention across all year cohorts (2020\u20132024). Each curve averages the % still active at each quarter interval.</small>'),
         static_plotly(_fig_ret),
         mo.md("---"),
         mo.md("### Newcomer pipeline: who attracts more fresh talent?"),
-        mo.md('<small style="color:#64748B">Newcomers = builders with less than 6 months of prior OSS activity before their DeFi onboarding.</small>'),
+        mo.md('<small class="ddp-note">Newcomers = builders with less than 6 months of prior OSS activity before their DeFi onboarding.</small>'),
         static_plotly(_fig_inflow),
     ])
     return (comparison_tab_content,)
-
-
-@app.cell(hide_code=True)
-def section_conclusion(mo):
-    mo.accordion({
-        "Metrics & Definitions": mo.md("""
-        - Ecosystem Classification:
-            - Ethereum: Projects with >80% of TVL on Ethereum (L1 + L2s like Arbitrum, Polygon, Base, Optimism, etc.)
-            - Solana: Projects whose top chain by TVL is Solana
-            - Other: Remaining non-Ethereum, non-Solana projects (including Hyperliquid, Bitcoin, etc.)
-        - Project Classifications:
-            - Home Project: The DeFi project a builder is primarily associated with, based on their most active repository contributions.
-            - Feeder Projects: Projects where a builder contributed or starred repositories before onboarding to their home DeFi project.
-        - Builder Classifications:
-            - Qualifying Builder: A builder with 12+ months of sustained contribution to a top DeFi project's home repositories.
-            - Monthly Active Builders (MABs): Count of unique qualified builders with at least one contribution event in a given month.
-            - Newcomer: A qualified builder with fewer than 6 months of observable open-source activity before onboarding to their home project (came in cold).
-            - Cohort Retention: The percentage of builders from a given onboarding cohort (year) who remain active on their home project at each subsequent time interval.
-        - Lifecycle:
-            - Onboarding: A builder's first month of activity on their home project.
-            - Offboarding: A builder is considered offboarded if they have been inactive on their home project for 6+ consecutive months.
-            - Still Active: A builder who has contributed to their home project within the most recent 6 months of data.
-        - Flows:
-            - Net Flow: The year-over-year difference between builders entering and exiting an ecosystem. Positive means net talent gain.
-            - Cross-Ecosystem Flow (Ethereum <-> Other Crypto): The horizontal bar in the Net Flows section counts unique builders who moved between Ethereum and other crypto ecosystems over the full time period. This uses a different method from the annual inflow/outflow bars, which count year-over-year flows by source/destination category; the two methods do not sum to each other.
-            - Year-over-Year Flows: The annual bar chart breaks down builder inflows (entering) and outflows (leaving) by partner category (Other Crypto, Non-Crypto OSS, Inactive). The net flow line shows the cumulative balance; these year-over-year counts sum to the total net flow shown in the stat cards.
-        """),
-        "Assumptions & Limitations": mo.md("""
-        - TVL as inclusion criterion: We use TVL to identify economically meaningful protocols, which excludes low-stakes forks and testnet-only experiments; this analysis focuses on capital-securing DeFi.
-        - Excluded protocols: Some high-TVL protocols have minimal observable OSS activity, so they may appear in tables but contribute little to flow analysis.
-        - Private repositories: Activity in private repos is not visible to GitHub Archive, so teams that develop behind closed doors (or move to private repos after open-source phases) may appear to go inactive; this is one of the most consequential limitations.
-        - Post-hire behavior: Some builders are hired by crypto firms and stop public contributions, so the inactive count may be inflated; we cannot distinguish left crypto from went private.
-        - Bot and noise filtering: We exclude known bots, but some automated contributions may still slip through.
-        - Identity resolution: OpenDevData maps multiple accounts to canonical IDs, but imperfect mapping may double-count some builders.
-        - Scope: This is a structured analysis of visible OSS builder flows across economically significant DeFi protocols, not a census of all crypto builders or proprietary development.
-        """),
-        "Data Sources": mo.md("""
-        - [DefiLlama](https://defillama.com/) --- Top DeFi protocols by TVL (40 selected)
-        - [OSS Directory](https://github.com/opensource-observer/oss-directory) --- Protocol to GitHub mapping
-        - [OpenDevData (Electric Capital)](https://github.com/electric-capital/crypto-ecosystems) --- Ecosystem classifications
-        - [GitHub Archive](https://www.gharchive.org/) --- Builder activity events
-        - [OSO API](https://docs.oso.xyz/) --- Data pipeline and metrics
-        """),
-    })
-    return
 
 
 @app.cell(hide_code=True)
@@ -2498,7 +2495,7 @@ def main_layout(
 
     # Build panel HTML: highlighted table (if any) + tab content
     # Wrap in max-width container so tables, SVGs, and charts all align
-    _wrap = '<div style="max-width:1100px;">'
+    _wrap = '<div>'
     _wrap_end = '</div>'
     _content_htmls = []
     for _name, _table_html, _content in _tab_configs:

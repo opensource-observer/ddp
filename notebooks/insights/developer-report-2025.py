@@ -1,49 +1,29 @@
 import marimo
 
-__generated_with = "0.18.4"
+__generated_with = "unknown"
 app = marimo.App(width="full", css_file="../styles/insights.css")
 
 
 @app.cell(hide_code=True)
 def header_title(mo):
-    mo.md("""
-    # 2025 Developer Trends
-    <small>Owner: <span style="background-color: #f0f0f0; padding: 2px 4px; border-radius: 3px;">OSO Team</span> · Last Updated: <span style="background-color: #f0f0f0; padding: 2px 4px; border-radius: 3px;">2026-02-17</span></small>
-
-    Explore an interactive reproduction of the [Electric Capital Developer Report](https://www.developerreport.com), updated with 2025 data.
-    """)
+    mo.Html('<div class="ddp-header"><h1>2025 Developer Trends</h1><p>Exploring monthly active developer trends across crypto ecosystems using Electric Capital data.</p><div class="ddp-header-meta"><span>Created: <span class="ddp-badge">2026-03-16</span></span></div></div>')
     return
 
 
 @app.cell(hide_code=True)
 def header_accordion(mo):
     mo.accordion({
-        "Overview": mo.md("""
-    - As of December 2025, the total number of monthly active developers (MADs) across all crypto ecosystems reached its highest recorded level, driven by growth in newer chains and Layer 2s
-    - Ethereum remains the largest single ecosystem by MAD count, though its share of total crypto developers continued to decline as multi-chain activity increases
-    - Newcomer developers (those active for less than 1 year) represented a significant portion of 2025 MADs, indicating continued onboarding despite broader market fluctuations
-    - Full-time developers (active 10+ months of the year) showed resilience, with retention rates improving year-over-year compared to the 2022-2023 downturn
-        """),
-        "Context": mo.md("""
-    - This analysis covers monthly active developers across all crypto ecosystems
-    - Data source: Open Dev Data (Electric Capital) via OSO data warehouse
-    - Time period: January 2015 to December 2025 (full historical data)
-    - Developers are original code authors (merge/PR integrators are not counted unless they authored commits)
-    - Monthly active developers are measured using a 28-day rolling activity window
-    - Uses curated Open Dev Data repository set (not comprehensive GitHub coverage)
-    - Developer identity resolution may miss some connections across accounts or pseudonyms
-    - Data freshness depends on Open Dev Data and OSO pipeline update cadence
-
-    **Metric Definitions**
-    - Activity — Monthly Active Developer (MAD) methodology
-
-    **Methodology**
-    - **Developers**: Original code authors only (merge/PR integrators excluded unless they authored commits)
-    - **Monthly Active Developers**: 28-day rolling activity window
-    - **Tenure Categories**: Newcomers (< 1 year), Emerging (1–2 years), Established (2+ years)
+        "Metrics & Definitions": mo.md("""
+    - **Time period**: January 2015 to December 2025 (full historical data)
+    - **Monthly Active Developer (MAD)**: A developer who authored at least 1 commit in a given month (measured using a 28-day rolling activity window)
+    - **Tenure Categories**: Newcomers (< 1 year active), Emerging (1–2 years), Established (2+ years)
     - **Activity Levels**: Full-time (sustained activity over 84-day window), Part-time (intermittent), One-time (sporadic)
-
-    > This analysis is inspired by the [Electric Capital Developer Report](https://www.developerreport.com). Data sourced from Open Dev Data via the OSO data warehouse.
+        """),
+        "Assumptions & Limitations": mo.md("""
+    - **Commit-only activity measure**: Developer activity is based on commits only — pull requests, code reviews, and issue comments are not counted
+    - **Public repos only**: Private repositories are excluded from the dataset
+    - **Identity resolution**: Developer identities are resolved across forges using Electric Capital's methodology, but some cross-account connections may be missed
+    - **Ecosystem classification**: Ecosystem assignments follow the Electric Capital taxonomy; projects may belong to multiple ecosystems
         """),
         "Data Sources": mo.md("""
     - **Open Dev Data** — Electric Capital's developer activity dataset, [github.com/electric-capital/crypto-ecosystems](https://github.com/electric-capital/crypto-ecosystems)
@@ -431,26 +411,28 @@ def chart1_total_mads(EC_LIGHT_BLUE, df_all, go, mo, pd):
     _opts = list(_states.keys())
     _djs_safe = _json.dumps(_states).replace('</', '<\\/')
     _opts_js = _json.dumps(_opts)
-    _sel_html = '<div style="margin-bottom:8px"><span style="font-size:11px;color:#6b7280;display:block;margin-bottom:2px">Time Range</span><select id="sel" style="padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;color:#374151;background:#fff;cursor:pointer">' + ''.join(f'<option value="{i}">{o}</option>' for i, o in enumerate(_opts)) + '</select></div>'
+    _sel_html = '<div style="margin-bottom:8px"><span class="ddp-select-label">Time Range</span><select id="sel" class="ddp-select">' + ''.join(f'<option value="{i}">{o}</option>' for i, o in enumerate(_opts)) + '</select></div>'
 
     _inner = (
         '<!DOCTYPE html><html><head><meta charset="utf-8">'
         '<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>'
         '<style>'
-        '*{box-sizing:border-box;margin:0;padding:0}'
-        'body{font-family:Arial,sans-serif;font-size:13px;padding:4px}'
+        '*{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important}'
+        'body{font-size:14px;color:#0f172a;padding:4px}'
+        '.ddp-select{padding:4px 8px;border:1px solid #e2e8f0;border-radius:4px;font-size:0.8125em;color:#0f172a;background:#fff;cursor:pointer;outline:none}'
+        '.ddp-select-label{font-size:0.6875em;color:#64748b;display:block;margin-bottom:2px}'
         '</style></head><body>'
         f'{_sel_html}'
         '<div id="chart"></div>'
         f'<script>var D={_djs_safe};var O={_opts_js};'
         'var sel=document.getElementById("sel");'
-        'function show(i){Plotly.react("chart",D[O[i]].chart.data,D[O[i]].chart.layout,{responsive:true});}'
+        'function show(i){Plotly.react("chart",D[O[i]].chart.data,D[O[i]].chart.layout,{responsive:true,displayModeBar:false});}'
         'sel.addEventListener("change",function(){show(parseInt(this.value))});'
         'show(0);'
         '</script></body></html>'
     )
     _src = _html_mod.escape(_inner, quote=True)
-    mo.Html(f'<iframe srcdoc="{_src}" style="width:100%;height:520px;border:none;display:block" scrolling="no"></iframe>')
+    mo.Html(f'<iframe srcdoc="{_src}" class="ddp-chart-frame" scrolling="no"></iframe>')
     return
 
 
@@ -513,26 +495,28 @@ def chart2_tenure_composition(TENURE_COLORS, df_all, go, mo, pd):
     _opts = list(_states.keys())
     _djs_safe = _json.dumps(_states).replace('</', '<\\/')
     _opts_js = _json.dumps(_opts)
-    _sel_html = '<div style="margin-bottom:8px"><span style="font-size:11px;color:#6b7280;display:block;margin-bottom:2px">Time Range</span><select id="sel" style="padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;color:#374151;background:#fff;cursor:pointer">' + ''.join(f'<option value="{i}">{o}</option>' for i, o in enumerate(_opts)) + '</select></div>'
+    _sel_html = '<div style="margin-bottom:8px"><span class="ddp-select-label">Time Range</span><select id="sel" class="ddp-select">' + ''.join(f'<option value="{i}">{o}</option>' for i, o in enumerate(_opts)) + '</select></div>'
 
     _inner = (
         '<!DOCTYPE html><html><head><meta charset="utf-8">'
         '<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>'
         '<style>'
-        '*{box-sizing:border-box;margin:0;padding:0}'
-        'body{font-family:Arial,sans-serif;font-size:13px;padding:4px}'
+        '*{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important}'
+        'body{font-size:14px;color:#0f172a;padding:4px}'
+        '.ddp-select{padding:4px 8px;border:1px solid #e2e8f0;border-radius:4px;font-size:0.8125em;color:#0f172a;background:#fff;cursor:pointer;outline:none}'
+        '.ddp-select-label{font-size:0.6875em;color:#64748b;display:block;margin-bottom:2px}'
         '</style></head><body>'
         f'{_sel_html}'
         '<div id="chart"></div>'
         f'<script>var D={_djs_safe};var O={_opts_js};'
         'var sel=document.getElementById("sel");'
-        'function show(i){Plotly.react("chart",D[O[i]].chart.data,D[O[i]].chart.layout,{responsive:true});}'
+        'function show(i){Plotly.react("chart",D[O[i]].chart.data,D[O[i]].chart.layout,{responsive:true,displayModeBar:false});}'
         'sel.addEventListener("change",function(){show(parseInt(this.value))});'
         'show(0);'
         '</script></body></html>'
     )
     _src = _html_mod.escape(_inner, quote=True)
-    mo.Html(f'<iframe srcdoc="{_src}" style="width:100%;height:520px;border:none;display:block" scrolling="no"></iframe>')
+    mo.Html(f'<iframe srcdoc="{_src}" class="ddp-chart-frame" scrolling="no"></iframe>')
     return
 
 
@@ -664,26 +648,28 @@ def chart3_experienced_devs(TENURE_COLORS, df_all, go, mo):
     _opts = list(_states.keys())
     _djs_safe = _json.dumps(_states).replace('</', '<\\/')
     _opts_js = _json.dumps(_opts)
-    _sel_html = '<div style="margin-bottom:8px"><span style="font-size:11px;color:#6b7280;display:block;margin-bottom:2px">Comparison Period</span><select id="sel" style="padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;color:#374151;background:#fff;cursor:pointer">' + ''.join(f'<option value="{i}">{o}</option>' for i, o in enumerate(_opts)) + '</select></div>'
+    _sel_html = '<div style="margin-bottom:8px"><span class="ddp-select-label">Comparison Period</span><select id="sel" class="ddp-select">' + ''.join(f'<option value="{i}">{o}</option>' for i, o in enumerate(_opts)) + '</select></div>'
 
     _inner = (
         '<!DOCTYPE html><html><head><meta charset="utf-8">'
         '<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>'
         '<style>'
-        '*{box-sizing:border-box;margin:0;padding:0}'
-        'body{font-family:Arial,sans-serif;font-size:13px;padding:4px}'
+        '*{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important}'
+        'body{font-size:14px;color:#0f172a;padding:4px}'
+        '.ddp-select{padding:4px 8px;border:1px solid #e2e8f0;border-radius:4px;font-size:0.8125em;color:#0f172a;background:#fff;cursor:pointer;outline:none}'
+        '.ddp-select-label{font-size:0.6875em;color:#64748b;display:block;margin-bottom:2px}'
         '</style></head><body>'
         f'{_sel_html}'
         '<div id="chart"></div>'
         f'<script>var D={_djs_safe};var O={_opts_js};'
         'var sel=document.getElementById("sel");'
-        'function show(i){Plotly.react("chart",D[O[i]].chart.data,D[O[i]].chart.layout,{responsive:true});}'
+        'function show(i){Plotly.react("chart",D[O[i]].chart.data,D[O[i]].chart.layout,{responsive:true,displayModeBar:false});}'
         'sel.addEventListener("change",function(){show(parseInt(this.value))});'
         'show(0);'
         '</script></body></html>'
     )
     _src = _html_mod.escape(_inner, quote=True)
-    mo.Html(f'<iframe srcdoc="{_src}" style="width:100%;height:520px;border:none;display:block" scrolling="no"></iframe>')
+    mo.Html(f'<iframe srcdoc="{_src}" class="ddp-chart-frame" scrolling="no"></iframe>')
     return
 
 
@@ -814,26 +800,28 @@ def chart4_developer_changes(TENURE_COLORS, df_all, go, mo):
     _opts = list(_states.keys())
     _djs_safe = _json.dumps(_states).replace('</', '<\\/')
     _opts_js = _json.dumps(_opts)
-    _sel_html = '<div style="margin-bottom:8px"><span style="font-size:11px;color:#6b7280;display:block;margin-bottom:2px">Comparison Period</span><select id="sel" style="padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;color:#374151;background:#fff;cursor:pointer">' + ''.join(f'<option value="{i}">{o}</option>' for i, o in enumerate(_opts)) + '</select></div>'
+    _sel_html = '<div style="margin-bottom:8px"><span class="ddp-select-label">Comparison Period</span><select id="sel" class="ddp-select">' + ''.join(f'<option value="{i}">{o}</option>' for i, o in enumerate(_opts)) + '</select></div>'
 
     _inner = (
         '<!DOCTYPE html><html><head><meta charset="utf-8">'
         '<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>'
         '<style>'
-        '*{box-sizing:border-box;margin:0;padding:0}'
-        'body{font-family:Arial,sans-serif;font-size:13px;padding:4px}'
+        '*{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important}'
+        'body{font-size:14px;color:#0f172a;padding:4px}'
+        '.ddp-select{padding:4px 8px;border:1px solid #e2e8f0;border-radius:4px;font-size:0.8125em;color:#0f172a;background:#fff;cursor:pointer;outline:none}'
+        '.ddp-select-label{font-size:0.6875em;color:#64748b;display:block;margin-bottom:2px}'
         '</style></head><body>'
         f'{_sel_html}'
         '<div id="chart"></div>'
         f'<script>var D={_djs_safe};var O={_opts_js};'
         'var sel=document.getElementById("sel");'
-        'function show(i){Plotly.react("chart",D[O[i]].chart.data,D[O[i]].chart.layout,{responsive:true});}'
+        'function show(i){Plotly.react("chart",D[O[i]].chart.data,D[O[i]].chart.layout,{responsive:true,displayModeBar:false});}'
         'sel.addEventListener("change",function(){show(parseInt(this.value))});'
         'show(0);'
         '</script></body></html>'
     )
     _src = _html_mod.escape(_inner, quote=True)
-    mo.Html(f'<iframe srcdoc="{_src}" style="width:100%;height:520px;border:none;display:block" scrolling="no"></iframe>')
+    mo.Html(f'<iframe srcdoc="{_src}" class="ddp-chart-frame" scrolling="no"></iframe>')
     return
 
 
@@ -914,28 +902,30 @@ def chart5_newcomer_volatility(EC_LIGHT_BLUE, df_all, go, mo, pd):
             _states[_opt] = {'chart': _json.loads(_fig.to_json())}
 
     _djs_safe = _json.dumps(_states).replace('</', '<\\/')
-    _gran_sel = '<div style="margin-bottom:8px"><span style="font-size:11px;color:#6b7280;display:block;margin-bottom:2px">Time Granularity</span><select id="sel1" style="padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;color:#374151;background:#fff;cursor:pointer">' + ''.join(f'<option value="{o}">{o}</option>' for o in _GRAN_OPTS) + '</select></div>'
-    _range_sel = '<div style="margin-bottom:8px"><span style="font-size:11px;color:#6b7280;display:block;margin-bottom:2px">Date Range</span><select id="sel2" style="padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;color:#374151;background:#fff;cursor:pointer">' + ''.join(f'<option value="{o}">{o}</option>' for o in _RANGE_OPTS) + '</select></div>'
+    _gran_sel = '<div style="margin-bottom:8px"><span class="ddp-select-label">Time Granularity</span><select id="sel1" class="ddp-select">' + ''.join(f'<option value="{o}">{o}</option>' for o in _GRAN_OPTS) + '</select></div>'
+    _range_sel = '<div style="margin-bottom:8px"><span class="ddp-select-label">Date Range</span><select id="sel2" class="ddp-select">' + ''.join(f'<option value="{o}">{o}</option>' for o in _RANGE_OPTS) + '</select></div>'
     _sel_html = f'<div style="display:flex;gap:12px;flex-wrap:wrap">{_gran_sel}{_range_sel}</div>'
 
     _inner = (
         '<!DOCTYPE html><html><head><meta charset="utf-8">'
         '<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>'
         '<style>'
-        '*{box-sizing:border-box;margin:0;padding:0}'
-        'body{font-family:Arial,sans-serif;font-size:13px;padding:4px}'
+        '*{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important}'
+        'body{font-size:14px;color:#0f172a;padding:4px}'
+        '.ddp-select{padding:4px 8px;border:1px solid #e2e8f0;border-radius:4px;font-size:0.8125em;color:#0f172a;background:#fff;cursor:pointer;outline:none}'
+        '.ddp-select-label{font-size:0.6875em;color:#64748b;display:block;margin-bottom:2px}'
         '</style></head><body>'
         f'{_sel_html}'
         '<div id="chart"></div>'
         f'<script>var D={_djs_safe};'
         'var sel1=document.getElementById("sel1");var sel2=document.getElementById("sel2");'
-        'function show(){var k=sel1.value+" | "+sel2.value;Plotly.react("chart",D[k].chart.data,D[k].chart.layout,{responsive:true});}'
+        'function show(){var k=sel1.value+" | "+sel2.value;Plotly.react("chart",D[k].chart.data,D[k].chart.layout,{responsive:true,displayModeBar:false});}'
         'sel1.addEventListener("change",show);sel2.addEventListener("change",show);'
         'show();'
         '</script></body></html>'
     )
     _src = _html_mod.escape(_inner, quote=True)
-    mo.Html(f'<iframe srcdoc="{_src}" style="width:100%;height:520px;border:none;display:block" scrolling="no"></iframe>')
+    mo.Html(f'<iframe srcdoc="{_src}" class="ddp-chart-frame" scrolling="no"></iframe>')
     return
 
 
@@ -1072,28 +1062,30 @@ def chart6_btc_eth_share(df_all, go, mo, pd):
         _states[_opt] = {'chart': _json.loads(_fig.to_json())}
 
     _djs_safe = _json.dumps(_states).replace('</', '<\\/')
-    _view_sel = '<div style="margin-bottom:8px"><span style="font-size:11px;color:#6b7280;display:block;margin-bottom:2px">View</span><select id="sel1" style="padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;color:#374151;background:#fff;cursor:pointer">' + ''.join(f'<option value="{o}">{o}</option>' for o in _VIEW_OPTS) + '</select></div>'
-    _time_sel = '<div style="margin-bottom:8px"><span style="font-size:11px;color:#6b7280;display:block;margin-bottom:2px">Time Range</span><select id="sel2" style="padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;color:#374151;background:#fff;cursor:pointer">' + ''.join(f'<option value="{o}">{o}</option>' for o in _TIME_OPTS) + '</select></div>'
+    _view_sel = '<div style="margin-bottom:8px"><span class="ddp-select-label">View</span><select id="sel1" class="ddp-select">' + ''.join(f'<option value="{o}">{o}</option>' for o in _VIEW_OPTS) + '</select></div>'
+    _time_sel = '<div style="margin-bottom:8px"><span class="ddp-select-label">Time Range</span><select id="sel2" class="ddp-select">' + ''.join(f'<option value="{o}">{o}</option>' for o in _TIME_OPTS) + '</select></div>'
     _sel_html = f'<div style="display:flex;gap:12px;flex-wrap:wrap">{_view_sel}{_time_sel}</div>'
 
     _inner = (
         '<!DOCTYPE html><html><head><meta charset="utf-8">'
         '<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>'
         '<style>'
-        '*{box-sizing:border-box;margin:0;padding:0}'
-        'body{font-family:Arial,sans-serif;font-size:13px;padding:4px}'
+        '*{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important}'
+        'body{font-size:14px;color:#0f172a;padding:4px}'
+        '.ddp-select{padding:4px 8px;border:1px solid #e2e8f0;border-radius:4px;font-size:0.8125em;color:#0f172a;background:#fff;cursor:pointer;outline:none}'
+        '.ddp-select-label{font-size:0.6875em;color:#64748b;display:block;margin-bottom:2px}'
         '</style></head><body>'
         f'{_sel_html}'
         '<div id="chart"></div>'
         f'<script>var D={_djs_safe};'
         'var sel1=document.getElementById("sel1");var sel2=document.getElementById("sel2");'
-        'function show(){var k=sel1.value+" | "+sel2.value;Plotly.react("chart",D[k].chart.data,D[k].chart.layout,{responsive:true});}'
+        'function show(){var k=sel1.value+" | "+sel2.value;Plotly.react("chart",D[k].chart.data,D[k].chart.layout,{responsive:true,displayModeBar:false});}'
         'sel1.addEventListener("change",show);sel2.addEventListener("change",show);'
         'show();'
         '</script></body></html>'
     )
     _src = _html_mod.escape(_inner, quote=True)
-    mo.Html(f'<iframe srcdoc="{_src}" style="width:100%;height:520px;border:none;display:block" scrolling="no"></iframe>')
+    mo.Html(f'<iframe srcdoc="{_src}" class="ddp-chart-frame" scrolling="no"></iframe>')
     return
 
 
@@ -1197,29 +1189,31 @@ def chart_ecosystem_total_devs(EC_LIGHT_BLUE, df_all, go, mo, pd):
         _states[_opt] = {'stats': _stats_html, 'chart': _json.loads(_fig.to_json())}
 
     _djs_safe = _json.dumps(_states).replace('</', '<\\/')
-    _eco_sel = '<div style="margin-bottom:8px"><span style="font-size:11px;color:#6b7280;display:block;margin-bottom:2px">Ecosystem</span><select id="sel1" style="padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;color:#374151;background:#fff;cursor:pointer">' + ''.join(f'<option value="{o}">{o}</option>' for o in _ECO_OPTS) + '</select></div>'
-    _time_sel = '<div style="margin-bottom:8px"><span style="font-size:11px;color:#6b7280;display:block;margin-bottom:2px">Time Range</span><select id="sel2" style="padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;color:#374151;background:#fff;cursor:pointer">' + ''.join(f'<option value="{o}">{o}</option>' for o in _TIME_OPTS) + '</select></div>'
+    _eco_sel = '<div style="margin-bottom:8px"><span class="ddp-select-label">Ecosystem</span><select id="sel1" class="ddp-select">' + ''.join(f'<option value="{o}">{o}</option>' for o in _ECO_OPTS) + '</select></div>'
+    _time_sel = '<div style="margin-bottom:8px"><span class="ddp-select-label">Time Range</span><select id="sel2" class="ddp-select">' + ''.join(f'<option value="{o}">{o}</option>' for o in _TIME_OPTS) + '</select></div>'
     _sel_html = f'<div style="display:flex;gap:12px;flex-wrap:wrap">{_eco_sel}{_time_sel}</div>'
 
     _inner = (
         '<!DOCTYPE html><html><head><meta charset="utf-8">'
         '<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>'
         '<style>'
-        '*{box-sizing:border-box;margin:0;padding:0}'
-        'body{font-family:Arial,sans-serif;font-size:13px;padding:4px}'
+        '*{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important}'
+        'body{font-size:14px;color:#0f172a;padding:4px}'
+        '.ddp-select{padding:4px 8px;border:1px solid #e2e8f0;border-radius:4px;font-size:0.8125em;color:#0f172a;background:#fff;cursor:pointer;outline:none}'
+        '.ddp-select-label{font-size:0.6875em;color:#64748b;display:block;margin-bottom:2px}'
         '</style></head><body>'
         f'{_sel_html}'
         '<div id="stats" style="margin-bottom:8px"></div>'
         '<div id="chart"></div>'
         f'<script>var D={_djs_safe};'
         'var sel1=document.getElementById("sel1");var sel2=document.getElementById("sel2");'
-        'function show(){var k=sel1.value+" | "+sel2.value;document.getElementById("stats").innerHTML=D[k].stats||"";Plotly.react("chart",D[k].chart.data,D[k].chart.layout,{responsive:true});}'
+        'function show(){var k=sel1.value+" | "+sel2.value;document.getElementById("stats").innerHTML=D[k].stats||"";Plotly.react("chart",D[k].chart.data,D[k].chart.layout,{responsive:true,displayModeBar:false});}'
         'sel1.addEventListener("change",show);sel2.addEventListener("change",show);'
         'show();'
         '</script></body></html>'
     )
     _src = _html_mod.escape(_inner, quote=True)
-    mo.Html(f'<iframe srcdoc="{_src}" style="width:100%;height:520px;border:none;display:block" scrolling="no"></iframe>')
+    mo.Html(f'<iframe srcdoc="{_src}" class="ddp-chart-frame" scrolling="no"></iframe>')
     return
 
 
@@ -1289,28 +1283,30 @@ def chart_ecosystem_tenure(TENURE_COLORS, df_all, go, mo, pd):
         _states[_opt] = {'chart': _json.loads(_fig.to_json())}
 
     _djs_safe = _json.dumps(_states).replace('</', '<\\/')
-    _eco_sel = '<div style="margin-bottom:8px"><span style="font-size:11px;color:#6b7280;display:block;margin-bottom:2px">Ecosystem</span><select id="sel1" style="padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;color:#374151;background:#fff;cursor:pointer">' + ''.join(f'<option value="{o}">{o}</option>' for o in _ECO_OPTS) + '</select></div>'
-    _time_sel = '<div style="margin-bottom:8px"><span style="font-size:11px;color:#6b7280;display:block;margin-bottom:2px">Time Range</span><select id="sel2" style="padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;color:#374151;background:#fff;cursor:pointer">' + ''.join(f'<option value="{o}">{o}</option>' for o in _TIME_OPTS) + '</select></div>'
+    _eco_sel = '<div style="margin-bottom:8px"><span class="ddp-select-label">Ecosystem</span><select id="sel1" class="ddp-select">' + ''.join(f'<option value="{o}">{o}</option>' for o in _ECO_OPTS) + '</select></div>'
+    _time_sel = '<div style="margin-bottom:8px"><span class="ddp-select-label">Time Range</span><select id="sel2" class="ddp-select">' + ''.join(f'<option value="{o}">{o}</option>' for o in _TIME_OPTS) + '</select></div>'
     _sel_html = f'<div style="display:flex;gap:12px;flex-wrap:wrap">{_eco_sel}{_time_sel}</div>'
 
     _inner = (
         '<!DOCTYPE html><html><head><meta charset="utf-8">'
         '<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>'
         '<style>'
-        '*{box-sizing:border-box;margin:0;padding:0}'
-        'body{font-family:Arial,sans-serif;font-size:13px;padding:4px}'
+        '*{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important}'
+        'body{font-size:14px;color:#0f172a;padding:4px}'
+        '.ddp-select{padding:4px 8px;border:1px solid #e2e8f0;border-radius:4px;font-size:0.8125em;color:#0f172a;background:#fff;cursor:pointer;outline:none}'
+        '.ddp-select-label{font-size:0.6875em;color:#64748b;display:block;margin-bottom:2px}'
         '</style></head><body>'
         f'{_sel_html}'
         '<div id="chart"></div>'
         f'<script>var D={_djs_safe};'
         'var sel1=document.getElementById("sel1");var sel2=document.getElementById("sel2");'
-        'function show(){var k=sel1.value+" | "+sel2.value;Plotly.react("chart",D[k].chart.data,D[k].chart.layout,{responsive:true});}'
+        'function show(){var k=sel1.value+" | "+sel2.value;Plotly.react("chart",D[k].chart.data,D[k].chart.layout,{responsive:true,displayModeBar:false});}'
         'sel1.addEventListener("change",show);sel2.addEventListener("change",show);'
         'show();'
         '</script></body></html>'
     )
     _src = _html_mod.escape(_inner, quote=True)
-    mo.Html(f'<iframe srcdoc="{_src}" style="width:100%;height:520px;border:none;display:block" scrolling="no"></iframe>')
+    mo.Html(f'<iframe srcdoc="{_src}" class="ddp-chart-frame" scrolling="no"></iframe>')
     return
 
 
@@ -1374,28 +1370,30 @@ def chart_ecosystem_activity(ACTIVITY_COLORS, df_all, go, mo, pd):
         _states[_opt] = {'chart': _json.loads(_fig.to_json())}
 
     _djs_safe = _json.dumps(_states).replace('</', '<\\/')
-    _eco_sel = '<div style="margin-bottom:8px"><span style="font-size:11px;color:#6b7280;display:block;margin-bottom:2px">Ecosystem</span><select id="sel1" style="padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;color:#374151;background:#fff;cursor:pointer">' + ''.join(f'<option value="{o}">{o}</option>' for o in _ECO_OPTS) + '</select></div>'
-    _time_sel = '<div style="margin-bottom:8px"><span style="font-size:11px;color:#6b7280;display:block;margin-bottom:2px">Time Range</span><select id="sel2" style="padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;color:#374151;background:#fff;cursor:pointer">' + ''.join(f'<option value="{o}">{o}</option>' for o in _TIME_OPTS) + '</select></div>'
+    _eco_sel = '<div style="margin-bottom:8px"><span class="ddp-select-label">Ecosystem</span><select id="sel1" class="ddp-select">' + ''.join(f'<option value="{o}">{o}</option>' for o in _ECO_OPTS) + '</select></div>'
+    _time_sel = '<div style="margin-bottom:8px"><span class="ddp-select-label">Time Range</span><select id="sel2" class="ddp-select">' + ''.join(f'<option value="{o}">{o}</option>' for o in _TIME_OPTS) + '</select></div>'
     _sel_html = f'<div style="display:flex;gap:12px;flex-wrap:wrap">{_eco_sel}{_time_sel}</div>'
 
     _inner = (
         '<!DOCTYPE html><html><head><meta charset="utf-8">'
         '<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>'
         '<style>'
-        '*{box-sizing:border-box;margin:0;padding:0}'
-        'body{font-family:Arial,sans-serif;font-size:13px;padding:4px}'
+        '*{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important}'
+        'body{font-size:14px;color:#0f172a;padding:4px}'
+        '.ddp-select{padding:4px 8px;border:1px solid #e2e8f0;border-radius:4px;font-size:0.8125em;color:#0f172a;background:#fff;cursor:pointer;outline:none}'
+        '.ddp-select-label{font-size:0.6875em;color:#64748b;display:block;margin-bottom:2px}'
         '</style></head><body>'
         f'{_sel_html}'
         '<div id="chart"></div>'
         f'<script>var D={_djs_safe};'
         'var sel1=document.getElementById("sel1");var sel2=document.getElementById("sel2");'
-        'function show(){var k=sel1.value+" | "+sel2.value;Plotly.react("chart",D[k].chart.data,D[k].chart.layout,{responsive:true});}'
+        'function show(){var k=sel1.value+" | "+sel2.value;Plotly.react("chart",D[k].chart.data,D[k].chart.layout,{responsive:true,displayModeBar:false});}'
         'sel1.addEventListener("change",show);sel2.addEventListener("change",show);'
         'show();'
         '</script></body></html>'
     )
     _src = _html_mod.escape(_inner, quote=True)
-    mo.Html(f'<iframe srcdoc="{_src}" style="width:100%;height:520px;border:none;display:block" scrolling="no"></iframe>')
+    mo.Html(f'<iframe srcdoc="{_src}" class="ddp-chart-frame" scrolling="no"></iframe>')
     return
 
 
@@ -1491,28 +1489,30 @@ def chart_ecosystem_newcomers_by_year(df_all, go, mo):
             _states[_opt] = {'chart': _json.loads(_fig.to_json())}
 
     _djs_safe = _json.dumps(_states).replace('</', '<\\/')
-    _eco_sel = '<div style="margin-bottom:8px"><span style="font-size:11px;color:#6b7280;display:block;margin-bottom:2px">Ecosystem</span><select id="sel1" style="padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;color:#374151;background:#fff;cursor:pointer">' + ''.join(f'<option value="{o}">{o}</option>' for o in _ECO_OPTS) + '</select></div>'
-    _time_sel = '<div style="margin-bottom:8px"><span style="font-size:11px;color:#6b7280;display:block;margin-bottom:2px">Time Range</span><select id="sel2" style="padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;color:#374151;background:#fff;cursor:pointer">' + ''.join(f'<option value="{o}">{o}</option>' for o in _TIME_OPTS) + '</select></div>'
+    _eco_sel = '<div style="margin-bottom:8px"><span class="ddp-select-label">Ecosystem</span><select id="sel1" class="ddp-select">' + ''.join(f'<option value="{o}">{o}</option>' for o in _ECO_OPTS) + '</select></div>'
+    _time_sel = '<div style="margin-bottom:8px"><span class="ddp-select-label">Time Range</span><select id="sel2" class="ddp-select">' + ''.join(f'<option value="{o}">{o}</option>' for o in _TIME_OPTS) + '</select></div>'
     _sel_html = f'<div style="display:flex;gap:12px;flex-wrap:wrap">{_eco_sel}{_time_sel}</div>'
 
     _inner = (
         '<!DOCTYPE html><html><head><meta charset="utf-8">'
         '<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>'
         '<style>'
-        '*{box-sizing:border-box;margin:0;padding:0}'
-        'body{font-family:Arial,sans-serif;font-size:13px;padding:4px}'
+        '*{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important}'
+        'body{font-size:14px;color:#0f172a;padding:4px}'
+        '.ddp-select{padding:4px 8px;border:1px solid #e2e8f0;border-radius:4px;font-size:0.8125em;color:#0f172a;background:#fff;cursor:pointer;outline:none}'
+        '.ddp-select-label{font-size:0.6875em;color:#64748b;display:block;margin-bottom:2px}'
         '</style></head><body>'
         f'{_sel_html}'
         '<div id="chart"></div>'
         f'<script>var D={_djs_safe};'
         'var sel1=document.getElementById("sel1");var sel2=document.getElementById("sel2");'
-        'function show(){var k=sel1.value+" | "+sel2.value;Plotly.react("chart",D[k].chart.data,D[k].chart.layout,{responsive:true});}'
+        'function show(){var k=sel1.value+" | "+sel2.value;Plotly.react("chart",D[k].chart.data,D[k].chart.layout,{responsive:true,displayModeBar:false});}'
         'sel1.addEventListener("change",show);sel2.addEventListener("change",show);'
         'show();'
         '</script></body></html>'
     )
     _src = _html_mod.escape(_inner, quote=True)
-    mo.Html(f'<iframe srcdoc="{_src}" style="width:100%;height:520px;border:none;display:block" scrolling="no"></iframe>')
+    mo.Html(f'<iframe srcdoc="{_src}" class="ddp-chart-frame" scrolling="no"></iframe>')
     return
 
 
@@ -1594,14 +1594,19 @@ def comparison_chart(df_all, mo, pd):
         )
         + '</div></div>'
     )
-    _metric_sel = '<div style="margin-bottom:8px"><span style="font-size:11px;color:#6b7280;display:block;margin-bottom:2px">Metric</span><select id="sel-metric" style="padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;color:#374151;background:#fff;cursor:pointer">' + ''.join(f'<option value="{o}">{o}</option>' for o in _METRIC_OPTS) + '</select></div>'
-    _time_sel = '<div style="margin-bottom:8px"><span style="font-size:11px;color:#6b7280;display:block;margin-bottom:2px">Time Range</span><select id="sel-time" style="padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;color:#374151;background:#fff;cursor:pointer">' + ''.join(f'<option value="{o}">{o}</option>' for o in _TIME_OPTS) + '</select></div>'
+    _metric_sel = '<div style="margin-bottom:8px"><span class="ddp-select-label">Metric</span><select id="sel-metric" class="ddp-select">' + ''.join(f'<option value="{o}">{o}</option>' for o in _METRIC_OPTS) + '</select></div>'
+    _time_sel = '<div style="margin-bottom:8px"><span class="ddp-select-label">Time Range</span><select id="sel-time" class="ddp-select">' + ''.join(f'<option value="{o}">{o}</option>' for o in _TIME_OPTS) + '</select></div>'
     _sel_html = f'<div style="display:flex;gap:12px;flex-wrap:wrap">{_cb_html}{_metric_sel}{_time_sel}</div>'
 
     _inner = (
         '<!DOCTYPE html><html><head><meta charset="utf-8">'
         '<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>'
-        '<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;font-size:13px;padding:4px}</style>'
+        '<style>'
+        '*{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important}'
+        'body{font-size:14px;color:#0f172a;padding:4px}'
+        '.ddp-select{padding:4px 8px;border:1px solid #e2e8f0;border-radius:4px;font-size:0.8125em;color:#0f172a;background:#fff;cursor:pointer;outline:none}'
+        '.ddp-select-label{font-size:0.6875em;color:#64748b;display:block;margin-bottom:2px}'
+        '</style>'
         '</head><body>'
         f'{_sel_html}'
         '<div id="chart"></div>'
@@ -1619,7 +1624,7 @@ def comparison_chart(df_all, mo, pd):
         'return {type:"scatter",mode:"lines",name:eco+" ("+fmt(s.y[s.y.length-1])+")",x:s.x,y:s.y,line:{width:2,color:EC[eco]},hovertemplate:"<b>"+eco+"<\/b><br>%{x}<br>"+metric+": %{y:,.0f}<extra><\/extra>"};'
         '}).filter(Boolean);'
         'var title=ecos.length===1?ecos[0]+": "+metric+" Over Time":ecos.length===2?ecos[0]+" vs "+ecos[1]+": "+metric:"Ecosystem Comparison: "+metric;'
-        'Plotly.react("chart",traces,{height:450,margin:{t:80,l:60,r:60,b:60},template:"plotly_white",hovermode:"x unified",showlegend:true,legend:{orientation:"v",yanchor:"top",y:0.99,xanchor:"left",x:0.01,bgcolor:"rgba(255,255,255,0.9)",bordercolor:"#CCC",borderwidth:1},title:{text:title,font:{size:18,color:"#1B4F72"},x:0,xanchor:"left"},xaxis:{showgrid:false,showline:true,linecolor:"#1F2937",linewidth:1,tickformat:"%b %Y"},yaxis:{showgrid:true,gridcolor:"#E5E7EB",showline:true,linecolor:"#1F2937",linewidth:1}},{responsive:true});'
+        'Plotly.react("chart",traces,{height:450,margin:{t:80,l:60,r:60,b:60},template:"plotly_white",hovermode:"x unified",showlegend:true,legend:{orientation:"v",yanchor:"top",y:0.99,xanchor:"left",x:0.01,bgcolor:"rgba(255,255,255,0.9)",bordercolor:"#CCC",borderwidth:1},title:{text:title,font:{size:18,color:"#1B4F72"},x:0,xanchor:"left"},xaxis:{showgrid:false,showline:true,linecolor:"#1F2937",linewidth:1,tickformat:"%b %Y"},yaxis:{showgrid:true,gridcolor:"#E5E7EB",showline:true,linecolor:"#1F2937",linewidth:1}},{responsive:true,displayModeBar:false});'
         '}'
         'cbs.forEach(function(c){c.addEventListener("change",show);});'
         'selMetric.addEventListener("change",show);'
@@ -1628,7 +1633,7 @@ def comparison_chart(df_all, mo, pd):
         '</script></body></html>'
     )
     _src = _html_mod.escape(_inner, quote=True)
-    mo.Html(f'<iframe srcdoc="{_src}" style="width:100%;height:520px;border:none;display:block" scrolling="no"></iframe>')
+    mo.Html(f'<iframe srcdoc="{_src}" class="ddp-chart-frame" scrolling="no"></iframe>')
     return
 
 

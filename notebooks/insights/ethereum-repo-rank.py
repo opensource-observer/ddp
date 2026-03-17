@@ -11,7 +11,7 @@ app = marimo.App(width="full", css_file="../styles/insights.css")
 
 @app.cell(hide_code=True)
 def _(mo):
-    _header_html = '<div class="ddp-header"><h1>Repo Rank</h1><p>Tracking which repos are trending in the Ethereum builder community.</p><div class="ddp-header-meta"><span style="display:inline-flex;align-items:center;gap:4px;"><span class="ddp-live-dot"></span> Live data</span><span>Updated 2026-03-16</span><span>&middot;</span><span>Kariba Labs / <a href="https://www.oso.xyz" target="_blank">OSO</a></span></div></div>'
+    _header_html = '<div class="ddp-header"><h1>Ethereum Repo Rank</h1><p>Trending repos and scouts in the Ethereum builder community.</p><div class="ddp-header-meta"><span>Created: <span class="ddp-badge">2026-03-16</span></span></div></div>'
     mo.Html(_header_html)
     return
 
@@ -37,7 +37,7 @@ def _(df_trending, eth_dev_set, df_engagement_raw, mo):
     mo.hstack(
         [
             mo.stat(value=f"{_panel_size:,}", label="Ethereum Builders Tracked", bordered=True, caption="≥12 months commit activity"),
-            mo.stat(value=f"{_active_eth}", label="Eth Builders Active on Trending Repos", bordered=True, caption=f"{_active_eth/_panel_size*100:.1f}% of panel"),
+            mo.stat(value=f"{_active_eth}", label="Active on Trending Repos", bordered=True, caption=f"{_active_eth/_panel_size*100:.1f}% of panel"),
             mo.stat(value=_top_eth_repo, label="#1 by Eth Builder Attention", bordered=True, caption=f"{_top_eth_devs} distinct eth builders"),
             mo.stat(value=_top_all_repo, label="#1 by All Builder Attention", bordered=True, caption=f"{_top_all_devs:,} distinct builders"),
         ],
@@ -53,145 +53,132 @@ def _(df_trending, eth_dev_set, df_engagement_raw, mo):
 
 
 @app.cell(hide_code=True)
-def _(mo):
-    leaderboard_window = mo.ui.dropdown(
-        options=["Past 30 Days", "Past 7 Days"],
-        value="Past 30 Days",
-        label="",
-    )
-    leaderboard_sort = mo.ui.dropdown(
-        options=["All Builder Attention", "Eth Builder Attention"],
-        value="All Builder Attention",
-        label="Sort by",
-    )
-    leaderboard_page = mo.ui.dropdown(
-        options=["Page 1", "Page 2", "Page 3", "Page 4"],
-        value="Page 1",
-        label="",
-    )
-    return leaderboard_page, leaderboard_sort, leaderboard_window
+def _(df_trending, mo):
+    import json as _json
+    import html as _html_mod
 
-
-@app.cell(hide_code=True)
-def _(df_trending, leaderboard_window, leaderboard_sort, leaderboard_page, mo):
-    _window = leaderboard_window.value
-    _is_30d = _window == "Past 30 Days"
-    _all_col = "global_engagers_30d" if _is_30d else "global_engagers_7d"
-    _eth_col = "eth_devs_30d" if _is_30d else "eth_devs_7d"
-    _suffix = "30d" if _is_30d else "7d"
-
-    # Sort by selected column, cap at 100
-    _sort_col = _eth_col if leaderboard_sort.value == "Eth Builder Attention" else _all_col
-    _df = df_trending.sort_values(_sort_col, ascending=False).head(100).reset_index(drop=True)
-
-    # Momentum: 7d daily rate / 30d daily rate
+    # Prepare top 100 rows with momentum
+    _df = df_trending.sort_values("global_engagers_30d", ascending=False).head(100).reset_index(drop=True)
     _df["rate_7d"] = _df["global_engagers_7d"] / 7
     _df["rate_30d"] = _df["global_engagers_30d"] / 30
     _df["momentum"] = _df["rate_7d"] / _df["rate_30d"].clip(lower=0.01)
 
-    # Pagination
-    _page_size = 25
-    _total_pages = max(1, -(-len(_df) // _page_size))
-    _page = min(int(leaderboard_page.value.split()[-1]), _total_pages)
-    _start = (_page - 1) * _page_size
-    _end = min(_start + _page_size, len(_df))
-    _page_df = _df.iloc[_start:_end]
-
-    def _fmt(n):
-        if n >= 10000:
-            return f"{n/1000:.1f}K"
-        if n >= 1000:
-            return f"{n/1000:.2f}K"
-        return str(int(n))
-
-    def _heat(m):
-        if m >= 1.5:
-            return "🌶🌶🌶"
-        if m >= 0.7:
-            return "🌶🌶"
-        return "🌶"
-
-    def _rank_badge(i):
-        if i == 0:
-            return '<span style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:#fef3c7;font-size:0.78em;">🥇</span>'
-        if i == 1:
-            return '<span style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:#f3f4f6;font-size:0.78em;">🥈</span>'
-        if i == 2:
-            return '<span style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:#fef2f2;font-size:0.78em;">🥉</span>'
-        return f'<span style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:#f9fafb;color:#6b7280;font-size:0.75em;font-weight:500;">#{i+1}</span>'
-
-    # Sort indicators for column headers
-    _eth_arrow = " ↓" if leaderboard_sort.value == "Eth Builder Attention" else ""
-    _all_arrow = " ↓" if leaderboard_sort.value == "All Builder Attention" else ""
-
-    _th = "padding:6px 8px;font-size:0.68em;color:#64748b;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;white-space:nowrap;"
-    _td = "padding:4px 8px;vertical-align:middle;"
-
-    def _community(pct):
-        if pct >= 0.01:
-            return '<span style="display:inline-block;padding:1px 8px;border-radius:10px;background:#ecfdf5;color:#059669;font-weight:600;font-size:0.72em;letter-spacing:0.02em;">Crypto</span>'
-        return '<span style="display:inline-block;padding:1px 8px;border-radius:10px;background:#f1f5f9;color:#64748b;font-size:0.72em;letter-spacing:0.02em;">Mainstream</span>'
-
-    _rows = []
-    for _idx in range(len(_page_df)):
-        _r = _page_df.iloc[_idx]
-        _rank = _start + _idx
-        _repo = _r["repo_name"]
+    _records = []
+    for _i in range(len(_df)):
+        _r = _df.iloc[_i]
         _desc = str(_r.get("description", ""))
         if len(_desc) > 72:
             _desc = _desc[:69] + "..."
-        _row_bg = "background:#fafbfc;" if _idx % 2 == 1 else ""
+        _records.append({
+            "repo_name": str(_r["repo_name"]),
+            "description": _desc,
+            "eth_dev_pct": float(_r["eth_dev_pct"]),
+            "eth_devs_30d": int(_r["eth_devs_30d"]),
+            "eth_devs_7d": int(_r["eth_devs_7d"]),
+            "global_engagers_30d": int(_r["global_engagers_30d"]),
+            "global_engagers_7d": int(_r["global_engagers_7d"]),
+            "momentum": float(_r["momentum"]),
+        })
 
-        _rows.append(f"""<tr style="border-bottom:1px solid #f1f5f9;{_row_bg}">
-        <td style="{_td}text-align:center;">{_rank_badge(_rank)}</td>
-        <td style="{_td}white-space:nowrap;"><a href="https://github.com/{_repo}" target="_blank" style="color:#2563eb;text-decoration:none;font-family:ui-monospace,SFMono-Regular,monospace;font-size:0.82em;">{_repo}</a></td>
-        <td style="{_td}color:#64748b;font-size:0.78em;">{_desc}</td>
-        <td style="{_td}text-align:center;">{_community(_r["eth_dev_pct"])}</td>
-        <td style="{_td}text-align:right;font-size:0.88em;font-variant-numeric:tabular-nums;color:#0f172a;">{_fmt(int(_r[_eth_col]))}</td>
-        <td style="{_td}text-align:right;font-size:0.88em;font-variant-numeric:tabular-nums;color:#0f172a;">{_fmt(int(_r[_all_col]))}</td>
-        <td style="{_td}text-align:center;font-size:0.82em;letter-spacing:-1px;">{_heat(_r["momentum"])}</td>
-        </tr>""")
+    _data_js = _json.dumps(_records).replace("</", "<\\/")
 
-    _table_html = f"""<div style="border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;background:white;box-shadow:0 1px 3px rgba(0,0,0,0.04);">
-        <table style="width:100%;border-collapse:collapse;table-layout:fixed;">
-        <colgroup>
-        <col style="width:44px;">
-        <col style="width:26%;">
-        <col style="width:auto;">
-        <col style="width:84px;">
-        <col style="width:84px;">
-        <col style="width:84px;">
-        <col style="width:60px;">
-        </colgroup>
-        <thead>
-        <tr style="background:#f8fafc;border-bottom:2px solid #e2e8f0;">
-        <th style="{_th}text-align:center;">#</th>
-        <th style="{_th}text-align:left;">Repository</th>
-        <th style="{_th}text-align:left;">Description</th>
-        <th style="{_th}text-align:center;">Community</th>
-        <th style="{_th}text-align:right;">Eth Builders{_eth_arrow}</th>
-        <th style="{_th}text-align:right;">All Builders{_all_arrow}</th>
-        <th style="{_th}text-align:center;">Heat</th>
-        </tr>
-        </thead>
-        <tbody>
-        {"".join(_rows)}
-        </tbody>
-        </table>
-        </div>"""
-
-    _footer_text = f'<span style="color:#94a3b8;font-size:0.78em;">Showing {_start+1}–{_end} of {len(_df)} repos with Ethereum builder signal</span>'
+    _inner = (
+        '<!DOCTYPE html><html><head><meta charset="utf-8">'
+        '<style>'
+        '*{box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important;}'
+        'body{margin:0;padding:0;font-size:14px;color:#0f172a;}'
+        '.ddp-select{padding:4px 8px;border:1px solid #e2e8f0;border-radius:4px;font-size:0.8125em;color:#0f172a;background:#fff;cursor:pointer;}'
+        '.ddp-card{border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.04);}'
+        '.ddp-rank-badge{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;font-size:0.75em;}'
+        '.ddp-note{font-size:0.8125em;color:#64748b;}'
+        'table{width:100%;border-collapse:collapse;}'
+        'th{padding:6px 8px;font-size:0.68em;color:#64748b;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;white-space:nowrap;}'
+        'td{padding:4px 8px;vertical-align:middle;}'
+        'a{color:#2563eb;text-decoration:none;}'
+        '.controls{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;}'
+        '.controls-right{margin-left:auto;display:flex;align-items:center;gap:8px;}'
+        '.footer{display:flex;align-items:center;justify-content:space-between;margin-top:6px;}'
+        '</style></head><body>'
+        '<div class="controls">'
+        '<div class="controls-right">'
+        '<label style="font-size:0.8125em;color:#64748b;">Sort by</label>'
+        '<select id="sortSel" class="ddp-select">'
+        '<option value="eth">Eth Builder Attention</option>'
+        '<option value="all">All Builder Attention</option>'
+        '</select>'
+        '<select id="windowSel" class="ddp-select">'
+        '<option value="30d">Past 30 Days</option>'
+        '<option value="7d">Past 7 Days</option>'
+        '</select>'
+        '</div></div>'
+        '<div id="tableWrap"></div>'
+        '<div class="footer">'
+        '<span id="footerText" class="ddp-note"></span>'
+        '<select id="pageSel" class="ddp-select"></select>'
+        '</div>'
+        '<script>'
+        f'var DATA={_data_js};'
+        'var PAGE_SIZE=25;'
+        'function fmt(n){if(n>=10000)return(n/1000).toFixed(1)+"K";if(n>=1000)return(n/1000).toFixed(2)+"K";return String(Math.floor(n));}'
+        'function heat(m){if(m>=1.5)return"\\ud83c\\udf36\\ufe0f\\ud83c\\udf36\\ufe0f\\ud83c\\udf36\\ufe0f";if(m>=0.7)return"\\ud83c\\udf36\\ufe0f\\ud83c\\udf36\\ufe0f";return"\\ud83c\\udf36\\ufe0f";}'
+        'function rankBadge(i){if(i===0)return\'<span class="ddp-rank-badge">\\ud83e\\udd47</span>\';if(i===1)return\'<span class="ddp-rank-badge">\\ud83e\\udd48</span>\';if(i===2)return\'<span class="ddp-rank-badge">\\ud83e\\udd49</span>\';return\'<span class="ddp-rank-badge">#\'+(i+1)+\'</span>\';}'
+        'function community(pct){if(pct>=0.01)return\'<span style="display:inline-block;padding:1px 8px;border-radius:10px;background:#ecfdf5;color:#059669;font-weight:600;font-size:0.72em;letter-spacing:0.02em;">Crypto</span>\';return\'<span style="display:inline-block;padding:1px 8px;border-radius:10px;background:#f1f5f9;color:#64748b;font-size:0.72em;letter-spacing:0.02em;">Mainstream</span>\';}'
+        'function render(){'
+        '  var sortVal=document.getElementById("sortSel").value;'
+        '  var winVal=document.getElementById("windowSel").value;'
+        '  var is30d=winVal==="30d";'
+        '  var allCol=is30d?"global_engagers_30d":"global_engagers_7d";'
+        '  var ethCol=is30d?"eth_devs_30d":"eth_devs_7d";'
+        '  var sortCol=sortVal==="eth"?ethCol:allCol;'
+        '  var sorted=DATA.slice().sort(function(a,b){return b[sortCol]-a[sortCol];});'
+        '  var totalPages=Math.max(1,Math.ceil(sorted.length/PAGE_SIZE));'
+        '  var pageSel=document.getElementById("pageSel");'
+        '  var curPage=parseInt(pageSel.value)||1;'
+        '  if(curPage>totalPages)curPage=1;'
+        '  pageSel.innerHTML="";'
+        '  for(var p=1;p<=totalPages;p++){var o=document.createElement("option");o.value=p;o.textContent="Page "+p;if(p===curPage)o.selected=true;pageSel.appendChild(o);}'
+        '  var start=(curPage-1)*PAGE_SIZE;'
+        '  var end=Math.min(start+PAGE_SIZE,sorted.length);'
+        '  var ethArrow=sortVal==="eth"?" \\u2193":"";'
+        '  var allArrow=sortVal==="all"?" \\u2193":"";'
+        '  var h=\'<div class="ddp-card"><table style="table-layout:fixed;"><colgroup><col style="width:44px;"><col style="width:26%;"><col style="width:auto;"><col style="width:84px;"><col style="width:84px;"><col style="width:84px;"><col style="width:60px;"></colgroup>\';'
+        '  h+=\'<thead><tr style="background:#f8fafc;border-bottom:2px solid #e2e8f0;">\';'
+        '  h+=\'<th style="text-align:center;">#</th>\';'
+        '  h+=\'<th style="text-align:left;">Repository</th>\';'
+        '  h+=\'<th style="text-align:left;">Description</th>\';'
+        '  h+=\'<th style="text-align:center;">Community</th>\';'
+        '  h+=\'<th style="text-align:right;">Eth Builders\'+ethArrow+\'</th>\';'
+        '  h+=\'<th style="text-align:right;">All Builders\'+allArrow+\'</th>\';'
+        '  h+=\'<th style="text-align:center;">Heat</th>\';'
+        '  h+=\'</tr></thead><tbody>\';'
+        '  for(var i=start;i<end;i++){'
+        '    var r=sorted[i];var rank=i;'
+        '    var bg=((i-start)%2===1)?"background:#fafbfc;":"";'
+        '    h+=\'<tr style="border-bottom:1px solid #f1f5f9;\'+bg+\'">\';'
+        '    h+=\'<td style="text-align:center;">\'+rankBadge(rank)+\'</td>\';'
+        '    h+=\'<td style="white-space:nowrap;"><a href="https://github.com/\'+r.repo_name+\'" target="_blank" style="font-family:ui-monospace,SFMono-Regular,monospace;font-size:0.82em;">\'+r.repo_name+\'</a></td>\';'
+        '    h+=\'<td style="color:#64748b;font-size:0.78em;">\'+r.description+\'</td>\';'
+        '    h+=\'<td style="text-align:center;">\'+community(r.eth_dev_pct)+\'</td>\';'
+        '    h+=\'<td style="text-align:right;font-size:0.88em;font-variant-numeric:tabular-nums;color:#0f172a;">\'+fmt(r[ethCol])+\'</td>\';'
+        '    h+=\'<td style="text-align:right;font-size:0.88em;font-variant-numeric:tabular-nums;color:#0f172a;">\'+fmt(r[allCol])+\'</td>\';'
+        '    h+=\'<td style="text-align:center;font-size:0.82em;letter-spacing:-1px;">\'+heat(r.momentum)+\'</td>\';'
+        '    h+=\'</tr>\';'
+        '  }'
+        '  h+=\'</tbody></table></div>\';'
+        '  document.getElementById("tableWrap").innerHTML=h;'
+        '  document.getElementById("footerText").textContent="Showing "+(start+1)+"\\u2013"+end+" of "+sorted.length+" repos with Ethereum builder signal";'
+        '}'
+        'document.getElementById("sortSel").addEventListener("change",function(){render();});'
+        'document.getElementById("windowSel").addEventListener("change",function(){render();});'
+        'document.getElementById("pageSel").addEventListener("change",function(){render();});'
+        'render();'
+        '</script></body></html>'
+    )
+    _src = _html_mod.escape(_inner, quote=True)
 
     mo.vstack([
-        mo.hstack([
-            mo.md("### Trending Repos"),
-            mo.hstack([leaderboard_sort, leaderboard_window], gap=1, justify="end"),
-        ], justify="space-between", align="end"),
-        mo.Html(_table_html),
-        mo.hstack([
-            mo.md(_footer_text),
-            leaderboard_page,
-        ], justify="space-between", align="center"),
+        mo.md("### Trending Repos"),
+        mo.Html(f'<iframe srcdoc="{_src}" class="ddp-chart-frame-tall" scrolling="no" style="height:780px;"></iframe>'),
     ])
     return
 
@@ -583,76 +570,95 @@ def _(df_crossover_devs, df_signal_strength, mo):
 
 
 @app.cell(hide_code=True)
-def _(df_trending, mo):
+def _(df_trending, df_engagement_daily, mo):
+    import json as _json2
+    import html as _html_mod2
+
+    # Build repo options (sorted by popularity)
     _repo_opts = (
         df_trending[df_trending["global_engagers_30d"] > 0]
         .sort_values("global_engagers_30d", ascending=False)["repo_name"]
         .tolist()
     )
-    # Default to zeroclaw, ironclaw, openclaw
+
+    # Default selections
     _preferred = ["zeroclaw-labs/zeroclaw", "nearai/ironclaw", "openclaw/openclaw"]
     _defaults = [r for r in _preferred if r in _repo_opts]
 
-    compare_repos = mo.ui.multiselect(
-        options=_repo_opts,
-        value=_defaults,
-        label="**Compare repos**",
-        max_selections=6,
-        full_width=True,
+    # Serialize daily engagement data for all top repos
+    _daily_subset = df_engagement_daily[df_engagement_daily["repo_name"].isin(_repo_opts)].copy()
+    _daily_subset["day_str"] = _daily_subset["day"].dt.strftime("%Y-%m-%d")
+    _daily_records = {}
+    for _repo in _repo_opts:
+        _rd = _daily_subset[_daily_subset["repo_name"] == _repo].sort_values("day")
+        if len(_rd) > 0:
+            _daily_records[_repo] = {
+                "days": _rd["day_str"].tolist(),
+                "cum": _rd["cum_engagers"].tolist(),
+            }
+
+    _opts_js = _json2.dumps(_repo_opts).replace("</", "<\\/")
+    _defaults_js = _json2.dumps(_defaults).replace("</", "<\\/")
+    _daily_js = _json2.dumps(_daily_records).replace("</", "<\\/")
+
+    _opt_html = "".join(
+        f'<option value="{r}">{r}</option>' for r in _repo_opts
     )
-    return (compare_repos,)
 
+    _inner2 = (
+        '<!DOCTYPE html><html><head><meta charset="utf-8">'
+        '<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></' + 'script>'
+        '<style>'
+        '*{box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important;}'
+        'body{margin:0;padding:0;font-size:14px;color:#0f172a;}'
+        '.ddp-select{padding:4px 8px;border:1px solid #e2e8f0;border-radius:4px;font-size:0.8125em;color:#0f172a;background:#fff;cursor:pointer;}'
+        '</style></head><body>'
+        '<div style="margin-bottom:8px;">'
+        '<label style="font-size:0.8125em;font-weight:600;color:#0f172a;">Compare repos</label><br>'
+        '<select id="repoSel" class="ddp-select" multiple size="6" style="width:100%;margin-top:4px;">'
+        + _opt_html +
+        '</select>'
+        '<div style="font-size:0.75em;color:#94a3b8;margin-top:2px;">Select up to 6 repos (Cmd/Ctrl+click)</div>'
+        '</div>'
+        '<div id="chart" style="width:100%;"></div>'
+        '<script>'
+        f'var DAILY={_daily_js};'
+        f'var DEFAULTS={_defaults_js};'
+        'var COLORS=["#6366f1","#10b981","#f59e0b","#ef4444","#8b5cf6","#06b6d4"];'
+        'var sel=document.getElementById("repoSel");'
+        # Set defaults
+        'for(var i=0;i<sel.options.length;i++){if(DEFAULTS.indexOf(sel.options[i].value)>=0)sel.options[i].selected=true;}'
+        'function render(){'
+        '  var chosen=[];for(var i=0;i<sel.options.length;i++){if(sel.options[i].selected)chosen.push(sel.options[i].value);}'
+        '  if(chosen.length>6)chosen=chosen.slice(0,6);'
+        '  if(chosen.length===0){document.getElementById("chart").innerHTML="<p style=\\"color:#94a3b8;font-size:0.875em;\\">Select repos above to compare growth curves.</p>";return;}'
+        '  var traces=[];'
+        '  for(var i=0;i<chosen.length;i++){'
+        '    var repo=chosen[i].toLowerCase();'
+        '    var d=DAILY[repo];if(!d)continue;'
+        '    var short_name=repo.split("/").pop();'
+        '    var c=COLORS[i%COLORS.length];'
+        '    var cr=parseInt(c.slice(1,3),16),cg=parseInt(c.slice(3,5),16),cb=parseInt(c.slice(5,7),16);'
+        '    traces.push({x:d.days,y:d.cum,name:short_name,mode:"lines",line:{color:c,width:2,shape:"hvh"},fill:"tozeroy",fillcolor:"rgba("+cr+","+cg+","+cb+",0.05)",hovertemplate:"%{y:,.0f} builders<extra>"+short_name+"</extra>"});'
+        '  }'
+        '  var layout={font:{size:12,color:"#0f172a"},plot_bgcolor:"white",paper_bgcolor:"white",margin:{t:40,l:70,r:40,b:50},height:450,hovermode:"x unified",'
+        '    legend:{orientation:"h",yanchor:"bottom",y:1.04,xanchor:"left",x:0,bgcolor:"rgba(255,255,255,0.8)",font:{size:11,color:"#475569"}},'
+        '    xaxis:{showgrid:false,tickformat:"%b %d",linecolor:"#cbd5e1",linewidth:1,ticks:"outside",tickcolor:"#cbd5e1",tickfont:{color:"#64748b",size:11}},'
+        '    yaxis:{showgrid:true,gridcolor:"#f1f5f9",zeroline:true,zerolinecolor:"#e2e8f0",zerolinewidth:1,linecolor:"#cbd5e1",linewidth:1,ticks:"outside",tickcolor:"#cbd5e1",tickfont:{color:"#64748b",size:11},tickformat:","}};'
+        '  Plotly.react("chart",traces,layout,{responsive:true,displayModeBar:false});'
+        '}'
+        'sel.addEventListener("change",render);'
+        'render();'
+        '</script></body></html>'
+    )
+    _src2 = _html_mod2.escape(_inner2, quote=True)
 
-@app.cell(hide_code=True)
-def _(compare_repos, df_engagement_daily, mo, go, PLOTLY_LAYOUT):
-    _selected = compare_repos.value if compare_repos.value else []
+    mo.vstack([
+        mo.md("""### Cumulative builder engagement
 
-    if not _selected:
-        _out = mo.vstack([
-            mo.md("### Cumulative builder engagement\n\nSelect repos above to compare growth curves."),
-            compare_repos,
-        ])
-    else:
-        _sel_lower = [r.lower() for r in _selected]
-        _eh = df_engagement_daily[df_engagement_daily["repo_name"].isin(_sel_lower)]
-
-        _colors = ["#6366f1", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#06b6d4"]
-
-        _fig = go.Figure()
-
-        for _i, _repo in enumerate(_sel_lower):
-            _short = _repo.split("/")[-1]
-            _color = _colors[_i % len(_colors)]
-            _r, _g, _b = int(_color[1:3], 16), int(_color[3:5], 16), int(_color[5:7], 16)
-
-            _d = _eh[_eh["repo_name"] == _repo].sort_values("day")
-            if len(_d) > 0:
-                _fig.add_trace(go.Scatter(
-                    x=_d["day"], y=_d["cum_engagers"], name=_short,
-                    mode="lines", line=dict(color=_color, width=2, shape="hvh"),
-                    fill="tozeroy", fillcolor=f"rgba({_r},{_g},{_b},0.05)",
-                    hovertemplate="%{y:,.0f} builders<extra>" + _short + "</extra>",
-                ))
-
-        _fig.update_layout(
-            **{
-                **PLOTLY_LAYOUT,
-                "legend": {**PLOTLY_LAYOUT["legend"], "orientation": "h", "yanchor": "bottom", "y": 1.04, "xanchor": "left", "x": 0, "bgcolor": "rgba(255,255,255,0.8)"},
-                "margin": dict(t=40, l=70, r=40, b=50),
-                "height": 450,
-            },
-        )
-        _fig.update_xaxes(tickformat="%b %d", showgrid=False)
-        _fig.update_yaxes(showgrid=True, tickformat=",")
-
-        _out = mo.vstack([
-            mo.md("""### Cumulative builder engagement
-
-            Each line counts unique builders who starred or forked (first event only). A steep ramp means viral discovery; a flattening curve means the moment has passed."""),
-            compare_repos,
-            mo.ui.plotly(_fig, config={"displayModeBar": False}),
-        ])
-    _out
+        Each line counts unique builders who starred or forked (first event only). A steep ramp means viral discovery; a flattening curve means the moment has passed."""),
+        mo.Html(f'<iframe srcdoc="{_src2}" class="ddp-chart-frame-tall" scrolling="no"></iframe>'),
+    ])
     return
 
 
@@ -664,17 +670,29 @@ def _(compare_repos, df_engagement_daily, mo, go, PLOTLY_LAYOUT):
 @app.cell(hide_code=True)
 def _(mo):
     mo.accordion({
-        "Methodology & Data Sources": mo.md("""
-        **Developer panel**: Qualified builders with ≥12 months commit activity on Ethereum panel repos and verified GitHub logins. ~920 infrastructure, ~415 DeFi.
+        "Metrics & Definitions": mo.md("""
+        **Ethereum builder panel**: Qualified builders with ≥12 months commit activity on Ethereum panel repos and verified GitHub logins. ~920 infrastructure, ~415 DeFi.
 
-        **Repo selection**: Top ~150 repos by aggregate panel builder attention (stars + forks). Stargazer/forker usernames scraped directly from the GitHub API (30-day rolling window).
+        **Engagement metrics**: Stars + forks collected over 30-day and 7-day rolling windows. Stargazer/forker usernames are scraped directly from the GitHub API and deduplicated within each window.
 
-        **Signal strength**: For each repo, we compute the % of engagers (stargazers + forkers, deduplicated) who are Ethereum panel builders — revealing disproportionate interest vs mainstream audience.
+        **Signal strength (eth_dev_pct)**: For each repo, the share of engagers who are Ethereum panel builders. A high percentage means the repo is drawing disproportionate attention from active Ethereum developers relative to the mainstream GitHub audience.
 
-        **Caveats**: Starring ≠ using. The repos were selected *because* they attracted Ethereum builder attention — this is not a random sample. The panel captures the most active slice of Ethereum builders, not all of them. Attention patterns shift; a repo trending today may be forgotten next month.
+        **Momentum**: 7-day daily engagement rate divided by 30-day daily engagement rate. A ratio above 1.0 means the repo is accelerating; below 1.0 means interest is cooling.
+        """),
+        "Assumptions & Limitations": mo.md("""
+        **Starring ≠ using.** A star is a lightweight signal of interest, not adoption or production use.
 
-        **Data sources**: [OSO](https://www.oso.xyz) data warehouse (`ethereum.local_rank_models`, `ethereum.dev_engagement_models`) · GitHub API (GraphQL + REST)
-        """)
+        **Non-random sample.** The repos were selected *because* they attracted Ethereum builder attention — this is not a representative cross-section of all open source software.
+
+        **Panel is a ceiling, not a floor.** The Ethereum builder panel captures the most active slice of Ethereum developers. Many builders fall below the activity threshold and are not counted.
+
+        **Attention is ephemeral.** Engagement patterns shift quickly. A repo trending today may drop out of the rankings next month as the community's focus moves on.
+        """),
+        "Data Sources": mo.md("""
+        **OSO data warehouse** — `ethereum.local_rank_models` (repo rankings and signal strength), `ethereum.dev_engagement_models` (per-repo engagement counts and panel overlap)
+
+        **GitHub API** — GraphQL + REST endpoints used to collect stargazer and forker usernames for each tracked repo over rolling windows.
+        """),
     })
     return
 

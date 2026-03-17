@@ -42,6 +42,13 @@ code, code *, pre, pre *, .cm-editor, .cm-editor * {
   font-family: var(--ddp-font-mono) !important;
 }
 
+/* === Content width ===
+ * Global max-width for all cell output so tables, charts, markdown,
+ * and stat cards align to the same column. Root variant narrows to 720px. */
+#root [data-cell-id] > div {
+  max-width: 1100px !important;
+}
+
 /* === Base === */
 body {
   margin: 0;
@@ -179,12 +186,13 @@ td {
 }
 [data-testid="marimo-stat"] [class*="value"],
 [data-testid="marimo-stat"] [class*="Value"] {
-  font-size: 1.5em !important;
+  font-size: clamp(1em, 4vw, 1.5em) !important;
   font-weight: 600 !important;
   letter-spacing: -0.02em !important;
   color: var(--ddp-text) !important;
   overflow-wrap: break-word !important;
   word-break: break-word !important;
+  line-height: 1.2 !important;
 }
 [data-testid="marimo-stat"] [class*="caption"],
 [data-testid="marimo-stat"] [class*="Caption"] {
