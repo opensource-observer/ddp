@@ -269,7 +269,7 @@ def retention_overview_tabs(df_all_retention, mo, go):
         f'<script>var D={_djs_safe};var O={_opts_js};'
         'var sel=document.getElementById("sel");'
         'function show(i){document.getElementById("stats").innerHTML=D[O[i]].stats||"";'
-        'Plotly.react("chart",D[O[i]].chart.data,D[O[i]].chart.layout,{responsive:true});}'
+        'Plotly.react("chart",D[O[i]].chart.data,D[O[i]].chart.layout,{responsive:true,displayModeBar:false});}'
         'sel.addEventListener("change",function(){show(parseInt(this.value))});'
         'show(0);'
         '</script></body></html>'

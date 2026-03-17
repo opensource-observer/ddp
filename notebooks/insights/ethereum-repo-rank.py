@@ -645,7 +645,7 @@ def _(df_trending, df_engagement_daily, mo):
         '    legend:{orientation:"h",yanchor:"bottom",y:1.04,xanchor:"left",x:0,bgcolor:"rgba(255,255,255,0.8)",font:{size:11,color:"#475569"}},'
         '    xaxis:{showgrid:false,tickformat:"%b %d",linecolor:"#cbd5e1",linewidth:1,ticks:"outside",tickcolor:"#cbd5e1",tickfont:{color:"#64748b",size:11}},'
         '    yaxis:{showgrid:true,gridcolor:"#f1f5f9",zeroline:true,zerolinecolor:"#e2e8f0",zerolinewidth:1,linecolor:"#cbd5e1",linewidth:1,ticks:"outside",tickcolor:"#cbd5e1",tickfont:{color:"#64748b",size:11},tickformat:","}};'
-        '  Plotly.react("chart",traces,layout,{responsive:true});'
+        '  Plotly.react("chart",traces,layout,{responsive:true,displayModeBar:false});'
         '}'
         'sel.addEventListener("change",render);'
         'render();'
