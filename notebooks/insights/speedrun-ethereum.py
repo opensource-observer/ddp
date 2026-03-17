@@ -6,63 +6,7 @@ app = marimo.App(width="full", css_file="../styles/insights.css")
 
 @app.cell(hide_code=True)
 def header_title(mo):
-    mo.md("""
-    # Case Study: Speedrun Ethereum
-    <small>Owner: <span class="ddp-badge">OSO Team</span> · Last Updated: <span class="ddp-badge">2026-02-17</span></small>
-
-    An in-depth case study on the role Speedrun Ethereum has played in onboarding and retaining new Ethereum developers.
-    """)
-    return
-
-
-@app.cell(hide_code=True)
-def header_accordion(mo):
-    mo.accordion({
-        "Overview": mo.md("""
-- Speedrun Ethereum (SRE) is a self-paced challenge program that has onboarded 17,000+ developers into the Ethereum ecosystem
-- This analysis examines whether SRE successfully converts newcomers into sustained Ethereum contributors — and the data suggests it does
-- Key questions: What share of SRE graduates remain active in Ethereum after 1–2 years? How does prior experience affect outcomes? Where do graduates go after SRE?
-        """),
-        "Context": mo.md("""
-We conducted this analysis as part of a broader inquiry into the state of the Ethereum developer ecosystem in 2025, grounded in three working hypotheses:
-
-1. Developer retention is a leading indicator of ecosystem health and, over time, a meaningful predictor of long-term token price, value accrual, network GDP, etc.
-2. Ethereum's early open-source culture is eroding as the crypto ecosystem matures, becomes more competitive, and partners with tradfi/web2.
-3. Other ecosystems (eg, AI) have emerged as powerful bottom-up attractors for ambitious, mission-driven developers.
-
-Using Speedrun Ethereum as a focused case study, the data suggests that bottom-up programs still work. Speedrun Ethereum is successfully counteracting these headwinds by onboarding, retaining, and anchoring net-new developers in the Ethereum ecosystem.
-
-**Working hypotheses:**
-1. Developer retention is a leading indicator of ecosystem health
-2. Ethereum's early open-source culture is under pressure from competition and crypto maturation
-3. AI and other ecosystems are attracting ambitious developers who might otherwise go to Ethereum
-
-**Key definitions:**
-- **Users**: Developers with GitHub profiles saved in the SRE registry (not all 17K+ total users)
-- **Cohort Month**: Profile `createdAt` date rounded to the nearest month
-- **Batch ID**: Some though not all developers were assigned a learning batch (group) when they went through the program
-- **Challenges Completed**: The number of SRE challenges the user successfully completed (according to their profile)
-- **Location**: Where available, the country code of the user
-- **Forked `scaffold-eth`**: Whether the user has one or more of the scaffold-eth repos forked to their personal GitHub
-- **Experience Categories**: *Newb* (minimal prior GitHub activity), *Learning* (<1 year prior), *Experienced* (>12 months prior), *Delayed Start* (became active several months after SRE start)
-- **Active Month**: ≥1 qualifying Push or PullRequest event on a public GitHub repo
-- **Ecosystem Classification**: Repos classified as *Ethereum*, *Other EVM Chain*, *Personal*, or *Other* via Electric Capital mappings
-- **Retention**: Share of a cohort active at month *t*, normalized at month 0
-- **Full-time month**: >10 days of qualifying activity
-- **Velocity**: Sum over active days of (1 + ln(events per day))
-- **Change Categories**: Average monthly activity changes after SRE compared to before
-
-**Metric Definitions**
-- Activity — Monthly Active Developer (MAD) methodology
-- Retention — Cohort-based retention methodology
-        """),
-        "Data Sources": mo.md("""
-- **SRE GitHub users** — `int_sre_github_users`: user registry, cohorts, batches, challenges completed
-- **GitHub events** — `int_sre_github_events_by_user`: public GitHub events joined to SRE users, from [GitHub Archive](https://gharchive.org)
-- **Ecosystem mappings** — `stg_opendevdata__*`: Electric Capital's repo → ecosystem mappings, via [Open Dev Data](https://opendevdata.org/)
-- **Further reading**: [Speedrun Ethereum](https://speedrunethereum.com/) · [Pyoso docs](https://docs.opensource.observer/docs/get-started/python) · [Marimo docs](https://docs.marimo.io/)
-        """),
-    })
+    mo.Html('<div class="ddp-header"><h1>Speedrun Ethereum</h1><p>Measuring the impact of Speedrun Ethereum on developer onboarding and ecosystem growth.</p><div class="ddp-header-meta"><span>Created: <span class="ddp-badge">2026-03-16</span></span></div></div>')
     return
 
 
@@ -1697,6 +1641,45 @@ def section_where_now(
         mo.md("_Showing Experienced developers with increased activity in the Ethereum ecosystem, at least 3 months after starting the program._"),
         show_plotly(_wc),
     ])
+    return
+
+
+@app.cell(hide_code=True)
+def header_accordion(mo):
+    mo.accordion({
+        "Metrics & Definitions": mo.md("""
+**Key definitions:**
+- **Users**: Developers with GitHub profiles saved in the SRE registry (not all 17K+ total users)
+- **Cohort Month**: Profile `createdAt` date rounded to the nearest month
+- **Batch ID**: Some though not all developers were assigned a learning batch (group) when they went through the program
+- **Challenges Completed**: The number of SRE challenges the user successfully completed (according to their profile)
+- **Location**: Where available, the country code of the user
+- **Forked `scaffold-eth`**: Whether the user has one or more of the scaffold-eth repos forked to their personal GitHub
+- **Experience Categories**: *Newb* (minimal prior GitHub activity), *Learning* (<1 year prior), *Experienced* (>12 months prior), *Delayed Start* (became active several months after SRE start)
+- **Active Month**: ≥1 qualifying Push or PullRequest event on a public GitHub repo
+- **Ecosystem Classification**: Repos classified as *Ethereum*, *Other EVM Chain*, *Personal*, or *Other* via Electric Capital mappings
+- **Retention**: Share of a cohort active at month *t*, normalized at month 0
+- **Full-time month**: >10 days of qualifying activity
+- **Velocity**: Sum over active days of (1 + ln(events per day))
+- **Change Categories**: Average monthly activity changes after SRE compared to before
+
+**Metric Definitions:**
+- **Activity** — Monthly Active Developer (MAD) methodology
+- **Retention** — Cohort-based retention methodology
+        """),
+        "Assumptions & Limitations": mo.md("""
+- **SRE data completeness**: The SRE registry only covers developers who created a GitHub profile through the program — the full 17K+ user count includes developers not represented in this dataset
+- **GitHub-only activity tracking**: All activity metrics are derived from public GitHub events; off-chain contributions, forum participation, and private repo activity are not captured
+- **Attribution methodology**: Correlations between SRE participation and ecosystem activity do not imply causation — developers who complete SRE may have become active Ethereum contributors regardless
+- **Time period scope**: Analysis is bounded by GitHub Archive availability and the SRE registry snapshot date; recent cohorts have shorter observation windows and lower apparent retention by construction
+        """),
+        "Data Sources": mo.md("""
+- **SRE GitHub users** — `int_sre_github_users`: user registry, cohorts, batches, challenges completed
+- **GitHub events** — `int_sre_github_events_by_user`: public GitHub events joined to SRE users, from [GitHub Archive](https://gharchive.org)
+- **Ecosystem mappings** — `stg_opendevdata__*`: Electric Capital's repo → ecosystem mappings, via [Open Dev Data](https://opendevdata.org/)
+- **Further reading**: [Speedrun Ethereum](https://speedrunethereum.com/) · [Pyoso docs](https://docs.opensource.observer/docs/get-started/python) · [Marimo docs](https://docs.marimo.io/)
+        """),
+    })
     return
 
 
