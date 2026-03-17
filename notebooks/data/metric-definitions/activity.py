@@ -38,23 +38,7 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md("""
-    ## Overview
-
-    The `stg_opendevdata__eco_mads` model provides pre-calculated developer activity metrics per ecosystem per day, sourced from Electric Capital's Open Dev Data. Each row captures a snapshot of ecosystem health across three dimensions:
-
-    - **Activity level**: How intensely developers contribute (full-time, part-time, one-time)
-    - **Tenure**: How long developers have been in crypto (newcomers, emerging, established)
-    - **Exclusivity**: Whether developers work in one ecosystem or many (exclusive vs multichain)
-
-    These breakdowns enable the standard Electric Capital visualizations: total MAD trends, activity composition, and tenure distribution — all selectable by ecosystem.
-    """)
-    return
-
-
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md("""
-    ## Key Definitions
+    ## Definition & Formula
 
     | Metric | Definition | Window |
     |:-------|:-----------|:-------|
@@ -337,239 +321,6 @@ def _(mo, df_activity, go, apply_ec_style, time_range, pd, TENURE_COLORS, ecosys
 @app.cell(hide_code=True)
 def _(mo):
     mo.md("""
-    ## Data Source Validation
-
-    The charts above use Open Dev Data's pre-calculated MAD counts. How do those compare to MAD calculated independently from GitHub Archive? This section compares four sources during **February 2025** for the selected ecosystem:
-
-    1. **Open Dev Data**: Pre-calculated rolling 28-day MAD from `eco_mads`
-    2. **GitHub Archive**: Rolling 28-day MAD calculated from raw `developer_activities`
-    3. **Mapped ODD**: ODD filtered to repos with valid OSO `repo_id` mapping
-    4. **Mapped GHA**: GHA filtered to the same mapped repo set
-
-    Sources 3 & 4 isolate the effect of repository mapping — any remaining gap is due to identity resolution and code filtering differences.
-    """)
-    return
-
-
-@app.cell(hide_code=True)
-def _(mo, pyoso_db_conn, pd, go, apply_ec_style, ecosystem_dropdown):
-    _eco = ecosystem_dropdown.value
-
-    _df_odd = mo.sql(
-        f"""
-        SELECT m.day, m.all_devs
-        FROM oso.stg_opendevdata__eco_mads AS m
-        JOIN oso.stg_opendevdata__ecosystems AS e ON m.ecosystem_id = e.id
-        WHERE e.name = '{_eco}'
-          AND m.day BETWEEN DATE '2025-02-01' AND DATE '2025-02-28'
-        ORDER BY m.day
-        """, engine=pyoso_db_conn, output=False)
-
-    _df_gha = mo.sql(
-        f"""
-        WITH base AS (
-            SELECT DISTINCT da.bucket_day, da.actor_id
-            FROM oso.int_gharchive__developer_activities AS da
-            JOIN oso.int_opendevdata__repositories_with_repo_id AS r
-              ON da.repo_id = r.repo_id
-            JOIN oso.stg_opendevdata__ecosystems_repos_recursive AS err
-              ON r.opendevdata_id = err.repo_id
-            JOIN oso.stg_opendevdata__ecosystems AS e
-              ON err.ecosystem_id = e.id
-            WHERE e.name = '{_eco}'
-              AND da.bucket_day BETWEEN DATE '2025-01-04' AND DATE '2025-02-28'
-        ),
-        rolling AS (
-            SELECT d.bucket_day, COUNT(DISTINCT w.actor_id) AS all_devs
-            FROM (SELECT DISTINCT bucket_day FROM base) d
-            JOIN base w ON w.bucket_day BETWEEN d.bucket_day - INTERVAL '27' DAY AND d.bucket_day
-            GROUP BY 1
-        )
-        SELECT bucket_day AS day, all_devs
-        FROM rolling
-        WHERE bucket_day BETWEEN DATE '2025-02-01' AND DATE '2025-02-28'
-        ORDER BY 1
-        """, engine=pyoso_db_conn, output=False)
-
-    _df_odd_mapped = mo.sql(
-        f"""
-        WITH mapped_repos AS (
-            SELECT DISTINCT r.opendevdata_id
-            FROM oso.int_opendevdata__repositories_with_repo_id AS r
-            JOIN oso.stg_opendevdata__ecosystems_repos_recursive AS err
-              ON r.opendevdata_id = err.repo_id
-            JOIN oso.stg_opendevdata__ecosystems AS e
-              ON err.ecosystem_id = e.id
-            WHERE e.name = '{_eco}' AND r.repo_id IS NOT NULL
-        )
-        SELECT rda.day, COUNT(DISTINCT rda.canonical_developer_id) AS all_devs
-        FROM oso.stg_opendevdata__repo_developer_28d_activities AS rda
-        JOIN mapped_repos AS mr ON rda.repo_id = mr.opendevdata_id
-        WHERE rda.day BETWEEN DATE '2025-02-01' AND DATE '2025-02-28'
-        GROUP BY 1
-        ORDER BY 1
-        """, engine=pyoso_db_conn, output=False)
-
-    _df_gha_mapped = mo.sql(
-        f"""
-        WITH mapped_repos AS (
-            SELECT DISTINCT r.repo_id
-            FROM oso.int_opendevdata__repositories_with_repo_id AS r
-            JOIN oso.stg_opendevdata__ecosystems_repos_recursive AS err
-              ON r.opendevdata_id = err.repo_id
-            JOIN oso.stg_opendevdata__ecosystems AS e
-              ON err.ecosystem_id = e.id
-            WHERE e.name = '{_eco}' AND r.repo_id IS NOT NULL
-        ),
-        base AS (
-            SELECT DISTINCT da.bucket_day, da.actor_id
-            FROM oso.int_gharchive__developer_activities AS da
-            JOIN mapped_repos AS mr ON da.repo_id = mr.repo_id
-            WHERE da.bucket_day BETWEEN DATE '2025-01-04' AND DATE '2025-02-28'
-        ),
-        rolling AS (
-            SELECT d.bucket_day, COUNT(DISTINCT w.actor_id) AS all_devs
-            FROM (SELECT DISTINCT bucket_day FROM base) d
-            JOIN base w ON w.bucket_day BETWEEN d.bucket_day - INTERVAL '27' DAY AND d.bucket_day
-            GROUP BY 1
-        )
-        SELECT bucket_day AS day, all_devs
-        FROM rolling
-        WHERE bucket_day BETWEEN DATE '2025-02-01' AND DATE '2025-02-28'
-        ORDER BY 1
-        """, engine=pyoso_db_conn, output=False)
-
-    _df_odd['source'] = 'Open Dev Data'
-    _df_gha['source'] = 'GitHub Archive'
-    _df_odd_mapped['source'] = 'Mapped ODD'
-    _df_gha_mapped['source'] = 'Mapped GHA'
-    for _d in [_df_odd, _df_gha, _df_odd_mapped, _df_gha_mapped]:
-        _d['day'] = pd.to_datetime(_d['day'])
-
-    _color_map = {
-        'Open Dev Data': '#4C78A8',
-        'GitHub Archive': '#E15759',
-        'Mapped ODD': '#2E86AB',
-        'Mapped GHA': '#A23B72',
-    }
-
-    _fig = go.Figure()
-    for _src_df in [_df_odd, _df_gha, _df_odd_mapped, _df_gha_mapped]:
-        _name = _src_df['source'].iloc[0]
-        _fig.add_trace(go.Scatter(
-            x=_src_df['day'], y=_src_df['all_devs'],
-            name=_name, mode='lines',
-            line=dict(width=2.5, color=_color_map[_name]),
-            hovertemplate=f'<b>{_name}</b>: %{{y:,.0f}}<extra></extra>'
-        ))
-
-    apply_ec_style(_fig,
-        title=f"MAD Comparison: 4 Data Sources ({_eco})",
-        subtitle="February 2025 — differences reflect identity resolution, code filtering, and repo mapping",
-        y_title="Monthly Active Developers"
-    )
-    _fig.update_layout(height=400)
-
-    # Summary stats
-    _avgs = {}
-    for _d, _n in [(_df_odd, 'ODD'), (_df_gha, 'GHA'), (_df_odd_mapped, 'Mapped ODD'), (_df_gha_mapped, 'Mapped GHA')]:
-        _avgs[_n] = int(_d['all_devs'].mean()) if len(_d) > 0 else 0
-
-    _odd_avg = _avgs['ODD']
-    _gha_avg = _avgs['GHA']
-    _diff_pct = ((_gha_avg - _odd_avg) / _odd_avg * 100) if _odd_avg > 0 else 0
-
-    mo.vstack([
-        mo.hstack([
-            mo.stat(label="ODD (avg)", value=f"{_odd_avg:,}", bordered=True, caption="Pre-calculated by EC"),
-            mo.stat(label="GHA (avg)", value=f"{_gha_avg:,}", bordered=True, caption="Calculated from raw events"),
-            mo.stat(label="GHA vs ODD", value=f"{_diff_pct:+.1f}%", bordered=True, caption="Identity + filtering gap"),
-            mo.stat(label="Mapped ODD (avg)", value=f"{_avgs['Mapped ODD']:,}", bordered=True, caption="ODD repos with repo_id"),
-        ], widths="equal", gap=1),
-        mo.ui.plotly(_fig, config={'displayModeBar': False}),
-    ])
-    return
-
-
-@app.cell(hide_code=True)
-def _(mo, pyoso_db_conn):
-    _df_trunc = mo.sql(
-        f"""
-        SELECT
-          COUNT(*) AS total_push_events,
-          SUM(CASE WHEN actual_commits_count > 20 THEN 1 ELSE 0 END) AS truncated_events,
-          SUM(available_commits_count) AS available_commits,
-          SUM(actual_commits_count) AS actual_commits,
-          SUM(actual_commits_count - available_commits_count) AS missing_commits
-        FROM oso.stg_github__push_events
-        WHERE created_at BETWEEN DATE '2025-02-01' AND DATE '2025-02-28'
-          AND actual_commits_count IS NOT NULL
-        """,
-        engine=pyoso_db_conn,
-        output=False
-    )
-
-    _total = int(_df_trunc['total_push_events'].iloc[0])
-    _truncated = int(_df_trunc['truncated_events'].iloc[0])
-    _available = int(_df_trunc['available_commits'].iloc[0])
-    _actual = int(_df_trunc['actual_commits'].iloc[0])
-    _missing = int(_df_trunc['missing_commits'].iloc[0])
-    _pct_truncated = (_truncated / _total * 100) if _total > 0 else 0
-    _pct_missing = (_missing / _actual * 100) if _actual > 0 else 0
-
-    mo.vstack([
-        mo.md("""
-    ### PushEvent Commit Truncation (February 2025)
-
-    GitHub's Events API caps PushEvent payloads at 20 commits. Pushes with >20 commits lose individual commit data, which can affect activity-day calculations for batch committers.
-        """),
-        mo.hstack([
-            mo.stat(label="Total Push Events", value=f"{_total:,}", bordered=True, caption="Feb 2025, all repos"),
-            mo.stat(label="Truncated (>20)", value=f"{_truncated:,}", bordered=True, caption=f"{_pct_truncated:.2f}% of events"),
-            mo.stat(label="Actual Commits", value=f"{_actual:,}", bordered=True, caption="Real distinct_size total"),
-            mo.stat(label="Missing Commits", value=f"{_missing:,}", bordered=True, caption=f"{_pct_missing:.1f}% of actual"),
-        ], widths="equal", gap=1),
-    ])
-    return
-
-
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md("""
-    ## Methodology
-
-    ### Data Source
-
-    All metrics come from **Open Dev Data** (Electric Capital), accessed via `oso.stg_opendevdata__eco_mads`. This model provides pre-calculated daily snapshots per ecosystem.
-
-    ### Definitions
-
-    Per the [Electric Capital methodology](https://www.developerreport.com/about):
-
-    - **Time Window**: Rolling 28-day window (not calendar month)
-    - **Developer Classification**:
-      - **Full-Time**: ≥10 active days in the rolling 28-day window
-      - **Part-Time**: <10 active days in the rolling 28-day window
-      - **One-Time**: Minimal/sporadic activity (tracked via 84-day rolling window)
-    - **Identity Resolution**: Developers are "fingerprinted" to deduplicate across multiple accounts/emails
-    - **Code Filtering**: Commits from forks and copy-pasted code are filtered out
-    - **Tenure**: Measures total time a developer has been active in any crypto ecosystem
-
-    ### Known Limitations
-
-    | Factor | Impact |
-    |:-------|:-------|
-    | **Curated repo set** | Only repos tracked by Open Dev Data are included |
-    | **Identity resolution** | Some developers with unusual patterns may be missed or merged |
-    | **Code filtering** | Fork/copy detection is heuristic and may over- or under-filter |
-    | **Latency** | Data may lag a few days behind real-time |
-    """)
-    return
-
-
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md("""
     ## Sample Queries
 
     ### 1. Monthly Active Developers for an Ecosystem
@@ -681,24 +432,31 @@ def _(mo, pyoso_db_conn):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md("""
-    ## Related Models
+    mo.accordion({
+        "Methodology": mo.md("""
+        **Data Source**: Electric Capital's Open Dev Data via `stg_opendevdata__eco_mads` — pre-calculated daily snapshots per ecosystem with rolling 28-day windows.
 
-    - **Ecosystems**: [ecosystems.py](../models/ecosystems.py) — Ecosystem definitions and hierarchy
-    - **Developers**: [developers.py](../models/developers.py) — Unified developer identities
-    - **Commits**: [commits.py](../models/commits.py) — Unified commit data
-    - **Timeseries Metrics**: [timeseries-metrics.py](../models/timeseries-metrics.py) — Aggregated time series
-    - **Alignment**: [alignment.py](./alignment.py) — Developer ecosystem alignment metric
-    - **Lifecycle**: [lifecycle.py](./lifecycle.py) — Developer lifecycle stages
-    - **Retention**: [retention.py](./retention.py) — Cohort-based developer retention
-
-    **Insights**
-    - 2025 Developer Trends
-    - Lifecycle Analysis
-    - Retention Analysis
-    - DeFi Developer Journeys
-    - Speedrun Ethereum
-    """)
+        **Definitions**:
+        - **MAD** (Monthly Active Developer): Unique developers with ≥1 commit in a rolling 28-day window
+        - **Full-Time**: ≥10 active days per 28-day window
+        - **Part-Time**: <10 active days, regular activity pattern
+        - **One-Time**: Sporadic activity over 84-day rolling window
+        - **Newcomer/Emerging/Established**: Based on lifetime tenure (<1yr / 1-2yr / 2+yr)
+        - **Exclusive/Multichain**: Whether developer commits to repos in only one ecosystem or multiple
+        """),
+        "Assumptions & Limitations": mo.md("""
+        - Tracks commits only (excludes PRs, issues, reviews)
+        - Curated repository set — coverage depends on Electric Capital's ecosystem classification
+        - Identity resolution uses heuristics — some developers may be over/under-counted
+        - GitHub Archive PushEvent API truncates at 20 commits per push (inflates commit counts for large pushes)
+        - Data lags a few days behind real-time
+        """),
+        "Data Sources": mo.md("""
+        - **Open Dev Data** (Electric Capital): `oso.stg_opendevdata__eco_mads` — pre-calculated MAD snapshots
+        - **GitHub Archive**: `oso.int_gharchive__developer_activities` — raw daily activity for validation
+        - Full catalog: [docs.oso.xyz](https://docs.oso.xyz)
+        """),
+    })
     return
 
 
