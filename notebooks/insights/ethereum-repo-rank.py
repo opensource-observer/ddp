@@ -11,7 +11,7 @@ app = marimo.App(width="full", css_file="../styles/insights.css")
 
 @app.cell(hide_code=True)
 def _(mo):
-    _header_html = '<div class="ddp-header"><h1>Ethereum Repo Rank</h1><p>Trending repos and scouts in the Ethereum builder community.</p><div class="ddp-header-meta"><span style="display:inline-flex;align-items:center;gap:4px;"><span>Created: <span class="ddp-badge">2026-03-16</span></span></div></div>'
+    _header_html = '<div class="ddp-header"><h1>Ethereum Repo Rank</h1><p>Trending repos and scouts in the Ethereum builder community.</p><div class="ddp-header-meta"><span>Created: <span class="ddp-badge">2026-03-16</span></span></div></div>'
     mo.Html(_header_html)
     return
 
