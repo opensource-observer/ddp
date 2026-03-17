@@ -65,6 +65,7 @@ const navItems: NavItem[] = [
         children: [
           { label: 'Activity', href: '/data/metric-definitions/activity' },
           { label: 'Alignment', href: '/data/metric-definitions/alignment' },
+          { label: 'Experience', href: '/data/metric-definitions/experience' },
           { label: 'Lifecycle', href: '/data/metric-definitions/lifecycle' },
           { label: 'Retention', href: '/data/metric-definitions/retention' },
         ],

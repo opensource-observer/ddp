@@ -408,6 +408,8 @@ def _(mo):
     JOIN oso.stg_opendevdata__ecosystems e ON err.ecosystem_id = e.id
     JOIN oso.int_opendevdata__repositories_with_repo_id r
       ON err.repo_id = r.opendevdata_id
+    WHERE e.is_crypto = 1
+      AND e.is_category = 0
     GROUP BY e.name
     ORDER BY matched_repos DESC
     LIMIT 15
@@ -428,6 +430,8 @@ def _(mo, pyoso_db_conn):
         JOIN oso.stg_opendevdata__ecosystems e ON err.ecosystem_id = e.id
         JOIN oso.int_opendevdata__repositories_with_repo_id r
           ON err.repo_id = r.opendevdata_id
+        WHERE e.is_crypto = 1
+          AND e.is_category = 0
         GROUP BY e.name
         ORDER BY matched_repos DESC
         LIMIT 15

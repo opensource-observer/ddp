@@ -387,18 +387,6 @@ def _(mo, pyoso_db_conn):
 
 
 @app.cell(hide_code=True)
-def _(mo):
-    mo.md("""
-    ## Related Models
-
-    - **Commits**: commits — Unified commit data across ODD and GHA
-    - **Events**: events — GitHub Archive event data and activity metrics
-    - **Repositories**: repositories — Repository metadata with canonical IDs
-    """)
-    return
-
-
-@app.cell(hide_code=True)
 def imports():
     import plotly.express as px
     return (px,)
