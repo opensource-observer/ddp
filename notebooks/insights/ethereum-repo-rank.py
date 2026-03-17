@@ -670,17 +670,29 @@ def _(df_trending, df_engagement_daily, mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.accordion({
-        "Methodology & Data Sources": mo.md("""
-        **Developer panel**: Qualified builders with ≥12 months commit activity on Ethereum panel repos and verified GitHub logins. ~920 infrastructure, ~415 DeFi.
+        "Metrics & Definitions": mo.md("""
+        **Ethereum builder panel**: Qualified builders with ≥12 months commit activity on Ethereum panel repos and verified GitHub logins. ~920 infrastructure, ~415 DeFi.
 
-        **Repo selection**: Top ~150 repos by aggregate panel builder attention (stars + forks). Stargazer/forker usernames scraped directly from the GitHub API (30-day rolling window).
+        **Engagement metrics**: Stars + forks collected over 30-day and 7-day rolling windows. Stargazer/forker usernames are scraped directly from the GitHub API and deduplicated within each window.
 
-        **Signal strength**: For each repo, we compute the % of engagers (stargazers + forkers, deduplicated) who are Ethereum panel builders — revealing disproportionate interest vs mainstream audience.
+        **Signal strength (eth_dev_pct)**: For each repo, the share of engagers who are Ethereum panel builders. A high percentage means the repo is drawing disproportionate attention from active Ethereum developers relative to the mainstream GitHub audience.
 
-        **Caveats**: Starring ≠ using. The repos were selected *because* they attracted Ethereum builder attention — this is not a random sample. The panel captures the most active slice of Ethereum builders, not all of them. Attention patterns shift; a repo trending today may be forgotten next month.
+        **Momentum**: 7-day daily engagement rate divided by 30-day daily engagement rate. A ratio above 1.0 means the repo is accelerating; below 1.0 means interest is cooling.
+        """),
+        "Assumptions & Limitations": mo.md("""
+        **Starring ≠ using.** A star is a lightweight signal of interest, not adoption or production use.
 
-        **Data sources**: [OSO](https://www.oso.xyz) data warehouse (`ethereum.local_rank_models`, `ethereum.dev_engagement_models`) · GitHub API (GraphQL + REST)
-        """)
+        **Non-random sample.** The repos were selected *because* they attracted Ethereum builder attention — this is not a representative cross-section of all open source software.
+
+        **Panel is a ceiling, not a floor.** The Ethereum builder panel captures the most active slice of Ethereum developers. Many builders fall below the activity threshold and are not counted.
+
+        **Attention is ephemeral.** Engagement patterns shift quickly. A repo trending today may drop out of the rankings next month as the community's focus moves on.
+        """),
+        "Data Sources": mo.md("""
+        **OSO data warehouse** — `ethereum.local_rank_models` (repo rankings and signal strength), `ethereum.dev_engagement_models` (per-repo engagement counts and panel overlap)
+
+        **GitHub API** — GraphQL + REST endpoints used to collect stargazer and forker usernames for each tracked repo over rolling windows.
+        """),
     })
     return
 
