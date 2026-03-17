@@ -8,7 +8,7 @@ app = marimo.App(width="full", css_file="../styles/insights.css")
 def header_title(mo):
     mo.md("""
     # Retention Analysis
-    <small>Owner: <span style="background-color: #f0f0f0; padding: 2px 4px; border-radius: 3px;">OSO Team</span> · Last Updated: <span style="background-color: #f0f0f0; padding: 2px 4px; border-radius: 3px;">2026-02-17</span></small>
+    <small>Owner: <span class="ddp-badge">OSO Team</span> · Last Updated: <span class="ddp-badge">2026-02-17</span></small>
 
     Analyze developer retention by ecosystem and cohort year — what percentage of developers who joined in Year X are still active after N years?
     """)
@@ -159,10 +159,10 @@ def retention_overview_tabs(df_all_retention, mo, go):
 
     def _stat(value, label, caption=''):
         return (
-            f'<div style="border:1px solid #e5e7eb;border-radius:8px;padding:12px 16px;flex:1;min-width:140px">'
-            f'<div style="font-size:20px;font-weight:700;color:#111">{value}</div>'
-            f'<div style="font-size:12px;font-weight:600;color:#374151;margin-top:2px">{label}</div>'
-            + (f'<div style="font-size:11px;color:#9ca3af;margin-top:2px">{caption}</div>' if caption else '')
+            f'<div class="ddp-stat-box">'
+            f'<div class="ddp-stat-value">{value}</div>'
+            f'<div class="ddp-stat-label">{label}</div>'
+            + (f'<div class="ddp-stat-caption">{caption}</div>' if caption else '')
             + '</div>'
         )
 
@@ -189,7 +189,7 @@ def retention_overview_tabs(df_all_retention, mo, go):
         _avg_2yr = _metrics_2yr['retention_rate'].mean() if len(_metrics_2yr) > 0 else 0
 
         _stats_html = (
-            '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px">'
+            '<div class="ddp-stat-row">'
             + _stat(f'{_avg_1yr:.1f}%', 'Avg 1-Year Retention', f'{_eco} across selected cohorts')
             + _stat(f'{_avg_2yr:.1f}%', 'Avg 2-Year Retention', f'{_eco} across selected cohorts')
             + _stat(str(_best_1yr['cohort_year']), 'Best Cohort', f"{_best_1yr['retention_rate']:.1f}% retention at 1 year")
@@ -268,7 +268,7 @@ def retention_overview_tabs(df_all_retention, mo, go):
     _opts = [o for o in _ECOSYSTEMS if o in _states]
     _djs_safe = _json.dumps(_states).replace('</', '<\\/')
     _opts_js = _json.dumps(_opts)
-    _sel_html = '<div style="margin-bottom:8px"><span style="font-size:11px;color:#6b7280;display:block;margin-bottom:2px">Ecosystem</span><select id="sel" style="padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;color:#374151;background:#fff;cursor:pointer">' + ''.join(f'<option value="{i}">{o}</option>' for i, o in enumerate(_opts)) + '</select></div>'
+    _sel_html = '<div style="margin-bottom:8px"><span class="ddp-select-label">Ecosystem</span><select id="sel" class="ddp-select">' + ''.join(f'<option value="{i}">{o}</option>' for i, o in enumerate(_opts)) + '</select></div>'
 
     _inner = (
         '<!DOCTYPE html><html><head><meta charset="utf-8">'
@@ -289,7 +289,7 @@ def retention_overview_tabs(df_all_retention, mo, go):
         '</script></body></html>'
     )
     _src = _html_mod.escape(_inner, quote=True)
-    mo.Html(f'<iframe srcdoc="{_src}" style="width:100%;height:580px;border:none;display:block" scrolling="no"></iframe>')
+    mo.Html(f'<iframe srcdoc="{_src}" class="ddp-chart-frame-tall" scrolling="no"></iframe>')
     return
 
 
