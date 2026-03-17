@@ -235,14 +235,6 @@ def query_all_data(ECOSYSTEMS, mo, pd, pyoso_db_conn):
     return (df_all,)
 
 
-@app.cell(hide_code=True)
-def data_summary(df_all, mo):
-    _ecosystems = df_all['ecosystem_name'].unique()
-    _date_range = f"{df_all['day'].min().strftime('%Y-%m-%d')} to {df_all['day'].max().strftime('%Y-%m-%d')}"
-    _rows = len(df_all)
-    mo.md(f"**Data loaded:** {_rows:,} rows across {len(_ecosystems)} ecosystems ({_date_range})")
-    return
-
 
 @app.cell(hide_code=True)
 def section_overall_trends(mo):
