@@ -11,6 +11,7 @@ def _(mo):
 
     Developer experience measures how long a developer has been contributing to open source crypto, used to distinguish newcomers from veterans.
 
+    Preview:
     ```sql
     SELECT
       e.name AS ecosystem,
