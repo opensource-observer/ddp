@@ -1479,7 +1479,7 @@ def insight_protocol_table(
         ),
         _table,
         mo.md(
-            '<small style="color:#64748B">'
+            '<small class="ddp-note">'
             '**Note on TVL figures:** TVL values are sourced from DefiLlama and may differ from other sources '
             'due to double-counting across chains, stablecoin classification differences, or timing of snapshots. '
             'ETH TVL Share includes Ethereum L1 and major L2s.'
@@ -1600,7 +1600,7 @@ def insight_alluvial_journeys(
 
         _svg = [
             f'<svg viewBox="0 0 {_VB_W} {_target_h:.0f}" '
-            f'style="width:100%;max-width:1100px;height:auto;" xmlns="http://www.w3.org/2000/svg" '
+            f'style="width:100%;height:auto;" xmlns="http://www.w3.org/2000/svg" '
             f'font-family="system-ui, -apple-system, sans-serif">',
             '<style>.al-lk{transition:opacity .15s}.al-lk:hover{opacity:.7!important}</style>',
         ]
@@ -1711,14 +1711,14 @@ def insight_feeder_projects(
         def _render_cell(eng):
             _cell = _grid.get((_active_label, eng), {'Crypto': [], 'OSS': []})
             return (
-                f'<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">'
+                f'<div class="ddp-grid-2">'
                 f'<div><div style="font-size:11px;font-weight:600;color:{_active_color};text-transform:uppercase;letter-spacing:0.5px;padding-bottom:4px;border-bottom:2px solid {_active_color}">Crypto Ecosystems</div>{_render_list(_cell.get("Crypto", []), _active_color)}</div>'
                 f'<div><div style="font-size:11px;font-weight:600;color:{_active_color};text-transform:uppercase;letter-spacing:0.5px;padding-bottom:4px;border-bottom:2px solid {_active_color}">Other / Non-Crypto OSS</div>{_render_list(_cell.get("OSS", []), _active_color)}</div>'
                 f'</div>'
             )
 
         _html = (
-            f'<div style="width:100%;max-width:1100px;margin:0;font-family:system-ui,-apple-system,sans-serif">'
+            f'<div style="margin:0;font-family:system-ui,-apple-system,sans-serif">'
             f'<div style="display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid #E5E7EB;border-radius:8px;overflow:hidden">'
             f'<div style="background:{_header_bg};padding:10px 16px;border-bottom:1px solid {_header_border};border-right:1px solid #E5E7EB;text-align:center">'
             f'<span style="font-size:13px;font-weight:700;color:#1F2937">Contributing</span>'
@@ -2095,7 +2095,7 @@ def insight_ecosystem_overview(
             ], justify='space-around', widths='equal'),
         ]
         if _chart is not None:
-            _elements.append(mo.md(f'Aggregate TVL and monthly active builders across {_eco_name} DeFi projects over time.<br><small style="color:#64748B">This is not a correlation chart --- TVL (background) and builder counts (foreground) are shown together to provide context on ecosystem-level trends, not to imply a causal relationship.</small>'))
+            _elements.append(mo.md(f'Aggregate TVL and monthly active builders across {_eco_name} DeFi projects over time.<br><small class="ddp-note">This is not a correlation chart --- TVL (background) and builder counts (foreground) are shown together to provide context on ecosystem-level trends, not to imply a causal relationship.</small>'))
             _elements.append(_chart)
 
         return mo.vstack(_elements)
@@ -2122,23 +2122,23 @@ def ethereum_content(
         ecosystem_overview_content['Ethereum'],
         mo.md("---"),
         mo.md("## Where does Ethereum DeFi builder talent flow over time?"),
-        mo.md('<small style="color:#64748B">Each column is a year. Colored bands show where builders are active. Flows between columns trace how builders move between states year-over-year. Wider bands = more builders.</small>'),
+        mo.md('<small class="ddp-note">Each column is a year. Colored bands show where builders are active. Flows between columns trace how builders move between states year-over-year. Wider bands = more builders.</small>'),
         alluvial_content['Ethereum'],
         mo.md("---"),
         mo.md("## Is Ethereum DeFi retaining builder talent over time?"),
-        mo.md('<small style="color:#64748B">Bars above zero = builders entering the ecosystem; below zero = leaving. The dark line tracks net flow. Categories: **Other Crypto** = non-Ethereum chains, **Non-Crypto OSS** = traditional open source, **Inactive** = no observable activity for 12+ months. 2025 data is partial.</small>'),
+        mo.md('<small class="ddp-note">Bars above zero = builders entering the ecosystem; below zero = leaving. The dark line tracks net flow. Categories: **Other Crypto** = non-Ethereum chains, **Non-Crypto OSS** = traditional open source, **Inactive** = no observable activity for 12+ months. 2025 data is partial.</small>'),
         balance_content['Ethereum'],
         mo.md("---"),
         mo.md("## How long do Ethereum DeFi builders stay active after onboarding?"),
-        mo.md('<small style="color:#64748B">Each line tracks a cohort of builders from their onboarding year. Retention = % still active on home project at each interval. Recent cohorts have shorter curves because less time has elapsed.</small>'),
+        mo.md('<small class="ddp-note">Each line tracks a cohort of builders from their onboarding year. Retention = % still active on home project at each interval. Recent cohorts have shorter curves because less time has elapsed.</small>'),
         cohort_content['Ethereum'],
         mo.md("---"),
         mo.md("## Where do new Ethereum DeFi builders come from?"),
-        mo.md('<small style="color:#64748B">Breakdown of builder onboarding pipeline by year. Newcomers had less than 6 months of prior OSS activity before joining DeFi.</small>'),
+        mo.md('<small class="ddp-note">Breakdown of builder onboarding pipeline by year. Newcomers had less than 6 months of prior OSS activity before joining DeFi.</small>'),
         inflow_content['Ethereum'],
         mo.md("---"),
         mo.md("## Which projects seed the Ethereum DeFi builder pipeline?"),
-        mo.md('<small style="color:#64748B">Top feeder projects by number of builders who contributed before joining Ethereum DeFi. Includes both crypto and non-crypto open source projects.</small>'),
+        mo.md('<small class="ddp-note">Top feeder projects by number of builders who contributed before joining Ethereum DeFi. Includes both crypto and non-crypto open source projects.</small>'),
         feeder_content['Ethereum'],
     ])
     ethereum_tab_content = _eth
@@ -2159,23 +2159,23 @@ def solana_content(
         ecosystem_overview_content['Solana'],
         mo.md("---"),
         mo.md("## Where does Solana DeFi builder talent flow over time?"),
-        mo.md('<small style="color:#64748B">Each column is a year. Colored bands show where builders are active. Flows between columns trace how builders move between states year-over-year. Wider bands = more builders.</small>'),
+        mo.md('<small class="ddp-note">Each column is a year. Colored bands show where builders are active. Flows between columns trace how builders move between states year-over-year. Wider bands = more builders.</small>'),
         alluvial_content['Solana'],
         mo.md("---"),
         mo.md("## Is Solana DeFi retaining builder talent over time?"),
-        mo.md('<small style="color:#64748B">Bars above zero = builders entering the ecosystem; below zero = leaving. The dark line tracks net flow. Categories: **Ethereum** = Ethereum L1+L2 projects, **Non-Crypto OSS** = traditional open source, **Inactive** = no observable activity for 12+ months. 2025 data is partial.</small>'),
+        mo.md('<small class="ddp-note">Bars above zero = builders entering the ecosystem; below zero = leaving. The dark line tracks net flow. Categories: **Ethereum** = Ethereum L1+L2 projects, **Non-Crypto OSS** = traditional open source, **Inactive** = no observable activity for 12+ months. 2025 data is partial.</small>'),
         balance_content['Solana'],
         mo.md("---"),
         mo.md("## How long do Solana DeFi builders stay active after onboarding?"),
-        mo.md('<small style="color:#64748B">Each line tracks a cohort of builders from their onboarding year. Retention = % still active on home project at each interval. Recent cohorts have shorter curves because less time has elapsed.</small>'),
+        mo.md('<small class="ddp-note">Each line tracks a cohort of builders from their onboarding year. Retention = % still active on home project at each interval. Recent cohorts have shorter curves because less time has elapsed.</small>'),
         cohort_content['Solana'],
         mo.md("---"),
         mo.md("## Where do new Solana DeFi builders come from?"),
-        mo.md('<small style="color:#64748B">Breakdown of builder onboarding pipeline by year. Newcomers had less than 6 months of prior OSS activity before joining DeFi.</small>'),
+        mo.md('<small class="ddp-note">Breakdown of builder onboarding pipeline by year. Newcomers had less than 6 months of prior OSS activity before joining DeFi.</small>'),
         inflow_content['Solana'],
         mo.md("---"),
         mo.md("## Which projects seed the Solana DeFi builder pipeline?"),
-        mo.md('<small style="color:#64748B">Top feeder projects by number of builders who contributed before joining Solana DeFi. Includes both crypto and non-crypto open source projects.</small>'),
+        mo.md('<small class="ddp-note">Top feeder projects by number of builders who contributed before joining Solana DeFi. Includes both crypto and non-crypto open source projects.</small>'),
         feeder_content['Solana'],
     ])
     solana_tab_content = _sol
@@ -2196,23 +2196,23 @@ def other_ecosystem_content(
         ecosystem_overview_content['Other'],
         mo.md("---"),
         mo.md("## Where does other DeFi builder talent flow over time?"),
-        mo.md('<small style="color:#64748B">Each column is a year. Colored bands show where builders are active. Flows between columns trace how builders move between states year-over-year. Wider bands = more builders.</small>'),
+        mo.md('<small class="ddp-note">Each column is a year. Colored bands show where builders are active. Flows between columns trace how builders move between states year-over-year. Wider bands = more builders.</small>'),
         alluvial_content['Other'],
         mo.md("---"),
         mo.md("## Is other DeFi retaining builder talent over time?"),
-        mo.md('<small style="color:#64748B">Bars above zero = builders entering the ecosystem; below zero = leaving. The dark line tracks net flow. Categories: **Ethereum** = Ethereum L1+L2 projects, **Non-Crypto OSS** = traditional open source, **Inactive** = no observable activity for 12+ months. 2025 data is partial.</small>'),
+        mo.md('<small class="ddp-note">Bars above zero = builders entering the ecosystem; below zero = leaving. The dark line tracks net flow. Categories: **Ethereum** = Ethereum L1+L2 projects, **Non-Crypto OSS** = traditional open source, **Inactive** = no observable activity for 12+ months. 2025 data is partial.</small>'),
         balance_content['Other'],
         mo.md("---"),
         mo.md("## How long do other DeFi builders stay active after onboarding?"),
-        mo.md('<small style="color:#64748B">Each line tracks a cohort of builders from their onboarding year. Retention = % still active on home project at each interval. Recent cohorts have shorter curves because less time has elapsed.</small>'),
+        mo.md('<small class="ddp-note">Each line tracks a cohort of builders from their onboarding year. Retention = % still active on home project at each interval. Recent cohorts have shorter curves because less time has elapsed.</small>'),
         cohort_content['Other'],
         mo.md("---"),
         mo.md("## Where do new other DeFi builders come from?"),
-        mo.md('<small style="color:#64748B">Breakdown of builder onboarding pipeline by year. Newcomers had less than 6 months of prior OSS activity before joining DeFi.</small>'),
+        mo.md('<small class="ddp-note">Breakdown of builder onboarding pipeline by year. Newcomers had less than 6 months of prior OSS activity before joining DeFi.</small>'),
         inflow_content['Other'],
         mo.md("---"),
         mo.md("## Which projects seed the other DeFi builder pipeline?"),
-        mo.md('<small style="color:#64748B">Top feeder projects by number of builders who contributed before joining other DeFi ecosystems. Includes both crypto and non-crypto open source projects.</small>'),
+        mo.md('<small class="ddp-note">Top feeder projects by number of builders who contributed before joining other DeFi ecosystems. Includes both crypto and non-crypto open source projects.</small>'),
         feeder_content['Other'],
     ])
     other_tab_content = _other
@@ -2407,11 +2407,11 @@ def comparison_tab(
         static_plotly(_fig_grid),
         mo.md("---"),
         mo.md("### Monthly active builders over time"),
-        mo.md('<small style="color:#64748B">Aggregate monthly active builder count across all projects in each group.</small>'),
+        mo.md('<small class="ddp-note">Aggregate monthly active builder count across all projects in each group.</small>'),
         static_plotly(_fig_devs),
         mo.md("---"),
         mo.md("### Cross-ecosystem flows: tug of war"),
-        mo.md('<small style="color:#64748B">Direct builder movement between Ethereum and non-Ethereum DeFi. Counts builders whose primary ecosystem changed year-over-year.</small>'),
+        mo.md('<small class="ddp-note">Direct builder movement between Ethereum and non-Ethereum DeFi. Counts builders whose primary ecosystem changed year-over-year.</small>'),
         static_plotly(_fig_tow),
         mo.hstack([
             mo.stat(value=f'{"+" if _eth_bs["net"] >= 0 else ""}{_eth_bs["net"]}', label='Ethereum total net', bordered=True, caption=f'{_eth_bs["count_before"]} \u2192 {_eth_bs["count_after"]} ({_eth_bs["first_year"]}\u2013{_eth_bs["last_year"]})'),
@@ -2419,11 +2419,11 @@ def comparison_tab(
         ], widths='equal', gap=1),
         mo.md("---"),
         mo.md("### Retention: who sticks around longer?"),
-        mo.md('<small style="color:#64748B">Average retention across all year cohorts (2020\u20132024). Each curve averages the % still active at each quarter interval.</small>'),
+        mo.md('<small class="ddp-note">Average retention across all year cohorts (2020\u20132024). Each curve averages the % still active at each quarter interval.</small>'),
         static_plotly(_fig_ret),
         mo.md("---"),
         mo.md("### Newcomer pipeline: who attracts more fresh talent?"),
-        mo.md('<small style="color:#64748B">Newcomers = builders with less than 6 months of prior OSS activity before their DeFi onboarding.</small>'),
+        mo.md('<small class="ddp-note">Newcomers = builders with less than 6 months of prior OSS activity before their DeFi onboarding.</small>'),
         static_plotly(_fig_inflow),
     ])
     return (comparison_tab_content,)
@@ -2498,7 +2498,7 @@ def main_layout(
 
     # Build panel HTML: highlighted table (if any) + tab content
     # Wrap in max-width container so tables, SVGs, and charts all align
-    _wrap = '<div style="max-width:1100px;">'
+    _wrap = '<div>'
     _wrap_end = '</div>'
     _content_htmls = []
     for _name, _table_html, _content in _tab_configs:
