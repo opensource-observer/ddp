@@ -9,25 +9,22 @@ def _(mo):
     mo.md("""
     # Lifecycle
 
-    The **lifecycle metric** classifies developers into stages based on their activity patterns, enabling analysis of developer journeys, churn prediction, and ecosystem health monitoring.
+    Lifecycle classification tracks how developers move between activity states over time, from first contribution through sustained engagement to dormancy and churn.
 
     **Preview:**
     ```sql
     SELECT
       e.name AS ecosystem,
       m.day,
-      m.all_devs,
       m.full_time_devs,
       m.part_time_devs,
-      m.one_time_devs,
-      m.devs_0_1y AS newcomers,
-      m.devs_2y_plus AS established
+      m.one_time_devs
     FROM oso.stg_opendevdata__eco_mads AS m
     JOIN oso.stg_opendevdata__ecosystems AS e
       ON m.ecosystem_id = e.id
     WHERE e.name = 'Ethereum'
     ORDER BY m.day DESC
-    LIMIT 10
+    LIMIT 5
     ```
     """)
     return
@@ -36,9 +33,19 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md("""
-    ## Definition & Formula
+    ## Standard Definition
 
-    The lifecycle model assigns each developer a state each month based on their activity level and prior state. The 16 granular states roll up into 4 summary categories:
+    ODD tracks activity levels in `eco_mads` as a simple snapshot:
+
+    | State | Column | Threshold |
+    |:------|:-------|:----------|
+    | Full-time | `full_time_devs` | >=10 active days per 28-day window |
+    | Part-time | `part_time_devs` | 1-9 active days |
+    | One-time | `one_time_devs` | Sporadic activity over 84-day window |
+
+    This is a point-in-time classification — ODD does not track transitions between states or dormancy/churn.
+
+    DDP extends this into 16 granular states that track direction of change:
 
     | Category | Label | Description |
     |:---------|:------|:------------|
@@ -59,7 +66,7 @@ def _(mo):
     | | `churned (after reaching part time)` | Extended inactivity after reaching part time |
     | | `churned (after reaching full time)` | Extended inactivity after reaching full time |
 
-    **Active** = First Time + Full Time + Part Time (all 9 labels above the Churned/Dormant group)
+    **Active** = First Time + Full Time + Part Time (all 9 labels above the Churned/Dormant group).
 
     Activity levels (full-time, part-time) are assessed over a 28-day rolling window per Electric Capital's methodology. Dormancy transitions to churn after approximately 6 months of continuous inactivity.
     """)
@@ -68,24 +75,16 @@ def _(mo):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md("""
-    ## State Transitions
-    """)
-    return
-
-
-@app.cell(hide_code=True)
-def _(mo):
     mo.mermaid("""
     graph LR
-        NEW["🆕 New<br/><small>First contribution</small>"] --> FT["💼 Full-Time<br/><small>≥10 days / 28d</small>"]
-        NEW --> PT["🔧 Part-Time<br/><small>1-9 days / 28d</small>"]
+        NEW["New<br/><small>First contribution</small>"] --> FT["Full-Time<br/><small>10+ days / 28d</small>"]
+        NEW --> PT["Part-Time<br/><small>1-9 days / 28d</small>"]
         FT <-->|"activity changes"| PT
-        FT -->|"stops contributing"| DORMANT["💤 Dormant<br/><small>1-6 months inactive</small>"]
+        FT -->|"stops contributing"| DORMANT["Dormant<br/><small>1-6 months inactive</small>"]
         PT -->|"stops contributing"| DORMANT
         DORMANT -->|"resumes activity"| FT
         DORMANT -->|"resumes activity"| PT
-        DORMANT -->|">6 months"| CHURNED["🚪 Churned<br/><small>>6 months inactive</small>"]
+        DORMANT -->|">6 months"| CHURNED["Churned<br/><small>>6 months inactive</small>"]
         CHURNED -.->|"rare return"| FT
         CHURNED -.->|"rare return"| PT
     """)
@@ -95,18 +94,13 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md("""
-    ### Transition Rules
+    ## DDP Variants
 
-    | From | To | Trigger |
-    |:-----|:---|:--------|
-    | New | Full-Time / Part-Time | Continues contributing after first period |
-    | New | Dormant | No activity after initial contribution |
-    | Full-Time | Part-Time | Activity drops below 10 days / 28d |
-    | Part-Time | Full-Time | Activity rises to ≥10 days / 28d |
-    | Full-Time / Part-Time | Dormant | 0 active days |
-    | Dormant | Full-Time / Part-Time | Any activity resumes |
-    | Dormant | Churned | >6 months of continuous inactivity |
-    | Churned | Full-Time / Part-Time | Activity resumes (rare) |
+    | Variant | Insight | Definition | How It Differs |
+    |:--------|:--------|:-----------|:---------------|
+    | 16-state transition model | Lifecycle Analysis | Expands ODD's 3 states into 16 granular labels tracking direction of change: `first time`, `new full time`, `part time to full time`, `dormant to full time`, etc. Rolled up to 4 categories: First Time, Full Time, Part Time, Churned/Dormant | Adds state transitions, dormancy (1-6mo inactive), and churn (>6mo). Uses pre-aggregated `int_crypto_ecosystems_developer_lifecycle_monthly_aggregated` |
+    | Monthly churn rate | Lifecycle Analysis | `(churned + dormant) / active * 100` per month | Derived ratio not in ODD. Measures ecosystem health over time |
+    | Project-level lifecycle | DeFi Builder Journeys | Onboarding month (first home project activity), offboarding month (6+ months inactive), tenure, current status (active/elsewhere/inactive) | Per-project, not per-ecosystem. Tracks individual developer journeys rather than aggregate state distributions |
     """)
     return
 
@@ -116,9 +110,9 @@ def _(mo):
     mo.md("""
     ## Sample Queries
 
-    ### 1. Current Lifecycle Stage Distribution
+    ### 1. Activity Level Snapshot (ODD Standard)
 
-    Get the latest stage breakdown for an ecosystem from the pre-calculated model.
+    The standard `eco_mads` table provides a daily snapshot of developer activity levels per ecosystem. This query shows the latest 10 days for Ethereum with percentage breakdowns.
 
     ```sql
     SELECT
@@ -144,7 +138,7 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo, pyoso_db_conn):
     _df = mo.sql(
-        f"""
+        """
         SELECT
           m.day,
           m.all_devs AS total_active,
@@ -169,10 +163,9 @@ def _(mo, pyoso_db_conn):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md("""
-    ### 2. Developer-Level Stage Transitions
+    ### 2. Developer-Level Stage Transitions (DDP Variant)
 
-    Compute actual per-developer transitions between activity levels using raw activity data.
-    This query uses a tight 2-month window for performance.
+    Compute actual per-developer transitions between activity levels using raw activity data. This query uses a tight 2-month window for performance.
 
     ```sql
     WITH monthly_activity AS (
@@ -220,7 +213,7 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo, pyoso_db_conn):
     _df = mo.sql(
-        f"""
+        """
         WITH monthly_activity AS (
             SELECT
               rda.canonical_developer_id,
@@ -262,7 +255,6 @@ def _(mo, pyoso_db_conn):
         engine=pyoso_db_conn
     )
     return
-
 
 
 @app.cell(hide_code=True)
