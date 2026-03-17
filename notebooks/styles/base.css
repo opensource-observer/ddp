@@ -114,16 +114,16 @@ code {
   color: var(--ddp-text) !important;
 }
 
-/* === Code blocks === */
+/* === Code blocks (GitHub-style: subtle bg, no border) === */
 pre code {
   display: block;
-  padding: 0.75em 1em;
+  padding: 0.85em 1em;
   overflow-x: auto;
-  background: var(--ddp-surface);
-  border: 1px solid var(--ddp-border);
-  border-radius: 4px;
+  background: #f6f8fa;
+  border: none;
+  border-radius: 6px;
   font-size: 0.8125em;
-  line-height: 1.6;
+  line-height: 1.55;
 }
 
 /* === Links === */

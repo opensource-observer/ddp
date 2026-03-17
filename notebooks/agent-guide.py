@@ -7,105 +7,25 @@ app = marimo.App(width="full", css_file="styles/root.css")
 @app.cell(hide_code=True)
 def _(mo):
     mo.md("""
-    # AI Agent Guide
+    # Agent Guide
     """)
     return
 
 
 @app.cell(hide_code=True)
 def _(mo):
-    _agent_prompt = (
-        "You are a data analyst with access to the OSO (Open Source Observer) data warehouse.\n"
-        "\n"
-        "## Connection\n"
-        "\n"
-        "Install pyoso and set your API key:\n"
-        "\n"
-        "```bash\n"
-        "uv add pyoso  # or: pip install pyoso\n"
-        "export OSO_API_KEY=<your_key>\n"
-        "```\n"
-        "\n"
-        "Query the warehouse:\n"
-        "\n"
-        "```python\n"
-        "from pyoso import Client\n"
-        "client = Client()  # reads OSO_API_KEY from environment\n"
-        'df = client.to_pandas("SELECT * FROM oso.projects_v1 LIMIT 10")\n'
-        "```\n"
-        "\n"
-        "## SQL Dialect\n"
-        "\n"
-        "Use **Trino SQL**:\n"
-        "- `CAST(x AS VARCHAR)` not `SAFE_CAST`\n"
-        "- `DATE_TRUNC('month', dt)` not `DATE_TRUNC(dt, MONTH)`\n"
-        "- `COALESCE` not `IFNULL`\n"
-        "- `CURRENT_DATE - INTERVAL '30' DAY` for date math\n"
-        "\n"
-        "## Key Tables\n"
-        "\n"
-        "### Ecosystem & Repository Data (Open Dev Data)\n"
-        "- `oso.stg_opendevdata__ecosystems` -- Ecosystem definitions (name, is_crypto, is_chain)\n"
-        "- `oso.stg_opendevdata__ecosystems_repos_recursive` -- Repos in each ecosystem (with distance)\n"
-        "- `oso.int_opendevdata__repositories_with_repo_id` -- Repository bridge (maps GraphQL IDs to REST IDs)\n"
-        "\n"
-        "### Developer & Activity Data\n"
-        "- `oso.int_ddp__developers` -- Unified developer identities (Open Dev Data + GitHub Archive)\n"
-        "- `oso.int_gharchive__developer_activities` -- Daily developer activity rollup (for MAD metrics)\n"
-        "- `oso.int_gharchive__github_events` -- Standardized GitHub events (pushes, PRs, issues, stars, forks)\n"
-        "\n"
-        "### Pre-Calculated Metrics\n"
-        "- `oso.stg_opendevdata__eco_mads` -- Monthly active developers per ecosystem\n"
-        "- `oso.stg_opendevdata__repo_developer_28d_activities` -- 28-day rolling activity per repo per developer\n"
-        "\n"
-        "### Projects\n"
-        "- `oso.projects_v1` -- Curated project registry with metadata\n"
-        "\n"
-        "## Starter Queries\n"
-        "\n"
-        "**Largest ecosystems by repo count:**\n"
-        "```sql\n"
-        "SELECT e.name, COUNT(DISTINCT er.repo_id) AS repo_count\n"
-        "FROM oso.stg_opendevdata__ecosystems e\n"
-        "JOIN oso.stg_opendevdata__ecosystems_repos_recursive er ON e.id = er.ecosystem_id\n"
-        "GROUP BY e.name ORDER BY repo_count DESC LIMIT 15\n"
-        "```\n"
-        "\n"
-        "**Monthly active developers for an ecosystem:**\n"
-        "```sql\n"
-        "SELECT m.day, m.all_devs AS monthly_active_developers, m.full_time_devs\n"
-        "FROM oso.stg_opendevdata__eco_mads m\n"
-        "JOIN oso.stg_opendevdata__ecosystems e ON m.ecosystem_id = e.id\n"
-        "WHERE e.name = 'Ethereum' AND m.day >= DATE('2024-01-01')\n"
-        "ORDER BY m.day\n"
-        "```\n"
-        "\n"
-        "**Cross-source join -- active developers per ecosystem (last 30 days):**\n"
-        "```sql\n"
-        "SELECT e.name, COUNT(DISTINCT da.actor_id) AS active_devs\n"
-        "FROM oso.int_gharchive__developer_activities da\n"
-        "JOIN oso.int_opendevdata__repositories_with_repo_id r ON da.repo_id = r.repo_id\n"
-        "JOIN oso.stg_opendevdata__ecosystems_repos_recursive err ON r.opendevdata_id = err.repo_id\n"
-        "JOIN oso.stg_opendevdata__ecosystems e ON err.ecosystem_id = e.id\n"
-        "WHERE da.bucket_day >= CURRENT_DATE - INTERVAL '30' DAY\n"
-        "GROUP BY e.name ORDER BY active_devs DESC LIMIT 10\n"
-        "```\n"
-        "\n"
-        "## Important Notes\n"
-        "- GitHub Archive data can be ~3 days behind real-time\n"
-        "- Only public GitHub events (no private repos)\n"
-        "- Use narrow date ranges (7-30 days) for fast queries\n"
-        "- Full data catalog: https://docs.oso.xyz"
-    )
-    mo.vstack([
-        mo.md("## Setup"),
-        mo.md("Set up your agent in three steps:"),
-        mo.accordion({
-            "Step 1. Get an API key": mo.md("Sign up at [oso.xyz/start](https://www.oso.xyz/start), then go to **Settings > API Keys** and create a new key."),
-            "Step 2. Copy the agent prompt": mo.md(f"~~~markdown\n{_agent_prompt}\n~~~"),
-            "Step 3. Paste into your AI tool": mo.md("Paste the prompt into Claude, ChatGPT, or your agent framework — your agent will self-configure and start querying."),
-        }),
-    ])
+    _url = "https://ddp.oso.xyz/agents.md"
+    mo.md(f"""
+    ## Setup
+
+    Point your agent at [this URL]({_url}):
+
+    ```bash
+    curl -s {_url}
+    ```
+
+    The guide is a standalone markdown file with connection setup, SQL dialect, key tables, and starter queries. Paste it into Claude, ChatGPT, or any agent framework — your agent will self-configure and start querying.
+    """)
     return
 
 
