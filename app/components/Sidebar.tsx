@@ -16,6 +16,7 @@ import {
   Zap,
   Wallet,
   Repeat,
+  Trophy,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -73,6 +74,7 @@ const navItems: NavItem[] = [
     label: 'Insights',
     href: '/insights',
     children: [
+      { label: 'Ethereum Repo Rank', href: '/insights/ethereum-repo-rank', icon: Trophy },
       { label: 'DeFi Builder Journeys', href: '/insights/defi-builder-journeys', icon: Wallet },
       { label: 'Speedrun Ethereum', href: '/insights/speedrun-ethereum', icon: Zap },
       { label: '2025 Developer Trends', href: '/insights/developer-report-2025', icon: TrendingUp },
@@ -180,12 +182,12 @@ export default function Sidebar() {
       {/* Header */}
       <div className="px-4 py-3 border-b border-[var(--sidebar-border)]">
         <Link href="/" className="flex items-center gap-2.5 rounded-lg px-1 py-1 hover:bg-[var(--sidebar-accent)] transition-colors">
-          <div className="h-7 w-7 rounded-md bg-[#3080B6] flex items-center justify-center text-white shrink-0">
+          <div className="shrink-0">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
               viewBox="0 0 112 154"
-              className="w-4 h-4"
+              className="w-6 h-auto text-[var(--sidebar-primary)]"
             >
               <path d="M48.303 153.213c-10.797 0-21.457-2.796-31.1-8.277l5.078-8.934c12.275 6.977 26.536 8.756 40.153 5.008 13.616-3.749 24.963-12.576 31.94-24.863 6.976-12.28 8.756-26.542 5.008-40.158-3.749-13.617-12.577-24.958-24.863-31.94l5.073-8.934c14.67 8.337 25.211 21.882 29.693 38.142 4.476 16.266 2.353 33.294-5.983 47.957-8.337 14.669-21.883 25.212-38.143 29.687a63.538 63.538 0 01-16.857 2.295v.017z" fill="currentColor" />
               <path d="M48.338 132.661c-7.284 0-14.48-1.886-20.983-5.581l5.002-8.828c7.514 4.269 16.307 5.245 24.637 2.951 8.331-2.294 15.267-7.692 19.53-15.207 8.81-15.51 3.358-35.293-12.145-44.097l5.073-8.934c20.434 11.607 27.612 37.67 16.006 58.11-5.623 9.897-14.764 17.016-25.738 20.037a42.877 42.877 0 01-11.382 1.549z" fill="currentColor" />
@@ -194,7 +196,7 @@ export default function Sidebar() {
               <path d="M58.502 72.24c-5.872-3.334-7.894-10.08-4.79-15.544 1.686-2.962 3.986-4.783 6.835-5.41 2.768-.609 5.93-.012 8.905 1.68l5.061-8.911c-5.185-2.945-10.926-3.962-16.17-2.809-5.66 1.242-10.478 4.925-13.57 10.371-5.895 10.377-2.14 23.402 8.62 29.534 5.771 3.281 7.834 10.175 4.695 15.704-1.508 2.66-3.82 4.41-6.675 5.061-2.892.662-6.073.124-8.964-1.52l-5.073 8.934c3.642 2.07 7.621 3.134 11.565 3.134a21.61 21.61 0 004.766-.532c5.664-1.295 10.394-4.849 13.32-10.005 5.978-10.524 2.236-23.561-8.525-29.693v.006z" fill="currentColor" />
             </svg>
           </div>
-          <p className="text-sm font-semibold text-[var(--sidebar-primary)] truncate">Developer Data Portal</p>
+          <p className="text-sm font-semibold text-[var(--sidebar-primary)] truncate">Developer<br></br>Data<br></br>Portal</p>
         </Link>
       </div>
 
@@ -216,9 +218,6 @@ export default function Sidebar() {
           <Github className="h-4 w-4" />
           <span>GitHub</span>
         </a>
-        <p className="text-xs text-[var(--sidebar-muted)] mt-2 px-1">
-          Powered by <span className="font-medium text-[var(--sidebar-foreground)]">OSO</span>
-        </p>
       </div>
     </aside>
   );
