@@ -1328,7 +1328,8 @@ def transform_pipeline_composition(
 
 
 @app.cell(hide_code=True)
-def section_conclusion(mo):
+def section_conclusion(mo, pipeline_by_eco):
+    # pipeline_by_eco dependency ensures this renders after all content cells
     mo.accordion({
         "Metrics & Definitions": mo.md("""
         - Ecosystem Classification:
