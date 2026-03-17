@@ -4,12 +4,7 @@
  * Prose-optimized layout for documentation/onboarding content.
  */
 
-/* Constrain prose width for readability */
-.marimo-output > div {
-  max-width: 720px;
-  margin-left: auto;
-  margin-right: auto;
-}
+/* Use same 1100px as base — consistent across all variants */
 
 /* Accordion styling */
 details {
