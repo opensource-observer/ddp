@@ -72,61 +72,6 @@ def _(mo):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md("""## Data Models""")
-    return
-
-
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md("""
-    ### Underlying Tables
-
-    | Table | Purpose |
-    |:-------|:---------|
-    | `stg_opendevdata__repo_developer_28d_activities` | Developer activity per repository (28-day rolling) |
-    | `stg_opendevdata__ecosystems` | Ecosystem definitions |
-    | `stg_opendevdata__ecosystems_repos_recursive` | Repository-to-ecosystem mapping |
-
-    ### Derived Calculations
-
-    **Step 1: Identify First Activity Month (Month 0)**
-    ```sql
-    SELECT
-        canonical_developer_id,
-        DATE_TRUNC('month', MIN(day)) AS cohort_month
-    FROM stg_opendevdata__repo_developer_28d_activities
-    -- ... join to ecosystem ...
-    GROUP BY canonical_developer_id
-    ```
-
-    **Step 2: Track Monthly Activity**
-    ```sql
-    SELECT
-        canonical_developer_id,
-        DATE_TRUNC('month', day) AS activity_month,
-        1 AS was_active
-    FROM stg_opendevdata__repo_developer_28d_activities
-    -- ... join to ecosystem ...
-    GROUP BY 1, 2
-    ```
-
-    **Step 3: Calculate Retention by Cohort**
-    ```sql
-    SELECT
-        cohort_month,
-        months_since_cohort,
-        COUNT(DISTINCT canonical_developer_id) AS active_count,
-        cohort_size,
-        ROUND(100.0 * active_count / cohort_size, 2) AS retention_rate
-    FROM cohort_activity
-    GROUP BY 1, 2, cohort_size
-    ```
-    """)
-    return
-
-
-@app.cell(hide_code=True)
-def _(mo):
     mo.md("""## Live Data Exploration""")
     return
 
@@ -579,22 +524,33 @@ def _(mo, pyoso_db_conn, px):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md("""
-    ## Related Models
+    mo.accordion({
+        "Methodology": mo.md("""
+        **Cohort Definition**: Month 0 = the first month a developer is observed contributing to an ecosystem's repos.
 
-    **Metric Definitions**
-    - **Activity**: [activity.py](./activity.py) — MAD metric methodology
-    - **Lifecycle**: [lifecycle.py](./lifecycle.py) — Developer stage definitions
-    - **Alignment**: [alignment.py](./alignment.py) — Developer ecosystem alignment
+        **Retention Rate**: `Retention(cohort, N) = Active_in_month_N / Cohort_size × 100%`
 
-    **Data Models**
-    - **Ecosystems**: [ecosystems.py](../models/ecosystems.py) — Ecosystem definitions and hierarchy
-    - **Developers**: [developers.py](../models/developers.py) — Unified developer identities
+        A developer is "active" if they have ≥1 commit in the 28-day window around month N. Cohort size is fixed at Month 0 count — it never shrinks.
 
-    **Insights**
-    - Retention Analysis — Cohort retention rates by ecosystem
-    - DeFi Developer Journeys — Developer flows in DeFi
-    """)
+        **Calculation Steps**:
+        1. Identify each developer's first activity month per ecosystem (cohort assignment)
+        2. Track monthly activity in subsequent months
+        3. Divide active count by cohort size for each month offset
+        """),
+        "Assumptions & Limitations": mo.md("""
+        - Cohort assignment is per-ecosystem — a developer joining Ethereum in Jan and Solana in Mar has two separate cohorts
+        - Commits only — excludes PRs, issues, code reviews
+        - Newer cohorts have shorter observation windows (survivorship bias for recent cohorts)
+        - Identity resolution may cause developers to appear in wrong cohorts
+        - 28-day activity windows can miss developers who contribute sporadically
+        """),
+        "Data Sources": mo.md("""
+        - `oso.stg_opendevdata__repo_developer_28d_activities` — 28-day rolling activity per developer per repo
+        - `oso.stg_opendevdata__ecosystems_repos_recursive` — Recursive repo-to-ecosystem mapping
+        - `oso.stg_opendevdata__ecosystems` — Ecosystem definitions
+        - Full catalog: [docs.oso.xyz](https://docs.oso.xyz)
+        """),
+    })
     return
 
 

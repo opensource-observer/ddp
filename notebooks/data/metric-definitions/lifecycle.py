@@ -36,24 +36,6 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md("""
-    ## Overview
-
-    Every developer in an ecosystem follows a lifecycle — they arrive, contribute at varying intensity, and eventually slow down or leave. The lifecycle model captures this journey by assigning each developer to one of five stages based on their recent activity:
-
-    - **New** → **Active** (full-time or part-time) → **Dormant** → **Churned**
-
-    The framework uses 16 granular state transitions, which roll up into 4 summary categories: First Time, Full Time, Part Time, and Churned/Dormant.
-
-    Tracking these stages over time reveals whether an ecosystem is growing (more new developers than churned), healthy (strong full-time core), or at risk (rising dormancy).
-
-    The underlying data comes from `oso.stg_opendevdata__eco_mads`, which provides pre-calculated daily snapshots per ecosystem including activity-level and tenure breakdowns.
-    """)
-    return
-
-
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md("""
     ## Definition & Formula
 
     The lifecycle model assigns each developer a state each month based on their activity level and prior state. The 16 granular states roll up into 4 summary categories:
@@ -345,43 +327,6 @@ def _(mo, df_lifecycle, go, apply_ec_style, time_range, pd, EC_COLORS, ecosystem
 @app.cell(hide_code=True)
 def _(mo):
     mo.md("""
-    ## Methodology
-
-    ### Threshold Justification
-
-    | Threshold | Value | Rationale |
-    |:----------|:------|:----------|
-    | Full-Time | ≥10 days / 28d window | Aligns with Electric Capital; ~2+ days/week of sustained contribution |
-    | Part-Time | 1-9 days / 28d window | Regular but not intensive; hobbyists, consultants, multi-ecosystem devs |
-    | One-Time | Sporadic over 84d window | Minimal engagement; may be exploring or making one-off contributions |
-    | Dormant | 1-6 months inactive | Balances early detection with false positives from holidays/breaks |
-    | Churned | >6 months inactive | Industry standard for "lost" users; return is rare but possible |
-
-    ### Comparison to Electric Capital
-
-    | Aspect | DDP Lifecycle | Electric Capital |
-    |:-------|:-------------|:-----------------|
-    | Full-Time threshold | 10 days / 28-day window | 10 days / 28-day window |
-    | Part-Time threshold | 1-9 days / 28-day window | <10 days / 28-day window |
-    | One-Time tracking | Via one_time_devs in eco_mads | 84-day rolling window |
-    | Identity resolution | Canonical developer ID (ODD) | Cross-email fingerprinting |
-    | Tenure segmentation | <1yr, 1-2yr, 2+yr | Same |
-
-    ### Limitations
-
-    | Factor | Impact |
-    |:-------|:-------|
-    | **Commits only** | Activity is based on commits; PRs, issues, and reviews are not counted |
-    | **Multi-ecosystem** | A developer may be full-time in one ecosystem but part-time in another |
-    | **Seasonal patterns** | Academic schedules, holidays, and funding cycles create natural fluctuations |
-    | **Dormant/churned not in eco_mads** | The pre-calculated model only tracks currently active developers; dormant and churned developers must be derived from raw activity data |
-    """)
-    return
-
-
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md("""
     ## Sample Queries
 
     ### 1. Current Lifecycle Stage Distribution
@@ -534,20 +479,32 @@ def _(mo, pyoso_db_conn):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md("""
-    ## Related Models
+    mo.accordion({
+        "Methodology": mo.md("""
+        **Lifecycle States**: Developers are classified into 4 high-level categories based on 28-day rolling activity windows:
+        - **Full-Time**: ≥10 active days per 28-day window
+        - **Part-Time**: 1-9 active days per 28-day window
+        - **One-Time/Dormant**: Sporadic activity over 84-day window or 1-6 months inactive
+        - **Churned**: >6 months with no activity
 
-    - **Activity**: [activity.py](./activity.py) — MAD metric with EC-style charts and data source validation
-    - **Alignment**: [alignment.py](./alignment.py) — Developer ecosystem alignment metric
-    - **Retention**: [retention.py](./retention.py) — Cohort-based developer retention
-    - **Ecosystems**: [ecosystems.py](../models/ecosystems.py) — Ecosystem definitions and hierarchy
-    - **Developers**: [developers.py](../models/developers.py) — Unified developer identities
-    - **Timeseries Metrics**: [timeseries-metrics.py](../models/timeseries-metrics.py) — Aggregated time series
+        **Thresholds**: Aligned with Electric Capital's methodology. Full-time threshold (10 days/28 days) represents ~36% of working days.
 
-    **Insights**
-    - Lifecycle Analysis — Stage transitions and ecosystem health over time
-    - Retention Analysis — Cohort retention rates by ecosystem
-    """)
+        **State Transitions**: Developers move between states monthly. A churned developer who returns is reclassified based on current activity level, not history.
+        """),
+        "Assumptions & Limitations": mo.md("""
+        - Commits only — excludes PRs, issues, code reviews
+        - Multi-ecosystem developers have independent lifecycle states per ecosystem
+        - Seasonal patterns (holidays, conference seasons) can cause temporary state changes
+        - Dormant and churned states are not pre-calculated in `eco_mads` — require custom CTE on raw activity data
+        - Identity resolution may affect transition accuracy
+        """),
+        "Data Sources": mo.md("""
+        - `oso.stg_opendevdata__eco_mads` — Pre-calculated daily MAD snapshots with activity level breakdowns
+        - `oso.stg_opendevdata__repo_developer_28d_activities` — Raw 28-day rolling activity for custom state calculations
+        - `oso.stg_opendevdata__ecosystems_repos_recursive` — Ecosystem-to-repo mapping
+        - Full catalog: [docs.oso.xyz](https://docs.oso.xyz)
+        """),
+    })
     return
 
 
