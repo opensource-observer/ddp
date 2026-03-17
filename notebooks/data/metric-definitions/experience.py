@@ -90,6 +90,8 @@ def _(mo):
     JOIN oso.stg_opendevdata__ecosystems AS e
       ON m.ecosystem_id = e.id
     WHERE m.day = (SELECT MAX(day) FROM oso.stg_opendevdata__eco_mads)
+      AND e.is_crypto = 1
+      AND e.is_category = 0
     ORDER BY m.all_devs DESC
     LIMIT 15
     ```
@@ -113,6 +115,8 @@ def _(mo, pyoso_db_conn):
         JOIN oso.stg_opendevdata__ecosystems AS e
           ON m.ecosystem_id = e.id
         WHERE m.day = (SELECT MAX(day) FROM oso.stg_opendevdata__eco_mads)
+          AND e.is_crypto = 1
+          AND e.is_category = 0
         ORDER BY m.all_devs DESC
         LIMIT 15
         """,

@@ -338,6 +338,8 @@ def _(mo):
       FROM oso.stg_opendevdata__eco_mads
     )
       AND (m.exclusive_devs + m.multichain_devs) > 0
+      AND e.is_crypto = 1
+      AND e.is_category = 0
     ORDER BY m.exclusive_devs + m.multichain_devs DESC
     LIMIT 20
     ```
@@ -364,6 +366,8 @@ def _(mo, pyoso_db_conn):
           FROM oso.stg_opendevdata__eco_mads
         )
           AND (m.exclusive_devs + m.multichain_devs) > 0
+          AND e.is_crypto = 1
+          AND e.is_category = 0
         ORDER BY m.exclusive_devs + m.multichain_devs DESC
         LIMIT 20
         """,

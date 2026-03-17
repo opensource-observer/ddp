@@ -136,6 +136,8 @@ def _(mo):
       SELECT MAX(day)
       FROM oso.stg_opendevdata__eco_mads
     )
+      AND e.is_crypto = 1
+      AND e.is_category = 0
     ORDER BY m.all_devs DESC
     LIMIT 15
     ```
@@ -160,6 +162,8 @@ def _(mo, pyoso_db_conn):
           SELECT MAX(day)
           FROM oso.stg_opendevdata__eco_mads
         )
+          AND e.is_crypto = 1
+          AND e.is_category = 0
         ORDER BY m.all_devs DESC
         LIMIT 15
         """,
