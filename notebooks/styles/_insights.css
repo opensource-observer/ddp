@@ -1,0 +1,98 @@
+/*
+ * DDP Insights Notebook Overrides
+ * For: insights/*.py
+ * Dashboard/analysis style with charts, stats, and interactive elements.
+ */
+
+/* === Dashboard header === */
+.ddp-header {
+  margin-bottom: 4px;
+}
+.ddp-header h1 {
+  font-size: 1.75em;
+  font-weight: 800;
+  color: var(--ddp-text);
+  letter-spacing: -0.02em;
+  margin: 0 0 6px 0;
+  line-height: 1.15;
+}
+.ddp-header p {
+  font-size: 0.95em;
+  color: var(--ddp-text-muted);
+  margin: 0 0 10px 0;
+  line-height: 1.5;
+  max-width: 720px;
+}
+.ddp-header-meta {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  font-size: 0.75em;
+  color: #94a3b8;
+}
+.ddp-header-meta a {
+  color: #94a3b8;
+}
+
+/* Live data indicator dot */
+.ddp-live-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #10b981;
+  display: inline-block;
+}
+
+/* Metadata badge (owner, date, etc.) */
+.ddp-badge {
+  background-color: #f0f0f0;
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-size: 0.9em;
+}
+
+/* === Stat cards === */
+.marimo-output [data-testid="marimo-stat"] {
+  border-color: var(--ddp-border);
+}
+
+/* === Chart containers === */
+.js-plotly-plot {
+  max-width: 100%;
+}
+.js-plotly-plot .plotly {
+  margin: 0 auto;
+}
+
+/* === Leaderboard / ranking tables === */
+table th {
+  font-size: 0.8em;
+  color: var(--ddp-text-muted);
+  padding: 6px 12px;
+  border-bottom: 2px solid var(--ddp-border);
+  text-align: left;
+}
+table td {
+  border-bottom: 1px solid var(--ddp-surface);
+}
+table {
+  max-width: 1100px;
+  border-collapse: collapse;
+}
+
+/* === Dropdown / control area === */
+.marimo-output select,
+.marimo-output [data-testid="marimo-dropdown"] {
+  margin-bottom: 0.75em;
+}
+
+/* === Mobile: responsive charts === */
+@media (max-width: 768px) {
+  .js-plotly-plot {
+    overflow-x: auto;
+  }
+  .ddp-header-meta {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+}
