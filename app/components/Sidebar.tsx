@@ -59,7 +59,7 @@ const navItems: NavItem[] = [
       { label: '2025 Developer Trends', href: '/insights/developer-report-2025' },
       { label: 'Lifecycle Analysis', href: '/insights/developer-lifecycle' },
       { label: 'Speedrun Ethereum', href: '/insights/speedrun-ethereum' },
-      { label: 'DeFi Developer Journeys', href: '/insights/defi-developer-journeys' },
+      { label: 'DeFi Builder Journeys', href: '/insights/defi-builder-journeys' },
       { label: 'Retention Analysis', href: '/insights/developer-retention' },
     ],
   },
