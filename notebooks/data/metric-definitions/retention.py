@@ -323,37 +323,6 @@ def _(mo, pyoso_db_conn, px):
     return (df_cross,)
 
 
-@app.cell(hide_code=True)
-def _(mo):
-    mo.accordion({
-        "Methodology": mo.md("""
-        **Cohort Definition**: Month 0 = the first month a developer is observed contributing to an ecosystem's repos.
-
-        **Retention Rate**: `Retention(cohort, N) = Active_in_month_N / Cohort_size × 100%`
-
-        A developer is "active" if they have ≥1 commit in the 28-day window around month N. Cohort size is fixed at Month 0 count — it never shrinks.
-
-        **Calculation Steps**:
-        1. Identify each developer's first activity month per ecosystem (cohort assignment)
-        2. Track monthly activity in subsequent months
-        3. Divide active count by cohort size for each month offset
-        """),
-        "Assumptions & Limitations": mo.md("""
-        - Cohort assignment is per-ecosystem — a developer joining Ethereum in Jan and Solana in Mar has two separate cohorts
-        - Commits only — excludes PRs, issues, code reviews
-        - Newer cohorts have shorter observation windows (survivorship bias for recent cohorts)
-        - Identity resolution may cause developers to appear in wrong cohorts
-        - 28-day activity windows can miss developers who contribute sporadically
-        """),
-        "Data Sources": mo.md("""
-        - `oso.stg_opendevdata__repo_developer_28d_activities` — 28-day rolling activity per developer per repo
-        - `oso.stg_opendevdata__ecosystems_repos_recursive` — Recursive repo-to-ecosystem mapping
-        - `oso.stg_opendevdata__ecosystems` — Ecosystem definitions
-        - Full catalog: [docs.oso.xyz](https://docs.oso.xyz)
-        """),
-    })
-    return
-
 
 @app.cell(hide_code=True)
 def _():

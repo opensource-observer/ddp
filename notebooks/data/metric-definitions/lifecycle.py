@@ -264,36 +264,6 @@ def _(mo, pyoso_db_conn):
     return
 
 
-@app.cell(hide_code=True)
-def _(mo):
-    mo.accordion({
-        "Methodology": mo.md("""
-        **Lifecycle States**: Developers are classified into 4 high-level categories based on 28-day rolling activity windows:
-        - **Full-Time**: ≥10 active days per 28-day window
-        - **Part-Time**: 1-9 active days per 28-day window
-        - **One-Time/Dormant**: Sporadic activity over 84-day window or 1-6 months inactive
-        - **Churned**: >6 months with no activity
-
-        **Thresholds**: Aligned with Electric Capital's methodology. Full-time threshold (10 days/28 days) represents ~36% of working days.
-
-        **State Transitions**: Developers move between states monthly. A churned developer who returns is reclassified based on current activity level, not history.
-        """),
-        "Assumptions & Limitations": mo.md("""
-        - Commits only — excludes PRs, issues, code reviews
-        - Multi-ecosystem developers have independent lifecycle states per ecosystem
-        - Seasonal patterns (holidays, conference seasons) can cause temporary state changes
-        - Dormant and churned states are not pre-calculated in `eco_mads` — require custom CTE on raw activity data
-        - Identity resolution may affect transition accuracy
-        """),
-        "Data Sources": mo.md("""
-        - `oso.stg_opendevdata__eco_mads` — Pre-calculated daily MAD snapshots with activity level breakdowns
-        - `oso.stg_opendevdata__repo_developer_28d_activities` — Raw 28-day rolling activity for custom state calculations
-        - `oso.stg_opendevdata__ecosystems_repos_recursive` — Ecosystem-to-repo mapping
-        - Full catalog: [docs.oso.xyz](https://docs.oso.xyz)
-        """),
-    })
-    return
-
 
 @app.cell(hide_code=True)
 def setup_pyoso():

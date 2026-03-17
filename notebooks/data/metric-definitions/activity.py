@@ -169,35 +169,6 @@ def _(mo, pyoso_db_conn):
     return
 
 
-@app.cell(hide_code=True)
-def _(mo):
-    mo.accordion({
-        "Methodology": mo.md("""
-        **Data Source**: Electric Capital's Open Dev Data via `stg_opendevdata__eco_mads` — pre-calculated daily snapshots per ecosystem with rolling 28-day windows.
-
-        **Definitions**:
-        - **MAD** (Monthly Active Developer): Unique developers with ≥1 commit in a rolling 28-day window
-        - **Full-Time**: ≥10 active days per 28-day window
-        - **Part-Time**: <10 active days, regular activity pattern
-        - **One-Time**: Sporadic activity over 84-day rolling window
-        - **Newcomer/Emerging/Established**: Based on lifetime tenure (<1yr / 1-2yr / 2+yr)
-        - **Exclusive/Multichain**: Whether developer commits to repos in only one ecosystem or multiple
-        """),
-        "Assumptions & Limitations": mo.md("""
-        - Tracks commits only (excludes PRs, issues, reviews)
-        - Curated repository set — coverage depends on Electric Capital's ecosystem classification
-        - Identity resolution uses heuristics — some developers may be over/under-counted
-        - GitHub Archive PushEvent API truncates at 20 commits per push (inflates commit counts for large pushes)
-        - Data lags a few days behind real-time
-        """),
-        "Data Sources": mo.md("""
-        - **Open Dev Data** (Electric Capital): `oso.stg_opendevdata__eco_mads` — pre-calculated MAD snapshots
-        - **GitHub Archive**: `oso.int_gharchive__developer_activities` — raw daily activity for validation
-        - Full catalog: [docs.oso.xyz](https://docs.oso.xyz)
-        """),
-    })
-    return
-
 
 @app.cell(hide_code=True)
 def setup_pyoso():

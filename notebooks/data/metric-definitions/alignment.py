@@ -321,36 +321,6 @@ def _(mo, pyoso_db_conn, px):
     return (df_distribution,)
 
 
-@app.cell(hide_code=True)
-def _(mo):
-    mo.accordion({
-        "Methodology": mo.md("""
-        **Base alignment** uses commit counts over a rolling 28-day window, computed by joining developer activity to ecosystem repo mappings. The percentage is: commits to ecosystem repos / total commits across all repos.
-
-        **Multi-ecosystem repos**: A repo mapped to both "Ethereum" and "DeFi" means commits to that repo count toward both ecosystems. This can cause alignment percentages to sum to >100% when viewed across ecosystems for a single developer.
-
-        **DeFi Builder Journeys** extends this into a 5-channel model (`mart_developer_alignment_monthly`) that tracks `repo_event_days` (not raw commits) across: home project, other crypto, personal, OSS, and interest/watching activity. This is a customer-scoped model computed from the same underlying activity data.
-
-        **Speedrun Ethereum** uses a hierarchical repo classification (Ethereum > Other EVM > Non-EVM > Other Crypto > Personal > Unknown) rather than percentage-based alignment. This is a categorical assignment, not a continuous metric.
-        """),
-        "Assumptions & Limitations": mo.md("""
-        - Tracks commits only — excludes PRs, issues, code reviews, stars, forks
-        - A repo can belong to multiple ecosystems, inflating cross-ecosystem alignment sums
-        - 28-day rolling window means alignment can shift rapidly with burst activity
-        - Identity resolution heuristics may merge or split developer profiles
-        - Ecosystem classification depends entirely on Electric Capital's repo-to-ecosystem mapping — unmapped repos are invisible
-        - The extended multi-channel model (DeFi Builder Journeys) uses `repo_event_days` which weights days of activity equally regardless of commit volume
-        """),
-        "Data Sources": mo.md("""
-        - `oso.stg_opendevdata__repo_developer_28d_activities` — 28-day rolling activity per developer per repo (public)
-        - `oso.stg_opendevdata__ecosystems_repos_recursive` — Recursive repo-to-ecosystem mapping (public)
-        - `oso.stg_opendevdata__ecosystems` — Ecosystem definitions with `is_crypto`, `is_chain` flags (public)
-        - `ethereum.devpanels.mart_developer_alignment_monthly` — 5-channel monthly alignment (customer-scoped)
-        - Full catalog: [docs.oso.xyz](https://docs.oso.xyz)
-        """),
-    })
-    return
-
 
 @app.cell(hide_code=True)
 def _():
