@@ -13,37 +13,6 @@ def header_title(mo):
 
 
 @app.cell(hide_code=True)
-def header_accordion(mo):
-    mo.accordion({
-        "Metrics & Definitions": mo.md("""
-**Definitions**
-
-- **Cohort**: Developers grouped by the year of their first contribution to the ecosystem
-- **Retention Rate**: Percentage of the original cohort that remains active in subsequent periods
-- **Years Since Join**: Time elapsed since first contribution (Year 0 = joined year, always 100%)
-
-**Methodology**
-
-1. **Cohort Assignment**: Each developer is assigned to a cohort based on their first contribution date
-2. **Activity Tracking**: We track whether the developer had any activity in subsequent years
-3. **Retention Rate**: Percentage of the original cohort that remains active
-        """),
-        "Assumptions & Limitations": mo.md("""
-- **Multi-ecosystem developers**: Developers active in multiple ecosystems are counted separately per ecosystem — a developer who churns from one ecosystem may still be active in another
-- **Identity resolution**: Developer identities are resolved by Electric Capital's fingerprinting; the same person using different accounts may be counted multiple times
-- **Newer cohorts**: More recent cohorts have shorter observation windows and therefore fewer data points for retention analysis
-- **Public commits only**: Only public GitHub activity is tracked; private repos and non-GitHub platforms are excluded
-- **Activity windows**: Activity is measured using 28-day rolling windows via Open Dev Data's `repo_developer_28d_activities` model
-        """),
-        "Data Sources": mo.md("""
-- **Open Dev Data (Electric Capital)** — Developer activity data, [github.com/electric-capital/crypto-ecosystems](https://github.com/electric-capital/crypto-ecosystems)
-- **Key Models** — `oso.stg_opendevdata__repo_developer_28d_activities`, `oso.stg_opendevdata__ecosystems_repos_recursive`
-        """),
-    })
-    return
-
-
-@app.cell(hide_code=True)
 def test_connection(mo, pyoso_db_conn):
     _test_df = mo.sql("""SELECT 1 AS test""", engine=pyoso_db_conn, output=False)
     return
@@ -476,6 +445,37 @@ def helper_apply_ec_style():
 
         return fig
     return (apply_ec_style,)
+
+
+@app.cell(hide_code=True)
+def header_accordion(mo):
+    mo.accordion({
+        "Metrics & Definitions": mo.md("""
+**Definitions**
+
+- **Cohort**: Developers grouped by the year of their first contribution to the ecosystem
+- **Retention Rate**: Percentage of the original cohort that remains active in subsequent periods
+- **Years Since Join**: Time elapsed since first contribution (Year 0 = joined year, always 100%)
+
+**Methodology**
+
+1. **Cohort Assignment**: Each developer is assigned to a cohort based on their first contribution date
+2. **Activity Tracking**: We track whether the developer had any activity in subsequent years
+3. **Retention Rate**: Percentage of the original cohort that remains active
+        """),
+        "Assumptions & Limitations": mo.md("""
+- **Multi-ecosystem developers**: Developers active in multiple ecosystems are counted separately per ecosystem — a developer who churns from one ecosystem may still be active in another
+- **Identity resolution**: Developer identities are resolved by Electric Capital's fingerprinting; the same person using different accounts may be counted multiple times
+- **Newer cohorts**: More recent cohorts have shorter observation windows and therefore fewer data points for retention analysis
+- **Public commits only**: Only public GitHub activity is tracked; private repos and non-GitHub platforms are excluded
+- **Activity windows**: Activity is measured using 28-day rolling windows via Open Dev Data's `repo_developer_28d_activities` model
+        """),
+        "Data Sources": mo.md("""
+- **Open Dev Data (Electric Capital)** — Developer activity data, [github.com/electric-capital/crypto-ecosystems](https://github.com/electric-capital/crypto-ecosystems)
+- **Key Models** — `oso.stg_opendevdata__repo_developer_28d_activities`, `oso.stg_opendevdata__ecosystems_repos_recursive`
+        """),
+    })
+    return
 
 
 @app.cell(hide_code=True)

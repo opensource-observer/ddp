@@ -11,30 +11,6 @@ def header_title(mo):
 
 
 @app.cell(hide_code=True)
-def header_accordion(mo, _report_complete):
-    mo.accordion({
-        "Metrics & Definitions": mo.md("""
-    - **Time period**: January 2015 to December 2025 (full historical data)
-    - **Monthly Active Developer (MAD)**: A developer who authored at least 1 commit in a given month (measured using a 28-day rolling activity window)
-    - **Tenure Categories**: Newcomers (< 1 year active), Emerging (1–2 years), Established (2+ years)
-    - **Activity Levels**: Full-time (sustained activity over 84-day window), Part-time (intermittent), One-time (sporadic)
-        """),
-        "Assumptions & Limitations": mo.md("""
-    - **Commit-only activity measure**: Developer activity is based on commits only — pull requests, code reviews, and issue comments are not counted
-    - **Public repos only**: Private repositories are excluded from the dataset
-    - **Identity resolution**: Developer identities are resolved across forges using Electric Capital's methodology, but some cross-account connections may be missed
-    - **Ecosystem classification**: Ecosystem assignments follow the Electric Capital taxonomy; projects may belong to multiple ecosystems
-        """),
-        "Data Sources": mo.md("""
-    - **Open Dev Data** — Electric Capital's developer activity dataset, [github.com/electric-capital/crypto-ecosystems](https://github.com/electric-capital/crypto-ecosystems)
-    - **OSO API** — Data pipeline and metrics, [docs.oso.xyz](https://docs.oso.xyz/)
-    - **Key Models** — `oso.stg_opendevdata__eco_mads`, `oso.stg_opendevdata__ecosystems`
-        """),
-    })
-    return
-
-
-@app.cell(hide_code=True)
 def setup_imports():
     import pandas as pd
     import plotly.graph_objects as go
@@ -1634,8 +1610,31 @@ def comparison_chart(df_all, mo, pd):
     )
     _src = _html_mod.escape(_inner, quote=True)
     mo.Html(f'<iframe srcdoc="{_src}" class="ddp-chart-frame" scrolling="no"></iframe>')
-    _report_complete = True
-    return (_report_complete,)
+    return
+
+
+@app.cell(hide_code=True)
+def header_accordion(mo):
+    mo.accordion({
+        "Metrics & Definitions": mo.md("""
+    - **Time period**: January 2015 to December 2025 (full historical data)
+    - **Monthly Active Developer (MAD)**: A developer who authored at least 1 commit in a given month (measured using a 28-day rolling activity window)
+    - **Tenure Categories**: Newcomers (< 1 year active), Emerging (1–2 years), Established (2+ years)
+    - **Activity Levels**: Full-time (sustained activity over 84-day window), Part-time (intermittent), One-time (sporadic)
+        """),
+        "Assumptions & Limitations": mo.md("""
+    - **Commit-only activity measure**: Developer activity is based on commits only — pull requests, code reviews, and issue comments are not counted
+    - **Public repos only**: Private repositories are excluded from the dataset
+    - **Identity resolution**: Developer identities are resolved across forges using Electric Capital's methodology, but some cross-account connections may be missed
+    - **Ecosystem classification**: Ecosystem assignments follow the Electric Capital taxonomy; projects may belong to multiple ecosystems
+        """),
+        "Data Sources": mo.md("""
+    - **Open Dev Data** — Electric Capital's developer activity dataset, [github.com/electric-capital/crypto-ecosystems](https://github.com/electric-capital/crypto-ecosystems)
+    - **OSO API** — Data pipeline and metrics, [docs.oso.xyz](https://docs.oso.xyz/)
+    - **Key Models** — `oso.stg_opendevdata__eco_mads`, `oso.stg_opendevdata__ecosystems`
+        """),
+    })
+    return
 
 
 if __name__ == "__main__":
