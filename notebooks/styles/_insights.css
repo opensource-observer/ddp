@@ -2,36 +2,49 @@
  * DDP Insights Notebook Overrides
  * For: insights/*.py
  * Dashboard/analysis style with charts, stats, and interactive elements.
+ *
+ * CSS classes prefixed with .ddp- are ready for notebooks to adopt.
+ * Currently most notebooks use inline styles for these patterns —
+ * see OSO-XXXX for the cleanup ticket to migrate to these classes.
  */
 
-/* === Dashboard header === */
+/* ==========================================================================
+   DASHBOARD HEADER
+   Used by: ethereum-repo-rank.py, defi-builder-journeys.py
+   Replace inline HTML headers with: <div class="ddp-header">
+   ========================================================================== */
+
 .ddp-header {
-  margin-bottom: 4px;
+  margin-bottom: 8px;
 }
 .ddp-header h1 {
-  font-size: 1.75em;
-  font-weight: 800;
+  font-size: 1.5em;
+  font-weight: 600;
   color: var(--ddp-text);
   letter-spacing: -0.02em;
   margin: 0 0 6px 0;
-  line-height: 1.15;
+  line-height: 1.2;
 }
 .ddp-header p {
-  font-size: 0.95em;
+  font-size: 0.875em;
   color: var(--ddp-text-muted);
   margin: 0 0 10px 0;
   line-height: 1.5;
   max-width: 720px;
 }
+
+/* Header metadata row (author, date, live status) */
 .ddp-header-meta {
   display: flex;
-  gap: 12px;
+  gap: 10px;
   align-items: center;
-  font-size: 0.75em;
-  color: #94a3b8;
+  font-size: 0.6875em;
+  color: var(--ddp-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
 }
 .ddp-header-meta a {
-  color: #94a3b8;
+  color: var(--ddp-text-muted);
 }
 
 /* Live data indicator dot */
@@ -43,20 +56,197 @@
   display: inline-block;
 }
 
-/* Metadata badge (owner, date, etc.) */
+/* ==========================================================================
+   BADGES
+   Used by: defi-builder-journeys.py (already), all others (inline)
+   Replace: <span style="background-color: #f0f0f0; padding: 2px 4px; ...">
+   With:    <span class="ddp-badge">
+   ========================================================================== */
+
 .ddp-badge {
-  background-color: #f0f0f0;
-  padding: 2px 4px;
+  background: var(--ddp-surface);
+  border: 1px solid var(--ddp-border);
+  padding: 1px 6px;
   border-radius: 3px;
-  font-size: 0.9em;
+  font-size: 0.8125em;
+  color: var(--ddp-text-muted);
+  white-space: nowrap;
 }
 
-/* === Stat cards === */
-.marimo-output [data-testid="marimo-stat"] {
-  border-color: var(--ddp-border);
+/* ==========================================================================
+   STAT BOXES (custom HTML)
+   Used by: developer-lifecycle.py, developer-retention.py
+   Replace inline <div style="border:1px solid #e5e7eb;border-radius:8px;...">
+   With:    <div class="ddp-stat-box">
+              <div class="ddp-stat-label">Label</div>
+              <div class="ddp-stat-value">123</div>
+              <div class="ddp-stat-caption">Context</div>
+            </div>
+   ========================================================================== */
+
+.ddp-stat-box {
+  border: 1px solid var(--ddp-border);
+  border-radius: 6px;
+  padding: 12px 16px;
+  flex: 1;
+  min-width: 120px;
+}
+.ddp-stat-label {
+  font-size: 0.6875em;
+  font-weight: 500;
+  color: var(--ddp-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-bottom: 4px;
+}
+.ddp-stat-value {
+  font-size: 1.5em;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--ddp-text);
+  line-height: 1.2;
+}
+.ddp-stat-caption {
+  font-size: 0.75em;
+  color: var(--ddp-text-muted);
+  margin-top: 4px;
 }
 
-/* === Chart containers === */
+/* Row container for stat boxes */
+.ddp-stat-row {
+  display: flex;
+  gap: 12px;
+  margin: 12px 0;
+}
+
+/* ==========================================================================
+   SELECT / DROPDOWN CONTROLS
+   Used by: speedrun-ethereum.py (x5), developer-report-2025.py (x4),
+            developer-lifecycle.py, developer-retention.py
+   Replace: <select style="padding:4px 8px;border:1px solid #d1d5db;...">
+   With:    <select class="ddp-select">
+   ========================================================================== */
+
+.ddp-select {
+  padding: 4px 8px;
+  border: 1px solid var(--ddp-border);
+  border-radius: 4px;
+  font-size: 0.8125em;
+  color: var(--ddp-text);
+  background: var(--ddp-bg);
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.ddp-select:hover {
+  border-color: var(--ddp-text-muted);
+}
+.ddp-select:focus {
+  border-color: var(--ddp-accent);
+  box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.1);
+}
+
+/* Control row wrapper (label + select side by side) */
+.ddp-control-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0;
+  font-size: 0.8125em;
+  color: var(--ddp-text-muted);
+}
+
+/* ==========================================================================
+   IFRAME WRAPPERS (for embedded plotly HTML)
+   Used by: speedrun-ethereum.py, developer-report-2025.py
+   Replace: style="width:100%;height:520px;border:none;..."
+   With:    class="ddp-chart-frame"
+   ========================================================================== */
+
+.ddp-chart-frame {
+  width: 100%;
+  height: 520px;
+  border: none;
+  display: block;
+}
+
+/* ==========================================================================
+   RANK BADGES (leaderboard medals)
+   Used by: ethereum-repo-rank.py
+   Replace inline emoji badge styles with classes:
+     <span class="ddp-rank-badge ddp-rank-1">🥇</span>
+   ========================================================================== */
+
+.ddp-rank-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  font-size: 0.75em;
+}
+.ddp-rank-1 { background: #fef3c7; }
+.ddp-rank-2 { background: #f3f4f6; }
+.ddp-rank-3 { background: #fef2f2; }
+
+/* ==========================================================================
+   TABLES (insights-specific)
+   ========================================================================== */
+
+table {
+  max-width: 1100px;
+  border-collapse: collapse;
+}
+table th {
+  font-size: 0.6875em;
+  font-weight: 500;
+  color: var(--ddp-text-muted);
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--ddp-border);
+  text-align: left;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+table td {
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--ddp-border);
+}
+/* Monospace cells for repo names, IDs */
+table td code, table td .mono {
+  font-size: 0.8125em;
+  color: var(--ddp-accent);
+}
+
+/* ==========================================================================
+   SECTION NOTES / ANNOTATIONS
+   Replace: <span style="color:#64748B">
+   With:    <span class="ddp-note">
+   ========================================================================== */
+
+.ddp-note {
+  font-size: 0.8125em;
+  color: var(--ddp-text-muted);
+  line-height: 1.5;
+}
+
+/* ==========================================================================
+   GRID LAYOUT (for side-by-side content blocks)
+   Used by: defi-builder-journeys.py
+   Replace: style="display:grid;grid-template-columns:1fr 1fr;gap:16px"
+   With:    class="ddp-grid-2"
+   ========================================================================== */
+
+.ddp-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+/* ==========================================================================
+   CHART CONTAINERS
+   ========================================================================== */
+
 .js-plotly-plot {
   max-width: 100%;
 }
@@ -64,29 +254,16 @@
   margin: 0 auto;
 }
 
-/* === Leaderboard / ranking tables === */
-table th {
-  font-size: 0.8em;
-  color: var(--ddp-text-muted);
-  padding: 6px 12px;
-  border-bottom: 2px solid var(--ddp-border);
-  text-align: left;
-}
-table td {
-  border-bottom: 1px solid var(--ddp-surface);
-}
-table {
-  max-width: 1100px;
-  border-collapse: collapse;
-}
-
-/* === Dropdown / control area === */
+/* Marimo dropdown spacing */
 .marimo-output select,
 .marimo-output [data-testid="marimo-dropdown"] {
-  margin-bottom: 0.75em;
+  margin-bottom: 0.5em;
 }
 
-/* === Mobile: responsive charts === */
+/* ==========================================================================
+   MOBILE
+   ========================================================================== */
+
 @media (max-width: 768px) {
   .js-plotly-plot {
     overflow-x: auto;
@@ -94,5 +271,14 @@ table {
   .ddp-header-meta {
     flex-wrap: wrap;
     gap: 6px;
+  }
+  .ddp-stat-row {
+    flex-direction: column;
+  }
+  .ddp-grid-2 {
+    grid-template-columns: 1fr;
+  }
+  .ddp-chart-frame {
+    height: 400px;
   }
 }

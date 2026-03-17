@@ -11,8 +11,8 @@ tbody tr:nth-child(even) {
 
 /* Code blocks in documentation */
 pre code {
-  font-size: 0.825em;
-  line-height: 1.5;
+  font-size: 0.8125em;
+  line-height: 1.6;
 }
 
 /* Mermaid diagram container */

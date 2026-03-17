@@ -1,17 +1,24 @@
 @import "tailwindcss";
 
 :root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 255, 255, 255;
-  --background-end-rgb: 255, 255, 255;
+  /* Shared font stack — must match notebooks/styles/base.css --ddp-font */
+  --ddp-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
 
-  /* Sidebar tokens (matching OSO kuma frontend-ui) */
-  --sidebar-bg: hsl(0 0% 98%);
+  /* Shared palette — Tailwind slate scale */
+  --ddp-text: #0f172a;
+  --ddp-text-muted: #64748b;
+  --ddp-border: #e2e8f0;
+  --ddp-surface: #f8fafc;
+  --ddp-accent: #4f46e5;
+
+  /* Sidebar tokens (derived from shared palette) */
+  --sidebar-bg: var(--ddp-surface);
   --sidebar-foreground: hsl(240 5.3% 26.1%);
-  --sidebar-primary: hsl(240 5.9% 10%);
+  --sidebar-primary: var(--ddp-text);
   --sidebar-accent: hsl(240 4.8% 95.9%);
-  --sidebar-border: hsl(220 13% 91%);
-  --sidebar-muted: hsl(240 3.8% 46.1%);
+  --sidebar-border: var(--ddp-border);
+  --sidebar-muted: var(--ddp-text-muted);
 }
 
 * {
@@ -19,13 +26,13 @@
 }
 
 body {
-  color: rgb(var(--foreground-rgb));
-  background: rgb(var(--background-start-rgb));
+  color: var(--ddp-text);
+  background: #ffffff;
   margin: 0;
   padding: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  font-family: var(--ddp-font);
+  font-size: 16px;
+  line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
