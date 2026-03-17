@@ -9,7 +9,7 @@ def _(mo):
     mo.md("""
     # Activity
 
-    The **Monthly Active Developer (MAD)** metric measures unique developers contributing code within a rolling 28-day window — the standard metric from the [Electric Capital Developer Report](https://www.developerreport.com). The 2025 Developer Trends insight uses this metric to track ecosystem growth, activity level composition, and tenure shifts over time.
+    Monthly Active Developers (MAD) counts unique developers contributing code within a rolling 28-day window — the standard metric from Electric Capital's Open Dev Data.
 
     **Preview:**
     ```sql
@@ -19,17 +19,13 @@ def _(mo):
       m.all_devs,
       m.full_time_devs,
       m.part_time_devs,
-      m.one_time_devs,
-      m.devs_0_1y AS newcomers,
-      m.devs_1_2y AS emerging,
-      m.devs_2y_plus AS established,
-      m.num_commits
+      m.one_time_devs
     FROM oso.stg_opendevdata__eco_mads AS m
     JOIN oso.stg_opendevdata__ecosystems AS e
       ON m.ecosystem_id = e.id
     WHERE e.name = 'Ethereum'
     ORDER BY m.day DESC
-    LIMIT 10
+    LIMIT 5
     ```
     """)
     return
@@ -38,21 +34,34 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md("""
-    ## Definition & Formula
+    ## Standard Definition
 
-    | Metric | Definition | Window |
-    |:-------|:-----------|:-------|
-    | **Monthly Active Developers** | Unique developers with ≥1 commit | Rolling 28 days |
-    | **Full-time** | ≥10 active days in window | 84-day rolling |
-    | **Part-time** | <10 active days, regular contributions | 84-day rolling |
-    | **One-time** | Minimal or sporadic activity | 84-day rolling |
-    | **Newcomers** | <1 year contributing to crypto | Lifetime |
-    | **Emerging** | 1-2 years contributing to crypto | Lifetime |
-    | **Established** | 2+ years contributing to crypto | Lifetime |
-    | **Exclusive** | Active only in this ecosystem | Rolling 28 days |
-    | **Multichain** | Active across multiple ecosystems | Rolling 28 days |
+    ODD classifies active developers by intensity over rolling windows:
 
-    > Developers are original code authors — merge/PR integrators are not counted unless they authored commits. Identity resolution deduplicates developers across multiple accounts and emails.
+    | Metric | Column | Threshold | Window |
+    |:-------|:-------|:----------|:-------|
+    | Monthly Active Developers | `all_devs` | >=1 commit | Rolling 28 days |
+    | Full-time | `full_time_devs` | >=10 active days | 84-day rolling |
+    | Part-time | `part_time_devs` | <10 active days, regular contributions | 84-day rolling |
+    | One-time | `one_time_devs` | Minimal or sporadic activity | 84-day rolling |
+    | Exclusive | `exclusive_devs` | Active in only this ecosystem | Rolling 28 days |
+    | Multichain | `multichain_devs` | Active across multiple ecosystems | Rolling 28 days |
+
+    These are pre-calculated daily in `stg_opendevdata__eco_mads`. Developers are original code authors — merge/PR integrators are not counted unless they authored commits. Identity resolution deduplicates developers across multiple accounts and emails.
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md("""
+    ## DDP Variants
+
+    | Variant | Insight | Definition | How It Differs |
+    |:--------|:--------|:-----------|:---------------|
+    | Standard MAD | 2025 Developer Trends | Uses `eco_mads` directly — MAD, full-time/part-time/one-time stacked area charts, ecosystem comparisons | Direct use of ODD metrics, no modifications |
+    | Engagement-based activity | Ethereum Repo Rank | Counts unique stargazers + forkers (not committers) per repo over 30d/7d windows | Different primitive: stars/forks from GitHub API, not commits from ODD. Measures attention, not contribution |
+    | Momentum | Ethereum Repo Rank | `(engagers_7d / 7) / (engagers_30d / 30)` — ratio of recent vs trailing engagement rate | Derived acceleration metric. >1.0 = trending up, <1.0 = cooling |
     """)
     return
 
@@ -62,9 +71,9 @@ def _(mo):
     mo.md("""
     ## Sample Queries
 
-    ### 1. Monthly Active Developers for an Ecosystem
+    ### 1. MAD with Activity Level Breakdown (ODD Standard)
 
-    Query the pre-calculated MAD metric with full breakdowns for any ecosystem.
+    Query the pre-calculated MAD metric for Ethereum over the last 90 days, showing the full activity level breakdown.
 
     ```sql
     SELECT
@@ -72,11 +81,7 @@ def _(mo):
       m.all_devs,
       m.full_time_devs,
       m.part_time_devs,
-      m.one_time_devs,
-      m.devs_0_1y AS newcomers,
-      m.devs_1_2y AS emerging,
-      m.devs_2y_plus AS established,
-      m.num_commits
+      m.one_time_devs
     FROM oso.stg_opendevdata__eco_mads AS m
     JOIN oso.stg_opendevdata__ecosystems AS e
       ON m.ecosystem_id = e.id
@@ -91,17 +96,13 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo, pyoso_db_conn):
     _df = mo.sql(
-        f"""
+        """
         SELECT
           m.day,
           m.all_devs,
           m.full_time_devs,
           m.part_time_devs,
-          m.one_time_devs,
-          m.devs_0_1y AS newcomers,
-          m.devs_1_2y AS emerging,
-          m.devs_2y_plus AS established,
-          m.num_commits
+          m.one_time_devs
         FROM oso.stg_opendevdata__eco_mads AS m
         JOIN oso.stg_opendevdata__ecosystems AS e
           ON m.ecosystem_id = e.id
@@ -127,8 +128,7 @@ def _(mo):
       m.all_devs AS monthly_active_devs,
       m.full_time_devs,
       m.exclusive_devs,
-      m.multichain_devs,
-      m.num_commits
+      m.multichain_devs
     FROM oso.stg_opendevdata__eco_mads AS m
     JOIN oso.stg_opendevdata__ecosystems AS e
       ON m.ecosystem_id = e.id
@@ -137,7 +137,7 @@ def _(mo):
       FROM oso.stg_opendevdata__eco_mads
     )
     ORDER BY m.all_devs DESC
-    LIMIT 20
+    LIMIT 15
     ```
     """)
     return
@@ -146,14 +146,13 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo, pyoso_db_conn):
     _df = mo.sql(
-        f"""
+        """
         SELECT
           e.name AS ecosystem,
           m.all_devs AS monthly_active_devs,
           m.full_time_devs,
           m.exclusive_devs,
-          m.multichain_devs,
-          m.num_commits
+          m.multichain_devs
         FROM oso.stg_opendevdata__eco_mads AS m
         JOIN oso.stg_opendevdata__ecosystems AS e
           ON m.ecosystem_id = e.id
@@ -162,12 +161,11 @@ def _(mo, pyoso_db_conn):
           FROM oso.stg_opendevdata__eco_mads
         )
         ORDER BY m.all_devs DESC
-        LIMIT 20
+        LIMIT 15
         """,
         engine=pyoso_db_conn
     )
     return
-
 
 
 @app.cell(hide_code=True)
