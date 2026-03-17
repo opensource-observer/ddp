@@ -6,10 +6,7 @@ app = marimo.App(width="full", css_file="../styles/insights.css")
 
 @app.cell(hide_code=True)
 def header_title(mo):
-    mo.md(r"""
-    # DeFi Builder Journeys
-    <small>Owner: <span class="ddp-badge">OSO Team</span> · Last Updated: <span class="ddp-badge">2026-03-16</span></small>
-    """)
+    mo.Html('<div class="ddp-header"><h1>DeFi Builder Journeys</h1><p>Analyzing builder activity across 40 top DeFi protocols on Ethereum and other major L1s.</p><div class="ddp-header-meta"><span>Created: <span class="ddp-badge">2026-03-16</span></span></div></div>')
     return
 
 
@@ -1331,6 +1328,51 @@ def transform_pipeline_composition(
 
 
 @app.cell(hide_code=True)
+def section_conclusion(mo):
+    mo.accordion({
+        "Metrics & Definitions": mo.md("""
+        - Ecosystem Classification:
+            - Ethereum: Projects with >80% of TVL on Ethereum (L1 + L2s like Arbitrum, Polygon, Base, Optimism, etc.)
+            - Solana: Projects whose top chain by TVL is Solana
+            - Other: Remaining non-Ethereum, non-Solana projects (including Hyperliquid, Bitcoin, etc.)
+        - Project Classifications:
+            - Home Project: The DeFi project a builder is primarily associated with, based on their most active repository contributions.
+            - Feeder Projects: Projects where a builder contributed or starred repositories before onboarding to their home DeFi project.
+        - Builder Classifications:
+            - Qualifying Builder: A builder with 12+ months of sustained contribution to a top DeFi project's home repositories.
+            - Monthly Active Builders (MABs): Count of unique qualified builders with at least one contribution event in a given month.
+            - Newcomer: A qualified builder with fewer than 6 months of observable open-source activity before onboarding to their home project (came in cold).
+            - Cohort Retention: The percentage of builders from a given onboarding cohort (year) who remain active on their home project at each subsequent time interval.
+        - Lifecycle:
+            - Onboarding: A builder's first month of activity on their home project.
+            - Offboarding: A builder is considered offboarded if they have been inactive on their home project for 6+ consecutive months.
+            - Still Active: A builder who has contributed to their home project within the most recent 6 months of data.
+        - Flows:
+            - Net Flow: The year-over-year difference between builders entering and exiting an ecosystem. Positive means net talent gain.
+            - Cross-Ecosystem Flow (Ethereum <-> Other Crypto): The horizontal bar in the Net Flows section counts unique builders who moved between Ethereum and other crypto ecosystems over the full time period. This uses a different method from the annual inflow/outflow bars, which count year-over-year flows by source/destination category; the two methods do not sum to each other.
+            - Year-over-Year Flows: The annual bar chart breaks down builder inflows (entering) and outflows (leaving) by partner category (Other Crypto, Non-Crypto OSS, Inactive). The net flow line shows the cumulative balance; these year-over-year counts sum to the total net flow shown in the stat cards.
+        """),
+        "Assumptions & Limitations": mo.md("""
+        - TVL as inclusion criterion: We use TVL to identify economically meaningful protocols, which excludes low-stakes forks and testnet-only experiments; this analysis focuses on capital-securing DeFi.
+        - Excluded protocols: Some high-TVL protocols have minimal observable OSS activity, so they may appear in tables but contribute little to flow analysis.
+        - Private repositories: Activity in private repos is not visible to GitHub Archive, so teams that develop behind closed doors (or move to private repos after open-source phases) may appear to go inactive; this is one of the most consequential limitations.
+        - Post-hire behavior: Some builders are hired by crypto firms and stop public contributions, so the inactive count may be inflated; we cannot distinguish left crypto from went private.
+        - Bot and noise filtering: We exclude known bots, but some automated contributions may still slip through.
+        - Identity resolution: OpenDevData maps multiple accounts to canonical IDs, but imperfect mapping may double-count some builders.
+        - Scope: This is a structured analysis of visible OSS builder flows across economically significant DeFi protocols, not a census of all crypto builders or proprietary development.
+        """),
+        "Data Sources": mo.md("""
+        - [DefiLlama](https://defillama.com/) --- Top DeFi protocols by TVL (40 selected)
+        - [OSS Directory](https://github.com/opensource-observer/oss-directory) --- Protocol to GitHub mapping
+        - [OpenDevData (Electric Capital)](https://github.com/electric-capital/crypto-ecosystems) --- Ecosystem classifications
+        - [GitHub Archive](https://www.gharchive.org/) --- Builder activity events
+        - [OSO API](https://docs.oso.xyz/) --- Data pipeline and metrics
+        """),
+    })
+    return
+
+
+@app.cell(hide_code=True)
 def settings_color_palette():
     # Color palette — semantic colors reused across all charts
     ETHEREUM_COLOR = '#6F5AE0'
@@ -2427,51 +2469,6 @@ def comparison_tab(
         static_plotly(_fig_inflow),
     ])
     return (comparison_tab_content,)
-
-
-@app.cell(hide_code=True)
-def section_conclusion(mo):
-    mo.accordion({
-        "Metrics & Definitions": mo.md("""
-        - Ecosystem Classification:
-            - Ethereum: Projects with >80% of TVL on Ethereum (L1 + L2s like Arbitrum, Polygon, Base, Optimism, etc.)
-            - Solana: Projects whose top chain by TVL is Solana
-            - Other: Remaining non-Ethereum, non-Solana projects (including Hyperliquid, Bitcoin, etc.)
-        - Project Classifications:
-            - Home Project: The DeFi project a builder is primarily associated with, based on their most active repository contributions.
-            - Feeder Projects: Projects where a builder contributed or starred repositories before onboarding to their home DeFi project.
-        - Builder Classifications:
-            - Qualifying Builder: A builder with 12+ months of sustained contribution to a top DeFi project's home repositories.
-            - Monthly Active Builders (MABs): Count of unique qualified builders with at least one contribution event in a given month.
-            - Newcomer: A qualified builder with fewer than 6 months of observable open-source activity before onboarding to their home project (came in cold).
-            - Cohort Retention: The percentage of builders from a given onboarding cohort (year) who remain active on their home project at each subsequent time interval.
-        - Lifecycle:
-            - Onboarding: A builder's first month of activity on their home project.
-            - Offboarding: A builder is considered offboarded if they have been inactive on their home project for 6+ consecutive months.
-            - Still Active: A builder who has contributed to their home project within the most recent 6 months of data.
-        - Flows:
-            - Net Flow: The year-over-year difference between builders entering and exiting an ecosystem. Positive means net talent gain.
-            - Cross-Ecosystem Flow (Ethereum <-> Other Crypto): The horizontal bar in the Net Flows section counts unique builders who moved between Ethereum and other crypto ecosystems over the full time period. This uses a different method from the annual inflow/outflow bars, which count year-over-year flows by source/destination category; the two methods do not sum to each other.
-            - Year-over-Year Flows: The annual bar chart breaks down builder inflows (entering) and outflows (leaving) by partner category (Other Crypto, Non-Crypto OSS, Inactive). The net flow line shows the cumulative balance; these year-over-year counts sum to the total net flow shown in the stat cards.
-        """),
-        "Assumptions & Limitations": mo.md("""
-        - TVL as inclusion criterion: We use TVL to identify economically meaningful protocols, which excludes low-stakes forks and testnet-only experiments; this analysis focuses on capital-securing DeFi.
-        - Excluded protocols: Some high-TVL protocols have minimal observable OSS activity, so they may appear in tables but contribute little to flow analysis.
-        - Private repositories: Activity in private repos is not visible to GitHub Archive, so teams that develop behind closed doors (or move to private repos after open-source phases) may appear to go inactive; this is one of the most consequential limitations.
-        - Post-hire behavior: Some builders are hired by crypto firms and stop public contributions, so the inactive count may be inflated; we cannot distinguish left crypto from went private.
-        - Bot and noise filtering: We exclude known bots, but some automated contributions may still slip through.
-        - Identity resolution: OpenDevData maps multiple accounts to canonical IDs, but imperfect mapping may double-count some builders.
-        - Scope: This is a structured analysis of visible OSS builder flows across economically significant DeFi protocols, not a census of all crypto builders or proprietary development.
-        """),
-        "Data Sources": mo.md("""
-        - [DefiLlama](https://defillama.com/) --- Top DeFi protocols by TVL (40 selected)
-        - [OSS Directory](https://github.com/opensource-observer/oss-directory) --- Protocol to GitHub mapping
-        - [OpenDevData (Electric Capital)](https://github.com/electric-capital/crypto-ecosystems) --- Ecosystem classifications
-        - [GitHub Archive](https://www.gharchive.org/) --- Builder activity events
-        - [OSO API](https://docs.oso.xyz/) --- Data pipeline and metrics
-        """),
-    })
-    return
 
 
 @app.cell(hide_code=True)
