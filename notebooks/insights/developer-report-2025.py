@@ -8,7 +8,7 @@ app = marimo.App(width="full", css_file="../styles/insights.css")
 def header_title(mo):
     mo.md("""
     # 2025 Developer Trends
-    <small>Owner: <span style="background-color: #f0f0f0; padding: 2px 4px; border-radius: 3px;">OSO Team</span> · Last Updated: <span style="background-color: #f0f0f0; padding: 2px 4px; border-radius: 3px;">2026-02-17</span></small>
+    <small>Owner: <span class="ddp-badge">OSO Team</span> · Last Updated: <span class="ddp-badge">2026-02-17</span></small>
 
     Explore an interactive reproduction of the [Electric Capital Developer Report](https://www.developerreport.com), updated with 2025 data.
     """)
@@ -431,7 +431,7 @@ def chart1_total_mads(EC_LIGHT_BLUE, df_all, go, mo, pd):
     _opts = list(_states.keys())
     _djs_safe = _json.dumps(_states).replace('</', '<\\/')
     _opts_js = _json.dumps(_opts)
-    _sel_html = '<div style="margin-bottom:8px"><span style="font-size:11px;color:#6b7280;display:block;margin-bottom:2px">Time Range</span><select id="sel" style="padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;color:#374151;background:#fff;cursor:pointer">' + ''.join(f'<option value="{i}">{o}</option>' for i, o in enumerate(_opts)) + '</select></div>'
+    _sel_html = '<div style="margin-bottom:8px"><span class="ddp-select-label">Time Range</span><select id="sel" class="ddp-select">' + ''.join(f'<option value="{i}">{o}</option>' for i, o in enumerate(_opts)) + '</select></div>'
 
     _inner = (
         '<!DOCTYPE html><html><head><meta charset="utf-8">'
@@ -450,7 +450,7 @@ def chart1_total_mads(EC_LIGHT_BLUE, df_all, go, mo, pd):
         '</script></body></html>'
     )
     _src = _html_mod.escape(_inner, quote=True)
-    mo.Html(f'<iframe srcdoc="{_src}" style="width:100%;height:520px;border:none;display:block" scrolling="no"></iframe>')
+    mo.Html(f'<iframe srcdoc="{_src}" class="ddp-chart-frame" scrolling="no"></iframe>')
     return
 
 
@@ -513,7 +513,7 @@ def chart2_tenure_composition(TENURE_COLORS, df_all, go, mo, pd):
     _opts = list(_states.keys())
     _djs_safe = _json.dumps(_states).replace('</', '<\\/')
     _opts_js = _json.dumps(_opts)
-    _sel_html = '<div style="margin-bottom:8px"><span style="font-size:11px;color:#6b7280;display:block;margin-bottom:2px">Time Range</span><select id="sel" style="padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;color:#374151;background:#fff;cursor:pointer">' + ''.join(f'<option value="{i}">{o}</option>' for i, o in enumerate(_opts)) + '</select></div>'
+    _sel_html = '<div style="margin-bottom:8px"><span class="ddp-select-label">Time Range</span><select id="sel" class="ddp-select">' + ''.join(f'<option value="{i}">{o}</option>' for i, o in enumerate(_opts)) + '</select></div>'
 
     _inner = (
         '<!DOCTYPE html><html><head><meta charset="utf-8">'
@@ -532,7 +532,7 @@ def chart2_tenure_composition(TENURE_COLORS, df_all, go, mo, pd):
         '</script></body></html>'
     )
     _src = _html_mod.escape(_inner, quote=True)
-    mo.Html(f'<iframe srcdoc="{_src}" style="width:100%;height:520px;border:none;display:block" scrolling="no"></iframe>')
+    mo.Html(f'<iframe srcdoc="{_src}" class="ddp-chart-frame" scrolling="no"></iframe>')
     return
 
 
@@ -664,7 +664,7 @@ def chart3_experienced_devs(TENURE_COLORS, df_all, go, mo):
     _opts = list(_states.keys())
     _djs_safe = _json.dumps(_states).replace('</', '<\\/')
     _opts_js = _json.dumps(_opts)
-    _sel_html = '<div style="margin-bottom:8px"><span style="font-size:11px;color:#6b7280;display:block;margin-bottom:2px">Comparison Period</span><select id="sel" style="padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;color:#374151;background:#fff;cursor:pointer">' + ''.join(f'<option value="{i}">{o}</option>' for i, o in enumerate(_opts)) + '</select></div>'
+    _sel_html = '<div style="margin-bottom:8px"><span class="ddp-select-label">Comparison Period</span><select id="sel" class="ddp-select">' + ''.join(f'<option value="{i}">{o}</option>' for i, o in enumerate(_opts)) + '</select></div>'
 
     _inner = (
         '<!DOCTYPE html><html><head><meta charset="utf-8">'
@@ -683,7 +683,7 @@ def chart3_experienced_devs(TENURE_COLORS, df_all, go, mo):
         '</script></body></html>'
     )
     _src = _html_mod.escape(_inner, quote=True)
-    mo.Html(f'<iframe srcdoc="{_src}" style="width:100%;height:520px;border:none;display:block" scrolling="no"></iframe>')
+    mo.Html(f'<iframe srcdoc="{_src}" class="ddp-chart-frame" scrolling="no"></iframe>')
     return
 
 
@@ -814,7 +814,7 @@ def chart4_developer_changes(TENURE_COLORS, df_all, go, mo):
     _opts = list(_states.keys())
     _djs_safe = _json.dumps(_states).replace('</', '<\\/')
     _opts_js = _json.dumps(_opts)
-    _sel_html = '<div style="margin-bottom:8px"><span style="font-size:11px;color:#6b7280;display:block;margin-bottom:2px">Comparison Period</span><select id="sel" style="padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;color:#374151;background:#fff;cursor:pointer">' + ''.join(f'<option value="{i}">{o}</option>' for i, o in enumerate(_opts)) + '</select></div>'
+    _sel_html = '<div style="margin-bottom:8px"><span class="ddp-select-label">Comparison Period</span><select id="sel" class="ddp-select">' + ''.join(f'<option value="{i}">{o}</option>' for i, o in enumerate(_opts)) + '</select></div>'
 
     _inner = (
         '<!DOCTYPE html><html><head><meta charset="utf-8">'
@@ -833,7 +833,7 @@ def chart4_developer_changes(TENURE_COLORS, df_all, go, mo):
         '</script></body></html>'
     )
     _src = _html_mod.escape(_inner, quote=True)
-    mo.Html(f'<iframe srcdoc="{_src}" style="width:100%;height:520px;border:none;display:block" scrolling="no"></iframe>')
+    mo.Html(f'<iframe srcdoc="{_src}" class="ddp-chart-frame" scrolling="no"></iframe>')
     return
 
 
@@ -914,8 +914,8 @@ def chart5_newcomer_volatility(EC_LIGHT_BLUE, df_all, go, mo, pd):
             _states[_opt] = {'chart': _json.loads(_fig.to_json())}
 
     _djs_safe = _json.dumps(_states).replace('</', '<\\/')
-    _gran_sel = '<div style="margin-bottom:8px"><span style="font-size:11px;color:#6b7280;display:block;margin-bottom:2px">Time Granularity</span><select id="sel1" style="padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;color:#374151;background:#fff;cursor:pointer">' + ''.join(f'<option value="{o}">{o}</option>' for o in _GRAN_OPTS) + '</select></div>'
-    _range_sel = '<div style="margin-bottom:8px"><span style="font-size:11px;color:#6b7280;display:block;margin-bottom:2px">Date Range</span><select id="sel2" style="padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;color:#374151;background:#fff;cursor:pointer">' + ''.join(f'<option value="{o}">{o}</option>' for o in _RANGE_OPTS) + '</select></div>'
+    _gran_sel = '<div style="margin-bottom:8px"><span class="ddp-select-label">Time Granularity</span><select id="sel1" class="ddp-select">' + ''.join(f'<option value="{o}">{o}</option>' for o in _GRAN_OPTS) + '</select></div>'
+    _range_sel = '<div style="margin-bottom:8px"><span class="ddp-select-label">Date Range</span><select id="sel2" class="ddp-select">' + ''.join(f'<option value="{o}">{o}</option>' for o in _RANGE_OPTS) + '</select></div>'
     _sel_html = f'<div style="display:flex;gap:12px;flex-wrap:wrap">{_gran_sel}{_range_sel}</div>'
 
     _inner = (
@@ -935,7 +935,7 @@ def chart5_newcomer_volatility(EC_LIGHT_BLUE, df_all, go, mo, pd):
         '</script></body></html>'
     )
     _src = _html_mod.escape(_inner, quote=True)
-    mo.Html(f'<iframe srcdoc="{_src}" style="width:100%;height:520px;border:none;display:block" scrolling="no"></iframe>')
+    mo.Html(f'<iframe srcdoc="{_src}" class="ddp-chart-frame" scrolling="no"></iframe>')
     return
 
 
@@ -1072,8 +1072,8 @@ def chart6_btc_eth_share(df_all, go, mo, pd):
         _states[_opt] = {'chart': _json.loads(_fig.to_json())}
 
     _djs_safe = _json.dumps(_states).replace('</', '<\\/')
-    _view_sel = '<div style="margin-bottom:8px"><span style="font-size:11px;color:#6b7280;display:block;margin-bottom:2px">View</span><select id="sel1" style="padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;color:#374151;background:#fff;cursor:pointer">' + ''.join(f'<option value="{o}">{o}</option>' for o in _VIEW_OPTS) + '</select></div>'
-    _time_sel = '<div style="margin-bottom:8px"><span style="font-size:11px;color:#6b7280;display:block;margin-bottom:2px">Time Range</span><select id="sel2" style="padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;color:#374151;background:#fff;cursor:pointer">' + ''.join(f'<option value="{o}">{o}</option>' for o in _TIME_OPTS) + '</select></div>'
+    _view_sel = '<div style="margin-bottom:8px"><span class="ddp-select-label">View</span><select id="sel1" class="ddp-select">' + ''.join(f'<option value="{o}">{o}</option>' for o in _VIEW_OPTS) + '</select></div>'
+    _time_sel = '<div style="margin-bottom:8px"><span class="ddp-select-label">Time Range</span><select id="sel2" class="ddp-select">' + ''.join(f'<option value="{o}">{o}</option>' for o in _TIME_OPTS) + '</select></div>'
     _sel_html = f'<div style="display:flex;gap:12px;flex-wrap:wrap">{_view_sel}{_time_sel}</div>'
 
     _inner = (
@@ -1093,7 +1093,7 @@ def chart6_btc_eth_share(df_all, go, mo, pd):
         '</script></body></html>'
     )
     _src = _html_mod.escape(_inner, quote=True)
-    mo.Html(f'<iframe srcdoc="{_src}" style="width:100%;height:520px;border:none;display:block" scrolling="no"></iframe>')
+    mo.Html(f'<iframe srcdoc="{_src}" class="ddp-chart-frame" scrolling="no"></iframe>')
     return
 
 
@@ -1197,8 +1197,8 @@ def chart_ecosystem_total_devs(EC_LIGHT_BLUE, df_all, go, mo, pd):
         _states[_opt] = {'stats': _stats_html, 'chart': _json.loads(_fig.to_json())}
 
     _djs_safe = _json.dumps(_states).replace('</', '<\\/')
-    _eco_sel = '<div style="margin-bottom:8px"><span style="font-size:11px;color:#6b7280;display:block;margin-bottom:2px">Ecosystem</span><select id="sel1" style="padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;color:#374151;background:#fff;cursor:pointer">' + ''.join(f'<option value="{o}">{o}</option>' for o in _ECO_OPTS) + '</select></div>'
-    _time_sel = '<div style="margin-bottom:8px"><span style="font-size:11px;color:#6b7280;display:block;margin-bottom:2px">Time Range</span><select id="sel2" style="padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;color:#374151;background:#fff;cursor:pointer">' + ''.join(f'<option value="{o}">{o}</option>' for o in _TIME_OPTS) + '</select></div>'
+    _eco_sel = '<div style="margin-bottom:8px"><span class="ddp-select-label">Ecosystem</span><select id="sel1" class="ddp-select">' + ''.join(f'<option value="{o}">{o}</option>' for o in _ECO_OPTS) + '</select></div>'
+    _time_sel = '<div style="margin-bottom:8px"><span class="ddp-select-label">Time Range</span><select id="sel2" class="ddp-select">' + ''.join(f'<option value="{o}">{o}</option>' for o in _TIME_OPTS) + '</select></div>'
     _sel_html = f'<div style="display:flex;gap:12px;flex-wrap:wrap">{_eco_sel}{_time_sel}</div>'
 
     _inner = (
@@ -1219,7 +1219,7 @@ def chart_ecosystem_total_devs(EC_LIGHT_BLUE, df_all, go, mo, pd):
         '</script></body></html>'
     )
     _src = _html_mod.escape(_inner, quote=True)
-    mo.Html(f'<iframe srcdoc="{_src}" style="width:100%;height:520px;border:none;display:block" scrolling="no"></iframe>')
+    mo.Html(f'<iframe srcdoc="{_src}" class="ddp-chart-frame" scrolling="no"></iframe>')
     return
 
 
@@ -1289,8 +1289,8 @@ def chart_ecosystem_tenure(TENURE_COLORS, df_all, go, mo, pd):
         _states[_opt] = {'chart': _json.loads(_fig.to_json())}
 
     _djs_safe = _json.dumps(_states).replace('</', '<\\/')
-    _eco_sel = '<div style="margin-bottom:8px"><span style="font-size:11px;color:#6b7280;display:block;margin-bottom:2px">Ecosystem</span><select id="sel1" style="padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;color:#374151;background:#fff;cursor:pointer">' + ''.join(f'<option value="{o}">{o}</option>' for o in _ECO_OPTS) + '</select></div>'
-    _time_sel = '<div style="margin-bottom:8px"><span style="font-size:11px;color:#6b7280;display:block;margin-bottom:2px">Time Range</span><select id="sel2" style="padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;color:#374151;background:#fff;cursor:pointer">' + ''.join(f'<option value="{o}">{o}</option>' for o in _TIME_OPTS) + '</select></div>'
+    _eco_sel = '<div style="margin-bottom:8px"><span class="ddp-select-label">Ecosystem</span><select id="sel1" class="ddp-select">' + ''.join(f'<option value="{o}">{o}</option>' for o in _ECO_OPTS) + '</select></div>'
+    _time_sel = '<div style="margin-bottom:8px"><span class="ddp-select-label">Time Range</span><select id="sel2" class="ddp-select">' + ''.join(f'<option value="{o}">{o}</option>' for o in _TIME_OPTS) + '</select></div>'
     _sel_html = f'<div style="display:flex;gap:12px;flex-wrap:wrap">{_eco_sel}{_time_sel}</div>'
 
     _inner = (
@@ -1310,7 +1310,7 @@ def chart_ecosystem_tenure(TENURE_COLORS, df_all, go, mo, pd):
         '</script></body></html>'
     )
     _src = _html_mod.escape(_inner, quote=True)
-    mo.Html(f'<iframe srcdoc="{_src}" style="width:100%;height:520px;border:none;display:block" scrolling="no"></iframe>')
+    mo.Html(f'<iframe srcdoc="{_src}" class="ddp-chart-frame" scrolling="no"></iframe>')
     return
 
 
@@ -1374,8 +1374,8 @@ def chart_ecosystem_activity(ACTIVITY_COLORS, df_all, go, mo, pd):
         _states[_opt] = {'chart': _json.loads(_fig.to_json())}
 
     _djs_safe = _json.dumps(_states).replace('</', '<\\/')
-    _eco_sel = '<div style="margin-bottom:8px"><span style="font-size:11px;color:#6b7280;display:block;margin-bottom:2px">Ecosystem</span><select id="sel1" style="padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;color:#374151;background:#fff;cursor:pointer">' + ''.join(f'<option value="{o}">{o}</option>' for o in _ECO_OPTS) + '</select></div>'
-    _time_sel = '<div style="margin-bottom:8px"><span style="font-size:11px;color:#6b7280;display:block;margin-bottom:2px">Time Range</span><select id="sel2" style="padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;color:#374151;background:#fff;cursor:pointer">' + ''.join(f'<option value="{o}">{o}</option>' for o in _TIME_OPTS) + '</select></div>'
+    _eco_sel = '<div style="margin-bottom:8px"><span class="ddp-select-label">Ecosystem</span><select id="sel1" class="ddp-select">' + ''.join(f'<option value="{o}">{o}</option>' for o in _ECO_OPTS) + '</select></div>'
+    _time_sel = '<div style="margin-bottom:8px"><span class="ddp-select-label">Time Range</span><select id="sel2" class="ddp-select">' + ''.join(f'<option value="{o}">{o}</option>' for o in _TIME_OPTS) + '</select></div>'
     _sel_html = f'<div style="display:flex;gap:12px;flex-wrap:wrap">{_eco_sel}{_time_sel}</div>'
 
     _inner = (
@@ -1395,7 +1395,7 @@ def chart_ecosystem_activity(ACTIVITY_COLORS, df_all, go, mo, pd):
         '</script></body></html>'
     )
     _src = _html_mod.escape(_inner, quote=True)
-    mo.Html(f'<iframe srcdoc="{_src}" style="width:100%;height:520px;border:none;display:block" scrolling="no"></iframe>')
+    mo.Html(f'<iframe srcdoc="{_src}" class="ddp-chart-frame" scrolling="no"></iframe>')
     return
 
 
@@ -1491,8 +1491,8 @@ def chart_ecosystem_newcomers_by_year(df_all, go, mo):
             _states[_opt] = {'chart': _json.loads(_fig.to_json())}
 
     _djs_safe = _json.dumps(_states).replace('</', '<\\/')
-    _eco_sel = '<div style="margin-bottom:8px"><span style="font-size:11px;color:#6b7280;display:block;margin-bottom:2px">Ecosystem</span><select id="sel1" style="padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;color:#374151;background:#fff;cursor:pointer">' + ''.join(f'<option value="{o}">{o}</option>' for o in _ECO_OPTS) + '</select></div>'
-    _time_sel = '<div style="margin-bottom:8px"><span style="font-size:11px;color:#6b7280;display:block;margin-bottom:2px">Time Range</span><select id="sel2" style="padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;color:#374151;background:#fff;cursor:pointer">' + ''.join(f'<option value="{o}">{o}</option>' for o in _TIME_OPTS) + '</select></div>'
+    _eco_sel = '<div style="margin-bottom:8px"><span class="ddp-select-label">Ecosystem</span><select id="sel1" class="ddp-select">' + ''.join(f'<option value="{o}">{o}</option>' for o in _ECO_OPTS) + '</select></div>'
+    _time_sel = '<div style="margin-bottom:8px"><span class="ddp-select-label">Time Range</span><select id="sel2" class="ddp-select">' + ''.join(f'<option value="{o}">{o}</option>' for o in _TIME_OPTS) + '</select></div>'
     _sel_html = f'<div style="display:flex;gap:12px;flex-wrap:wrap">{_eco_sel}{_time_sel}</div>'
 
     _inner = (
@@ -1512,7 +1512,7 @@ def chart_ecosystem_newcomers_by_year(df_all, go, mo):
         '</script></body></html>'
     )
     _src = _html_mod.escape(_inner, quote=True)
-    mo.Html(f'<iframe srcdoc="{_src}" style="width:100%;height:520px;border:none;display:block" scrolling="no"></iframe>')
+    mo.Html(f'<iframe srcdoc="{_src}" class="ddp-chart-frame" scrolling="no"></iframe>')
     return
 
 
@@ -1594,8 +1594,8 @@ def comparison_chart(df_all, mo, pd):
         )
         + '</div></div>'
     )
-    _metric_sel = '<div style="margin-bottom:8px"><span style="font-size:11px;color:#6b7280;display:block;margin-bottom:2px">Metric</span><select id="sel-metric" style="padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;color:#374151;background:#fff;cursor:pointer">' + ''.join(f'<option value="{o}">{o}</option>' for o in _METRIC_OPTS) + '</select></div>'
-    _time_sel = '<div style="margin-bottom:8px"><span style="font-size:11px;color:#6b7280;display:block;margin-bottom:2px">Time Range</span><select id="sel-time" style="padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;color:#374151;background:#fff;cursor:pointer">' + ''.join(f'<option value="{o}">{o}</option>' for o in _TIME_OPTS) + '</select></div>'
+    _metric_sel = '<div style="margin-bottom:8px"><span class="ddp-select-label">Metric</span><select id="sel-metric" class="ddp-select">' + ''.join(f'<option value="{o}">{o}</option>' for o in _METRIC_OPTS) + '</select></div>'
+    _time_sel = '<div style="margin-bottom:8px"><span class="ddp-select-label">Time Range</span><select id="sel-time" class="ddp-select">' + ''.join(f'<option value="{o}">{o}</option>' for o in _TIME_OPTS) + '</select></div>'
     _sel_html = f'<div style="display:flex;gap:12px;flex-wrap:wrap">{_cb_html}{_metric_sel}{_time_sel}</div>'
 
     _inner = (
@@ -1628,7 +1628,7 @@ def comparison_chart(df_all, mo, pd):
         '</script></body></html>'
     )
     _src = _html_mod.escape(_inner, quote=True)
-    mo.Html(f'<iframe srcdoc="{_src}" style="width:100%;height:520px;border:none;display:block" scrolling="no"></iframe>')
+    mo.Html(f'<iframe srcdoc="{_src}" class="ddp-chart-frame" scrolling="no"></iframe>')
     return
 
 
