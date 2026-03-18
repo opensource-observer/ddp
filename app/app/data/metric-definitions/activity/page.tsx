@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import MarimoIframe from '@/components/MarimoIframe';
 
 export default function Activity() {
@@ -7,3 +8,4 @@ export default function Activity() {
     </div>
   );
 }
+export const metadata: Metadata = { title: 'Activity Metrics' };

@@ -86,13 +86,14 @@ const navItems: NavItem[] = [
   },
 ];
 
-function NavLeaf({ item, pathname }: { item: NavItem; pathname: string }) {
+function NavLeaf({ item, pathname, onNavigate }: { item: NavItem; pathname: string; onNavigate?: () => void }) {
   const isActive = pathname === item.href;
 
   return (
     <li>
       <Link
         href={item.href}
+        onClick={onNavigate}
         className={`flex items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors ${
           isActive
             ? 'bg-[var(--sidebar-accent)] text-[var(--sidebar-primary)] font-medium'
@@ -106,7 +107,7 @@ function NavLeaf({ item, pathname }: { item: NavItem; pathname: string }) {
   );
 }
 
-function NavGroup({ item, pathname }: { item: NavItem; pathname: string }) {
+function NavGroup({ item, pathname, onNavigate }: { item: NavItem; pathname: string; onNavigate?: () => void }) {
   const isChildActive = item.children?.some(
     (child) =>
       child.href === pathname ||
@@ -136,9 +137,9 @@ function NavGroup({ item, pathname }: { item: NavItem; pathname: string }) {
         <ul className="mt-0.5 ml-3 border-l border-[var(--sidebar-border)] pl-2 space-y-0.5">
           {item.children!.map((child) =>
             child.children ? (
-              <NavGroup key={child.href} item={child} pathname={pathname} />
+              <NavGroup key={child.href} item={child} pathname={pathname} onNavigate={onNavigate} />
             ) : (
-              <NavLeaf key={child.href} item={child} pathname={pathname} />
+              <NavLeaf key={child.href} item={child} pathname={pathname} onNavigate={onNavigate} />
             )
           )}
         </ul>
@@ -147,7 +148,7 @@ function NavGroup({ item, pathname }: { item: NavItem; pathname: string }) {
   );
 }
 
-function NavSection({ item, pathname }: { item: NavItem; pathname: string }) {
+function NavSection({ item, pathname, onNavigate }: { item: NavItem; pathname: string; onNavigate?: () => void }) {
   if (item.children) {
     return (
       <div className="px-3 py-1">
@@ -157,9 +158,9 @@ function NavSection({ item, pathname }: { item: NavItem; pathname: string }) {
         <ul className="space-y-0.5">
           {item.children.map((child) =>
             child.children ? (
-              <NavGroup key={child.href} item={child} pathname={pathname} />
+              <NavGroup key={child.href} item={child} pathname={pathname} onNavigate={onNavigate} />
             ) : (
-              <NavLeaf key={child.href} item={child} pathname={pathname} />
+              <NavLeaf key={child.href} item={child} pathname={pathname} onNavigate={onNavigate} />
             )
           )}
         </ul>
@@ -170,7 +171,7 @@ function NavSection({ item, pathname }: { item: NavItem; pathname: string }) {
   return (
     <div className="px-3">
       <ul>
-        <NavLeaf item={item} pathname={pathname} />
+        <NavLeaf item={item} pathname={pathname} onNavigate={onNavigate} />
       </ul>
     </div>
   );
@@ -206,7 +207,7 @@ export default function Sidebar() {
         className={`
           bg-[var(--sidebar-bg)] border-r border-[var(--sidebar-border)] h-full flex flex-col overflow-hidden
           md:w-64 md:shrink-0 md:relative md:translate-x-0
-          fixed inset-y-0 left-0 z-50 w-full md:w-64 transition-transform duration-200 ease-in-out
+          fixed inset-y-0 left-0 z-50 w-72 md:w-64 transition-transform duration-200 ease-in-out
           ${mobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
         `}
       >
@@ -231,7 +232,7 @@ export default function Sidebar() {
                 <path d="M58.502 72.24c-5.872-3.334-7.894-10.08-4.79-15.544 1.686-2.962 3.986-4.783 6.835-5.41 2.768-.609 5.93-.012 8.905 1.68l5.061-8.911c-5.185-2.945-10.926-3.962-16.17-2.809-5.66 1.242-10.478 4.925-13.57 10.371-5.895 10.377-2.14 23.402 8.62 29.534 5.771 3.281 7.834 10.175 4.695 15.704-1.508 2.66-3.82 4.41-6.675 5.061-2.892.662-6.073.124-8.964-1.52l-5.073 8.934c3.642 2.07 7.621 3.134 11.565 3.134a21.61 21.61 0 004.766-.532c5.664-1.295 10.394-4.849 13.32-10.005 5.978-10.524 2.236-23.561-8.525-29.693v.006z" fill="currentColor" />
               </svg>
             </div>
-            <p className="text-sm font-semibold text-[var(--sidebar-primary)] truncate">Developer<br></br>Data<br></br>Portal</p>
+            <p className="text-sm font-semibold text-[var(--sidebar-primary)] truncate">Developer<br />Data<br />Portal</p>
           </Link>
           {/* Mobile close button */}
           <button
@@ -244,9 +245,9 @@ export default function Sidebar() {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 overflow-y-auto py-1" onClick={handleNavClick}>
+        <nav className="flex-1 overflow-y-auto py-1">
           {navItems.map((item) => (
-            <NavSection key={item.href} item={item} pathname={pathname} />
+            <NavSection key={item.href} item={item} pathname={pathname} onNavigate={handleNavClick} />
           ))}
         </nav>
 
@@ -260,6 +261,7 @@ export default function Sidebar() {
           >
             <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
             <span>GitHub</span>
+            <svg className="h-3 w-3 opacity-60" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" /><polyline points="15 3 21 3 21 9" /><line x1="10" y1="14" x2="21" y2="3" /></svg>
           </a>
         </div>
       </aside>

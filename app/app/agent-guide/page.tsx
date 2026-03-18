@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import MarimoIframe from '@/components/MarimoIframe';
 
 export default function AgentGuide() {
@@ -7,3 +8,4 @@ export default function AgentGuide() {
     </div>
   );
 }
+export const metadata: Metadata = { title: 'Agent Guide' };

@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import MarimoIframe from '@/components/MarimoIframe';
 
 export default function Lifecycle() {
@@ -7,3 +8,4 @@ export default function Lifecycle() {
     </div>
   );
 }
+export const metadata: Metadata = { title: 'Lifecycle Metrics' };
