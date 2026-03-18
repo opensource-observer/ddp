@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import MarimoIframe from '@/components/MarimoIframe';
 
 export default function OpenDevData() {
@@ -7,3 +8,4 @@ export default function OpenDevData() {
     </div>
   );
 }
+export const metadata: Metadata = { title: 'Open Dev Data' };

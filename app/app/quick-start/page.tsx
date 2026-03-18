@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import MarimoIframe from '@/components/MarimoIframe';
 
 export default function QuickStart() {
@@ -7,3 +8,4 @@ export default function QuickStart() {
     </div>
   );
 }
+export const metadata: Metadata = { title: 'Quick Start' };

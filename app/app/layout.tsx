@@ -3,8 +3,11 @@ import Sidebar from '@/components/Sidebar';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Developer Data Portal',
-  description: 'OSO data portal for developer analytics',
+  title: {
+    default: 'Developer Data Portal',
+    template: '%s | Developer Data Portal',
+  },
+  description: 'Open-source developer analytics across Ethereum and beyond',
 };
 
 export default function RootLayout({
