@@ -83,8 +83,8 @@ export default function Home() {
             Unified data from{' '}
             <a href="https://opendevdata.org/" target="_blank" rel="noopener noreferrer" className="text-gray-800 underline underline-offset-2 decoration-gray-300 hover:decoration-gray-600 transition-colors">Open Dev Data</a>,{' '}
             <a href="https://www.gharchive.org/" target="_blank" rel="noopener noreferrer" className="text-gray-800 underline underline-offset-2 decoration-gray-300 hover:decoration-gray-600 transition-colors">GitHub Archive</a>, and{' '}
-            <a href="https://www.oso.xyz" target="_blank" rel="noopener noreferrer" className="text-gray-800 underline underline-offset-2 decoration-gray-300 hover:decoration-gray-600 transition-colors">OSO</a>{' '}
-            — explore it in the browser, query it via API, or hand it to your AI agent.
+            <a href="https://www.oso.xyz" target="_blank" rel="noopener noreferrer" className="text-gray-800 underline underline-offset-2 decoration-gray-300 hover:decoration-gray-600 transition-colors">OSO</a>.
+            Explore it in the browser, query via a single API, or just hand it to your agent.
           </p>
         </div>
 
@@ -96,15 +96,17 @@ export default function Home() {
               <h2 className="text-sm font-semibold text-gray-900 mb-1.5">Stop plumbing. Start visualizing.</h2>
               <p className="text-gray-500 text-sm leading-relaxed">
                 Cross-source data pipelines are hard to build and harder to maintain.
-                DDP handles the integration so you can go straight to insights.
+                DDP handles the messy middle so you can go straight to doing cool things.
               </p>
             </div>
             <div>
               <h2 className="text-sm font-semibold text-gray-900 mb-1.5">Open. Traceable. Forkable.</h2>
               <p className="text-gray-500 text-sm leading-relaxed">
-                Every model is a Python notebook — built on{' '}
+                Every page you see here is a Python notebook — built on{' '}
                 <a href="https://marimo.io/" target="_blank" rel="noopener noreferrer" className="text-gray-700 underline underline-offset-2 decoration-gray-300 hover:decoration-gray-600 transition-colors">marimo</a>
-                {' '}— that you can inspect, replicate, or fork and run in your own environment.
+                {' '}— that you can inspect, replicate, or{' '}
+                <a href="https://github.com/opensource-observer/ddp" target="_blank" rel="noopener noreferrer" className="text-gray-700 underline underline-offset-2 decoration-gray-300 hover:decoration-gray-600 transition-colors">fork</a>
+                {' '}and run in your own environment.
               </p>
             </div>
           </div>
