@@ -102,7 +102,7 @@ export default function Home() {
             <div>
               <h2 className="text-sm font-semibold text-gray-900 mb-1.5">Open. Traceable. Forkable.</h2>
               <p className="text-gray-500 text-sm leading-relaxed">
-                Every model you see here is a Python notebook — built on{' '}
+                Every page you see here is a Python notebook — built on{' '}
                 <a href="https://marimo.io/" target="_blank" rel="noopener noreferrer" className="text-gray-700 underline underline-offset-2 decoration-gray-300 hover:decoration-gray-600 transition-colors">marimo</a>
                 {' '}— that you can inspect, replicate, or{' '}
                 <a href="https://github.com/opensource-observer/ddp" target="_blank" rel="noopener noreferrer" className="text-gray-700 underline underline-offset-2 decoration-gray-300 hover:decoration-gray-600 transition-colors">fork</a>
