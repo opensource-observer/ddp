@@ -50,17 +50,19 @@ function Carousel() {
         sizes="50vw"
         priority
       />
-      <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-2">
-        {CAROUSEL_IMAGES.map((_, i) => (
-          <button
-            key={i}
-            onClick={() => { setPrev(current); setCurrent(i); }}
-            aria-label={`Go to screenshot ${i + 1}`}
-            className={`w-1.5 h-1.5 rounded-full transition-all ${
-              i === current ? 'bg-white scale-125' : 'bg-white/50 hover:bg-white/75'
-            }`}
-          />
-        ))}
+      <div className="absolute bottom-3 left-0 right-0 flex justify-center">
+        <div className="flex gap-2 bg-black/20 rounded-full px-2.5 py-1.5 backdrop-blur-sm">
+          {CAROUSEL_IMAGES.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => { setPrev(current); setCurrent(i); }}
+              aria-label={`Go to screenshot ${i + 1}`}
+              className={`w-2 h-2 rounded-full transition-all ${
+                i === current ? 'bg-white scale-125' : 'bg-white/50 hover:bg-white/75'
+              }`}
+            />
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -69,7 +71,7 @@ function Carousel() {
 export default function Home() {
   return (
     <div className="h-full w-full overflow-y-auto">
-      <div className="px-10 py-10 max-w-5xl flex flex-col gap-12">
+      <div className="px-5 py-8 md:px-10 md:py-10 max-w-5xl flex flex-col gap-12">
 
         {/* Hero */}
         <div className="flex flex-col gap-3">
@@ -87,7 +89,7 @@ export default function Home() {
         </div>
 
         {/* Two-column: features left, carousel right */}
-        <div className="grid grid-cols-2 gap-12 items-center">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-center">
           <div className="flex flex-col gap-7">
             <div>
               <p className="text-[13px] font-semibold uppercase tracking-widest text-gray-400 mb-2">Why DDP</p>
@@ -115,7 +117,7 @@ export default function Home() {
         {/* Get started */}
         <div className="flex flex-col gap-4">
           <h2 className="text-xs font-semibold uppercase tracking-widest text-gray-400">Get started</h2>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Link
               href="/quick-start"
               className="group flex flex-col gap-2 p-5 border border-gray-200 rounded-xl hover:border-gray-900 hover:bg-gray-50 transition-all duration-150"
