@@ -24,7 +24,7 @@ def _(mo):
     curl -s {_url}
     ```
 
-    The guide is a standalone markdown file with connection setup, SQL dialect, key tables, and starter queries. Paste it into Claude, ChatGPT, or any agent framework — your agent will self-configure and start querying.
+    The guide is a standalone markdown file with connection setup, SQL dialect, key tables, and starter queries. Paste it into Claude Code, Codex, or any agent framework. Your agent will ask you for an API key and start querying.
     """)
     return
 
@@ -299,8 +299,8 @@ def _(mo):
         "```\n"
     )
     mo.vstack([
-        mo.md("## Create an Interactive Notebook"),
-        mo.md("Skill template for creating new notebooks using DDP data with marimo. Copy the guide below. Point your agent to existing notebooks we've created for inspiration."),
+        mo.md("## Creating Interactive Notebooks"),
+        mo.md("We also have some skill templates for creating notebooks on top of DDP data with marimo. The guides below are opinionated but hopefully useful as inspiration. You can also point your agent to the [full repo](https://github.com/opensource-observer/ddp)."),
         mo.accordion({
             "Notebook Creation Guide": mo.md(f"~~~markdown\n{_guide}\n~~~"),
             "Advanced Patterns": mo.md(f"~~~markdown\n{_advanced_guide}\n~~~"),

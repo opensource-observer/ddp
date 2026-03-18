@@ -7,7 +7,13 @@ app = marimo.App(width="full", css_file="styles/root.css")
 @app.cell(hide_code=True)
 def _(mo):
     mo.md("""
-    # Quick Start
+    # Developer Data Portal
+
+    Open-source developer analytics across Ethereum and beyond. Unified data from Open Dev Data, GitHub Archive, and OSO. Explore it in the browser, query via a single API, or just hand it to your agent.
+
+    Cross-source data pipelines are hard to build and harder to maintain. DDP handles the messy middle so you can go straight to doing cool things.
+
+    Every model you see here is a Python notebook — built on [marimo](https://marimo.io) — that you can inspect, replicate, or [fork](https://github.com/opensource-observer/ddp) and run in your own environment.
     """)
     return
 

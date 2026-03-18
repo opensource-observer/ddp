@@ -79,7 +79,9 @@ GROUP BY e.name ORDER BY active_devs DESC LIMIT 10
 ```
 
 ## Important Notes
+- **Only `oso.*` tables are publicly accessible.** Tables with other namespaces (e.g., `ethereum.*`) require customer-scoped API keys and will return an error with a standard key.
 - GitHub Archive data can be ~3 days behind real-time
 - Only public GitHub events (no private repos)
+- When listing/ranking ecosystems, add `WHERE e.is_crypto = 1 AND e.is_category = 0` to filter out internal ODD categories
 - Use narrow date ranges (7-30 days) for fast queries
 - Full data catalog: https://docs.oso.xyz
