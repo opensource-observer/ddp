@@ -274,17 +274,22 @@ def _(mo, pyoso_db_conn):
 
 ### Developer models
 - `oso.int_ddp__developers` — Unified developer list (ODD + GHA), keyed by `user_id`
-- `oso.stg_opendevdata__developers` — ODD developers with GraphQL IDs
+- `oso.stg_opendevdata__canonical_developers` — ODD canonical developers, keyed to GitHub GraphQL user IDs (`primary_github_user_id`)
 
 ### Commit models
 - `oso.int_ddp__commits_unified` — Combined ODD + GHA commits (not deduped)
 - `oso.int_ddp__commits_deduped` — Deduplicated unified commits
 - `oso.stg_opendevdata__commits` — Raw ODD commits with identity resolution
 
-### GitHub Archive (event models)
+### GitHub events — unified models (current canonical)
+- `oso.int_events__github_unified` — Standardized GitHub events, one row per event. Keyed by OSO artifact IDs (`from_artifact_id` / `to_artifact_id`); original GitHub IDs live in the `*_source_id` columns. Canonical entrypoint used by `events.py`.
+- `oso.int_events_daily__github_unified` — Daily aggregation (`bucket_day` × artifact × `event_type`, with `amount`)
+
+### GitHub Archive — legacy DDP pipeline models
+Still queried by `repositories.py`, `timeseries-metrics.py`, `developers.py`, `github-archive.py`. Keyed by integer `actor_id` / `repo_id` (not artifact IDs).
 - `oso.stg_github__events` — Raw events with nested fields
-- `oso.int_gharchive__github_events` — Standardized events (canonical entrypoint)
-- `oso.int_ddp_github_events` — Curated subset of event types
+- `oso.int_gharchive__github_events` — Standardized events at PushEvent grain
+- `oso.int_ddp_github_events` — Curated subset of event types (`PushEvent`, `WatchEvent`)
 - `oso.int_ddp_github_events_daily` — Daily aggregation with normalized types
 - `oso.int_gharchive__developer_activities` — Daily rollup for MAD metrics
 
@@ -304,7 +309,7 @@ def _(mo, pyoso_db_conn):
 
 When writing or documenting model notebooks, be explicit about:
 
-- **Freshness**: GitHub Archive is ~3 days behind real-time
+- **Freshness**: GitHub Archive data typically lags real-time by ~1–2 weeks; ODD models (`eco_mads`, `repo_developer_28d_activities`) lag by ~2–3 weeks. Check `MAX(bucket_day)` / `MAX(day)` if exact currency matters.
 - **Completeness**: Public GitHub timeline only — no private repos, no deleted events
 - **Identity**: `actor_id` is a GitHub REST ID; `canonical_developer_id` is from Open Dev Data — don't conflate them
 - **Join keys**: Use `repo_id` (integer) for cross-source joins, not repo names

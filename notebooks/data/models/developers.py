@@ -110,7 +110,7 @@ def _(mo):
 def _(mo):
     mo.mermaid("""
     graph TD
-        A[stg_opendevdata__developers<br/>ODD authors with GraphQL IDs] --> B[int_github__node_id_map<br/>Decode GraphQL → Database ID]
+        A[stg_opendevdata__canonical_developers<br/>ODD authors with GraphQL IDs] --> B[int_github__node_id_map<br/>Decode GraphQL → Database ID]
         B --> D{Union + Deduplicate by user_id}
         C[int_gharchive__github_events<br/>GHA actors with Database IDs] --> D
         D --> E[int_ddp__developers<br/>Unified developer list]
