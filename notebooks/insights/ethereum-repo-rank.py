@@ -26,24 +26,27 @@ def _(df_trending, eth_dev_set, df_engagement_raw, mo):
     _panel_size = len(eth_dev_set)
     _active_eth = int(df_engagement_raw[df_engagement_raw["username_lower"].isin(eth_dev_set)]["username_lower"].nunique())
 
-    _top_eth = df_trending.sort_values("eth_devs_30d", ascending=False).iloc[0]
-    _top_eth_repo = _top_eth["repo_name"].split("/")[-1]
-    _top_eth_devs = int(_top_eth["eth_devs_30d"])
+    if df_trending.empty:
+        mo.md("**Ethereum builder engagement data is temporarily unavailable.** The upstream engagement dataset has no repos in the latest window; check that the `ethereum.dev_engagement_models` pipeline has refreshed.")
+    else:
+        _top_eth = df_trending.sort_values("eth_devs_30d", ascending=False).iloc[0]
+        _top_eth_repo = _top_eth["repo_name"].split("/")[-1]
+        _top_eth_devs = int(_top_eth["eth_devs_30d"])
 
-    _top_all = df_trending.sort_values("global_engagers_30d", ascending=False).iloc[0]
-    _top_all_repo = _top_all["repo_name"].split("/")[-1]
-    _top_all_devs = int(_top_all["global_engagers_30d"])
+        _top_all = df_trending.sort_values("global_engagers_30d", ascending=False).iloc[0]
+        _top_all_repo = _top_all["repo_name"].split("/")[-1]
+        _top_all_devs = int(_top_all["global_engagers_30d"])
 
-    mo.hstack(
-        [
-            mo.stat(value=f"{_panel_size:,}", label="Ethereum Builders Tracked", bordered=True, caption="≥12 months commit activity"),
-            mo.stat(value=f"{_active_eth}", label="Active on Trending Repos", bordered=True, caption=f"{_active_eth/_panel_size*100:.1f}% of panel"),
-            mo.stat(value=_top_eth_repo, label="#1 by Eth Builder Attention", bordered=True, caption=f"{_top_eth_devs} distinct eth builders"),
-            mo.stat(value=_top_all_repo, label="#1 by All Builder Attention", bordered=True, caption=f"{_top_all_devs:,} distinct builders"),
-        ],
-        widths="equal",
-        gap=1,
-    )
+        mo.hstack(
+            [
+                mo.stat(value=f"{_panel_size:,}", label="Ethereum Builders Tracked", bordered=True, caption="≥12 months commit activity"),
+                mo.stat(value=f"{_active_eth}", label="Active on Trending Repos", bordered=True, caption=f"{_active_eth/_panel_size*100:.1f}% of panel"),
+                mo.stat(value=_top_eth_repo, label="#1 by Eth Builder Attention", bordered=True, caption=f"{_top_eth_devs} distinct eth builders"),
+                mo.stat(value=_top_all_repo, label="#1 by All Builder Attention", bordered=True, caption=f"{_top_all_devs:,} distinct builders"),
+            ],
+            widths="equal",
+            gap=1,
+        )
     return
 
 
@@ -797,8 +800,13 @@ def _(df_repo_engagement, df_engagement_raw, eth_dev_set, pd, REPO_CATEGORIES, R
     _active_lower = {k.lower() for k in REPO_CATEGORIES.keys()}
     df_trending = df_trending[df_trending["repo_name"].isin(_active_lower)].copy()
 
-    # Recompute eth dev counts from raw CSV data (more reliable than UDM precomputed)
-    _now = pd.Timestamp.now()
+    # Recompute eth dev counts from raw CSV data (more reliable than UDM precomputed).
+    # Anchor the rolling window to the latest event in the data, not wall-clock now(),
+    # so the notebook always shows the most recent available 30-day window even when the
+    # upstream UDM lags. (A now()-relative window empties df_trending once the UDM is >30d stale.)
+    _now = df_engagement_raw["ts"].max()
+    if pd.isna(_now):
+        _now = pd.Timestamp.now()
     _raw = df_engagement_raw.copy()
     _raw["_is_eth"] = _raw["username_lower"].isin(eth_dev_set)
     _eth_only = _raw[_raw["_is_eth"]]
