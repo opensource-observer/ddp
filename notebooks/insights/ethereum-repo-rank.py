@@ -702,7 +702,7 @@ def _(mo):
 # =============================================================================
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo, pyoso_db_conn):
     with mo.persistent_cache("panel_devs_v5"):
         df_panel_devs = mo.sql(
@@ -723,7 +723,7 @@ def _(mo, pyoso_db_conn):
 # =============================================================================
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo, pd, pyoso_db_conn):
     with mo.persistent_cache("engagement_unified_v1"):
         df_engagement_raw = mo.sql(
@@ -743,7 +743,7 @@ def _(mo, pd, pyoso_db_conn):
     return (df_engagement_raw,)
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo, pyoso_db_conn):
     with mo.persistent_cache("repo_engagement_v1"):
         df_repo_engagement = mo.sql(
@@ -765,7 +765,7 @@ def _(mo, pyoso_db_conn):
     return (df_repo_engagement,)
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo, pyoso_db_conn):
     with mo.persistent_cache("crossover_devs_v1"):
         df_crossover_devs = mo.sql(
@@ -789,7 +789,7 @@ def _(mo, pyoso_db_conn):
 # =============================================================================
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(df_repo_engagement, df_engagement_raw, eth_dev_set, pd, REPO_CATEGORIES, REPO_DESCRIPTIONS):
     df_trending = df_repo_engagement.copy()
     df_trending.rename(columns={"repo_lower": "repo_name"}, inplace=True)
@@ -841,7 +841,7 @@ def _(df_repo_engagement, df_engagement_raw, eth_dev_set, pd, REPO_CATEGORIES, R
     return (df_trending,)
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(df_panel_devs):
     eth_dev_set = set(df_panel_devs["username"].str.lower().tolist())
     return (eth_dev_set,)
@@ -852,7 +852,7 @@ def _(df_panel_devs):
 # =============================================================================
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(df_trending):
     df_signal_strength = df_trending.copy()
     df_signal_strength.rename(columns={
@@ -868,7 +868,7 @@ def _(df_trending):
 # =============================================================================
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(df_engagement_raw, df_trending, np, pd, REPO_CATEGORIES):
     _eth_repos = [k.lower() for k, v in REPO_CATEGORIES.items() if v == "Ethereum & Crypto"]
     _eth_in_data = df_trending[df_trending["repo_name"].isin(_eth_repos)].sort_values("eth_devs_30d", ascending=False).head(12)["repo_name"].tolist()
@@ -905,7 +905,7 @@ def _(df_engagement_raw, df_trending, np, pd, REPO_CATEGORIES):
 # =============================================================================
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(df_engagement_raw):
     _df = df_engagement_raw.copy()
     _df["day"] = _df["ts"].dt.floor("D")
